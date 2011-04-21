@@ -42,16 +42,16 @@ enum MD_TYPE {
 };
 
 // ============================================================================
-//        Class:  Modeldata
+//        Class:  ModelData
 //  Description:  
 // ============================================================================
-class Modeldata
+class ModelData
 {
     public:
         // ====================  LIFECYCLE     ================================
-        Modeldata ( std::string objFileName, std::string mtlFileName,
+        ModelData ( std::string objFileName, std::string mtlFileName,
                     std::string pngFileName );
-        Modeldata ( std::string datFileName );
+        ModelData ( std::string datFileName );
         bool writeDat ();
         bool create ();
 
@@ -90,15 +90,15 @@ class Modeldata
         void readDat ();
         void readModelData ();
 
-}; // -----  end of class Modeldata  -----
+}; // -----  end of class ModelData  -----
 
 //-----------------------------------------------------------------------------
-//       Class:  Modeldata
-//      Method:  Modeldata
+//       Class:  ModelData
+//      Method:  ModelData
 // Description:  constructor
 //-----------------------------------------------------------------------------
     inline
-Modeldata::Modeldata ( std::string objFileName, std::string mtlFileName,
+ModelData::ModelData ( std::string objFileName, std::string mtlFileName,
                        std::string pngFileName )
 {
     fileNames_.objFileName = objFileName;
@@ -107,15 +107,15 @@ Modeldata::Modeldata ( std::string objFileName, std::string mtlFileName,
     splitFileName(fileNames_.objFileName);
     fileNames_.datFileName = dataName_ + ".dat";
     readModelData();
-}  // -----  end of method Modeldata::Modeldata  (constructor)  -----
+}  // -----  end of method ModelData::ModelData  (constructor)  -----
 
 //-----------------------------------------------------------------------------
-//       Class:  Modeldata
-//      Method:  Modeldata
+//       Class:  ModelData
+//      Method:  ModelData
 // Description:  constructor
 //-----------------------------------------------------------------------------
     inline
-Modeldata::Modeldata ( std::string datFileName )
+ModelData::ModelData ( std::string datFileName )
 {
     fileNames_.datFileName = datFileName;
     splitFileName(fileNames_.datFileName);
@@ -123,16 +123,16 @@ Modeldata::Modeldata ( std::string datFileName )
     fileNames_.mtlFileName = dataName_ + ".mtl";
     fileNames_.pngFileName = dataName_ + ".png";
     readDat();
-}  // -----  end of method Modeldata::Modeldata  (constructor)  -----
+}  // -----  end of method ModelData::ModelData  (constructor)  -----
 
 //-----------------------------------------------------------------------------
-//       Class:  Modeldata
+//       Class:  ModelData
 //      Method:  readDat
 // Description:  Reads the .dat file into memory, and then decyphers its
 //               content.
 //-----------------------------------------------------------------------------
     inline void
-Modeldata::readDat ()
+ModelData::readDat ()
 {
     // Check if the .dat file has been read.
     std::ifstream datStream(fileNames_.datFileName.c_str());
@@ -199,16 +199,16 @@ Modeldata::readDat ()
     }
     // Set the image in data.
     data_.pngData = image;
-}		// -----  end of method Modeldata::readDat  -----
+}		// -----  end of method ModelData::readDat  -----
 
 //-----------------------------------------------------------------------------
-//       Class:  Modeldata
+//       Class:  ModelData
 //      Method:  readModelData
 // Description:  This method reads all 3 files belonging to a .dat file into
 //               memory.
 //-----------------------------------------------------------------------------
     inline void
-Modeldata::readModelData ()
+ModelData::readModelData ()
 {
     std::ifstream objStream(fileNames_.objFileName.c_str());
     std::ifstream mtlStream(fileNames_.mtlFileName.c_str());
@@ -234,15 +234,15 @@ Modeldata::readModelData ()
 
     objStream.close();
     mtlStream.close();
-}		// -----  end of method Modeldata::readModelData  -----
+}		// -----  end of method ModelData::readModelData  -----
 
 //-----------------------------------------------------------------------------
-//       Class:  Modeldata
+//       Class:  ModelData
 //      Method:  writeDat
 // Description:  Writes the .dat contents from memory into a .dat file.
 //-----------------------------------------------------------------------------
     inline bool
-Modeldata::writeDat ()
+ModelData::writeDat ()
 {
     // Writes the contents of the .dat file from memory into an actual .dat
     // file.
@@ -254,16 +254,16 @@ Modeldata::writeDat ()
     }
     ofs.close();
     return false;
-}		// -----  end of method Modeldata::writeDat  -----
+}		// -----  end of method ModelData::writeDat  -----
 
 //-----------------------------------------------------------------------------
-//       Class:  Modeldata
+//       Class:  ModelData
 //      Method:  create
 // Description:  Creates the memory representation of a .dat file from the 
 //               data read into the modeldata.
 //-----------------------------------------------------------------------------
     inline bool
-Modeldata::create ()
+ModelData::create ()
 {
     // Set a stringstream to serialize the plaintext data.
     std::ostringstream oss;
@@ -305,44 +305,44 @@ Modeldata::create ()
     // Set the data in memory.
     data_.datData = compressedString;
     return true;
-}		// -----  end of method Modeldata::create  -----
+}		// -----  end of method ModelData::create  -----
 
 //-----------------------------------------------------------------------------
-//       Class:  Modeldata
+//       Class:  ModelData
 //      Method:  splitFileName
 // Description:  Splits a file name from its suffix and sets it in memory.
 //-----------------------------------------------------------------------------
     inline void
-Modeldata::splitFileName ( std::string fileName )
+ModelData::splitFileName ( std::string fileName )
 {
     std::stringstream ss(fileName);
     getline(ss, dataName_, '.');
-}		// -----  end of method Modeldata::splitFileName  -----
+}		// -----  end of method ModelData::splitFileName  -----
 
 //-----------------------------------------------------------------------------
-//       Class:  Modeldata
+//       Class:  ModelData
 //      Method:  getData
 // Description:  Returns, depending on the datatype given, the data set in
 //               memory.
 //-----------------------------------------------------------------------------
     inline std::string
-Modeldata::getData ( MD_TYPE dataType )
+ModelData::getData ( MD_TYPE dataType )
 {
     if ( dataType == MD_OBJ ) return data_.objData;
     if ( dataType == MD_MTL ) return data_.mtlData;
     if ( dataType == MD_DAT ) return data_.datData;
     std::cerr << "Invalid datatype given.\n";
     exit(1);
-}		// -----  end of method Modeldata::getData  -----
+}		// -----  end of method ModelData::getData  -----
 
 //-----------------------------------------------------------------------------
-//       Class:  Modeldata
+//       Class:  ModelData
 //      Method:  getImage
 // Description:  Returns the image data.
 //-----------------------------------------------------------------------------
     inline png::image<png::rgba_pixel>
-Modeldata::getImage ()
+ModelData::getImage ()
 {
     return data_.pngData;
-}		// -----  end of method Modeldata::getImage  -----
+}		// -----  end of method ModelData::getImage  -----
 
