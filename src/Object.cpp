@@ -21,7 +21,7 @@
 #include    <glm/gtc/matrix_transform.hpp>
 #include    <glm/gtc/type_ptr.hpp>
 #include    <GL/glew.h>
-#include    "Undat.h"
+#include    <snappy.h>
 #include    "Object.h"
 
 //-----------------------------------------------------------------------------
@@ -39,13 +39,13 @@ Object::Object ()
 // Description:  constructor
 //-----------------------------------------------------------------------------
 Object::Object ( std::string datName, Shader& shader ) :
-    shader_(&shader)
+    shader_(&shader), datName_(datName)
 {
     translation = glm::mat4(1.0f);
     rotation = glm::mat4(1.0f);
     scaling = glm::mat4(1.0f);
     texture_ = NULL;
-    this->readDat(datName);
+    this->readDat();
     this->init();
 }  // -----  end of method Object::Object  (constructor)  -----
 
@@ -65,19 +65,40 @@ Object::~Object ()
 //               to the appropiate members.
 //-----------------------------------------------------------------------------
     void
-Object::readDat ( std::string datName )
+Object::readDat ()
 {
-    Modeldata modelData(datName);
-    if ( !modelData.extract() ) {
-        std::cerr << "Could not open the model file.\n";
-        exit(1);
+    // Read the file
+    std::ifstream ifs(datName_.c_str());
+    // Put the file into a stringstream
+    std::ostringstream oss;
+    oss << ifs.rdbuf();
+    std::string fileString = oss.str();
+    size_t fileSize = fileString.size();
+    std::string decompressedString;
+    // Decompress the file string
+    snappy::Uncompress(fileString.c_str(), fileSize, &decompressedString);
+    // Put the file string in a stringstream to be read as input
+    std::istringstream iss(decompressedString);
+    // The seperate files need to be sent as strings from stringstreams
+    std::ostringstream obj, mtl, png;
+    std::string line;
+    while ( iss.good() ) {
+        getline(iss, line);
+        if ( line == "EOF" ) break;
+        obj << line << "\n";
     }
-    if ( !modelData.writeModelData() ) {
-        std::cerr << "Could not generate model data\n";
-        exit(1);
+    while ( iss.good() ) {
+        getline(iss, line);
+        if ( line == "EOF" ) break;
+        mtl << line << "\n";
     }
-    model_ = new Model(modelData.getData(MD_OBJ), modelData.getData(MD_MTL));
-    texture_ = new Texture(GL_TEXTURE_2D, modelData.getImage());
+    model_ = new Model(obj.str(), mtl.str());
+    while ( iss.good() ) {
+        getline(iss, line);
+        png << line << "\n";
+    }
+    // Now we can create a new texture from the texture data sent as a string
+    texture_ = new Texture(GL_TEXTURE_2D, png.str());
 }		// -----  end of method Object::readDat  -----
 
 //-----------------------------------------------------------------------------
