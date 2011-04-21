@@ -1,0 +1,28 @@
+This simple program allows for packing a Wavefront .obj file, its MTL file, and
+an accompanying texture file in the form of a PNG to be compressed and bundled
+into one .dat file.
+
+PREREQUISITES
+
+FreeImage 3.1.05
+Snappy 1.0.1
+
+INSTALLATION
+
+Just do an easy "make". The program does not install into the user's /usr
+folder, since it's just a small helper program, for my game library/engine.
+
+USAGE
+
+To use the program, you need to specify its usage. To pack the 3 files into a
+.dat file, call the program like this:
+    ./undat --create foo.obj foo.mtl foo.png
+    or
+    ./undat -c foo.obj foo.mtl foo.png
+Preferably, the files need to have the same names, sans suffix.
+
+To unpack a file from a .dat file, call the program like this:
+    ./undat --extract foo.dat
+    or
+    ./undat -x foo.dat
+The resulting files will be named the same as the .dat file.
