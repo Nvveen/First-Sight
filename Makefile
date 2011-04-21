@@ -6,13 +6,12 @@ SRC+=$(wildcard $(SRCDIR)/*.cpp)
 OBJS=$(patsubst %.cpp,%.o,$(SRC))
 FLAGS=-g -Wall -Wl,-rpath,$(LIBDIR)/snappy/.libs/
 FLAGS+=-Wl,-rpath,$(LIBDIR)/sfml/build/lib/
-FLAGS+=-Wl,-rpath,$(LIBDIR)/FreeImage/Dist/
-LFLAGS=-lGL -lGLU -lGLEW -lsnappy -lsfml-window -lsfml-graphics -lglut -lfreeimage
+LFLAGS=-lGL -lGLU -lGLEW -lsnappy -lsfml-window -lsfml-graphics -lglut
+LFLAGS+=`libpng-config --cflags` `libpng-config --ldflags`
 
 CXXFLAGS=$(FLAGS) -I$(INCDIR) -I$(LIBDIR) -I$(LIBDIR)/glm/ 
 CXXFLAGS+=-I$(LIBDIR)/snappy/ -I$(LIBDIR)/snappy/.libs -L$(LIBDIR)/snappy/.libs 
 CXXFLAGS+=-I$(LIBDIR)/sfml/include/ -L$(LIBDIR)/sfml/build/lib $(LFLAGS)
-CXXFLAGS+=-I$(LIBDIR)/FreeImage/Dist/ -L$(LIBDIR)/FreeImage/Dist/
 CXX=g++
 .SUFFIXES: .o .cpp
 
