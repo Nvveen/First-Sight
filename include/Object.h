@@ -36,7 +36,7 @@ class Object
         Object ( std::string datName, Shader& shader );
         ~Object ();
         GLfloat toRadians ( GLfloat angle );
-        void readDat( std::string datName );
+        void readDat();
         void init ();
         void draw ();
         void translate ( GLfloat x, GLfloat y, GLfloat z );
@@ -58,6 +58,7 @@ class Object
         GLuint vbo_;
         GLuint vao_;
 
+        std::string datName_;
         Model* model_;
         Texture* texture_;
         std::vector<GLfloat> modelData_;

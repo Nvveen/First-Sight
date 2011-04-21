@@ -20,7 +20,7 @@
 #include    <string>
 #include    <vector>
 #include    <GL/gl.h>
-#include    <SFML/Graphics/Image.hpp>
+#include    <FreeImage.h>
 
 // ============================================================================
 //        Class:  Texture
@@ -33,8 +33,9 @@ class Texture
 
         // ====================  LIFECYCLE     ================================
         Texture ();
-        Texture ( GLenum textureTarget, const sf::Image& png );
+        Texture ( GLenum textureTarget, const std::string& png );
         ~Texture ();
+        void init( const std::string& png );
         void load ();
         void bind ( const GLuint& shader );
 
@@ -51,9 +52,10 @@ class Texture
     private:
         // ====================  DATA MEMBERS  ================================
         GLenum textureTarget_;
+        BYTE* bits_;
         int width_;
         int height_;
-        sf::Image png_;
+        int scanWidth_;
         GLuint texID;
 
         bool textureSet;
