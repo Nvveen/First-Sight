@@ -29,8 +29,10 @@
 #include    <iostream>
 #include    <fstream>
 #include    <sstream>
-#include    <SFML/Graphics.hpp>
 #include    <snappy.h>
+#include    <png++/png.hpp>
+
+static const int PNGSIGSIZE = 8;
 
 enum MD_TYPE {
     MD_OBJ,
@@ -47,20 +49,15 @@ class Modeldata
 {
     public:
         // ====================  LIFECYCLE     ================================
-        Modeldata ( std::string datFileName );// constructor
         Modeldata ( std::string objFileName, std::string mtlFileName,
                     std::string pngFileName );
-        void readDat ();
-        void readModelData ();
+        Modeldata ( std::string datFileName );
         bool writeDat ();
-        bool writeModelData ();
-        bool extract ();
         bool create ();
-        void splitFileName ( std::string fileName );
 
         // ====================  ACCESSORS     ================================
         std::string getData ( MD_TYPE dataType );
-        sf::Image getImage ();
+        png::image<png::rgba_pixel> getImage ();
 
         // ====================  MUTATORS      ================================
 
@@ -85,27 +82,15 @@ class Modeldata
         struct undatData {
             std::string objData;
             std::string mtlData;
-            sf::Image pngData;
             std::string datData;
+            png::image<png::rgba_pixel> pngData;
         } data_;
 
-}; // -----  end of class Modeldata  -----
+        void splitFileName ( std::string fileName );
+        void readDat ();
+        void readModelData ();
 
-//-----------------------------------------------------------------------------
-//       Class:  Modeldata
-//      Method:  Modeldata
-// Description:  constructor
-//-----------------------------------------------------------------------------
-    inline 
-Modeldata::Modeldata ( std::string datFileName )
-{
-    fileNames_.datFileName = datFileName;
-    splitFileName(fileNames_.datFileName);
-    fileNames_.objFileName = dataName_ + ".obj";
-    fileNames_.mtlFileName = dataName_ + ".mtl";
-    fileNames_.pngFileName = dataName_ + ".png";
-    readDat();
-}  // -----  end of method Modeldata::Modeldata  (constructor)  -----
+}; // -----  end of class Modeldata  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Modeldata
@@ -126,21 +111,94 @@ Modeldata::Modeldata ( std::string objFileName, std::string mtlFileName,
 
 //-----------------------------------------------------------------------------
 //       Class:  Modeldata
+//      Method:  Modeldata
+// Description:  constructor
+//-----------------------------------------------------------------------------
+    inline
+Modeldata::Modeldata ( std::string datFileName )
+{
+    fileNames_.datFileName = datFileName;
+    splitFileName(fileNames_.datFileName);
+    fileNames_.objFileName = dataName_ + ".obj";
+    fileNames_.mtlFileName = dataName_ + ".mtl";
+    fileNames_.pngFileName = dataName_ + ".png";
+    readDat();
+}  // -----  end of method Modeldata::Modeldata  (constructor)  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Modeldata
 //      Method:  readDat
-// Description:  Reads a .dat file into memory.
+// Description:  Reads the .dat file into memory, and then decyphers its
+//               content.
 //-----------------------------------------------------------------------------
     inline void
 Modeldata::readDat ()
 {
+    // Check if the .dat file has been read.
     std::ifstream datStream(fileNames_.datFileName.c_str());
     if ( !datStream.good() ) {
-        std::cerr << "Could not open the .dat file\n";
+        std::cout << "Could not read the .dat file.\n";
         exit(1);
     }
-    // We need the file as a string, so use the rdbuf method for conversion
+    // Convert it to a stream for decompression
     std::ostringstream oss;
     oss << datStream.rdbuf();
     data_.datData = oss.str();
+    datStream.close();
+
+    // Get the filesize and an output string.
+    size_t fileStringSize = data_.datData.size();
+    std::string decompressedString;
+    // Decompress
+    snappy::Uncompress(data_.datData.c_str(), fileStringSize, 
+                       &decompressedString);
+
+    // Make a stream out of the decompressed string
+    std::istringstream iss(decompressedString);
+    std::ostringstream objStream;
+    std::ostringstream mtlStream;
+    std::string line;
+
+    // Read line by line the obj and mtl data, and put them in a string.
+    while ( iss.good() ) {
+        getline(iss, line);
+        if ( line == "EOF" ) break;
+        objStream << line << "\n";
+    }
+    while ( iss.good() ) {
+        getline(iss, line);
+        if ( line == "EOF" ) break;
+        mtlStream << line << "\n";
+    }
+    // Set the strings in memory.
+    data_.objData = objStream.str();
+    data_.mtlData = mtlStream.str();
+
+    // Get the image dimensions
+    size_t width, height;
+    iss >> width;
+    iss >> height;
+    // Create an empty image
+    png::image<png::rgba_pixel> image(width, height);
+    // For every 4 values encountered in the .dat file, create a pixel, and
+    // set the pixel in the image.
+    for ( size_t i = 0; i < height; i += 1 ) {
+        for ( size_t j = 0; j < width; j += 1 ) {
+            png::basic_rgba_pixel<unsigned char> pixel;
+            short val;
+            iss >> val;
+            pixel.red = (unsigned char)val;
+            iss >> val;
+            pixel.green = (unsigned char)val;
+            iss >> val;
+            pixel.blue = (unsigned char)val;
+            iss >> val;
+            pixel.alpha = (unsigned char)val;
+            image.set_pixel(j, i, pixel);
+        }
+    }
+    // Set the image in data.
+    data_.pngData = image;
 }		// -----  end of method Modeldata::readDat  -----
 
 //-----------------------------------------------------------------------------
@@ -162,7 +220,8 @@ Modeldata::readModelData ()
         std::cerr << "Could not open the .mtl file.\n";
         exit(1);
     }
-    // We need to convert the filestreams into strings via stringstreams.
+    // We need to convert the plaintext filestreams into strings via 
+    // stringstreams.
     std::ostringstream objOSS;
     objOSS << objStream.rdbuf();
     std::ostringstream mtlOSS;
@@ -171,14 +230,10 @@ Modeldata::readModelData ()
     data_.objData = objOSS.str();
     data_.mtlData = mtlOSS.str();
 
-    // Load the image.
-    sf::Image image;
-    if ( !image.LoadFromFile(fileNames_.pngFileName.c_str()) ) {
-        std::cerr << "Could not load the PNG file.\n";
-        exit(1);
-    }
-    // Set image into memory.
-    data_.pngData = image;
+    data_.pngData = png::image<png::rgba_pixel>(fileNames_.pngFileName.c_str());
+
+    objStream.close();
+    mtlStream.close();
 }		// -----  end of method Modeldata::readModelData  -----
 
 //-----------------------------------------------------------------------------
@@ -194,111 +249,12 @@ Modeldata::writeDat ()
     std::ofstream ofs(fileNames_.datFileName.c_str());
     if ( ofs.good () ) {
         ofs << data_.datData;
+        ofs.close();
         return true;
     }
-    else {
-        return false;
-    }
+    ofs.close();
+    return false;
 }		// -----  end of method Modeldata::writeDat  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Modeldata
-//      Method:  writeModelData
-// Description:  Writes the contents of the modeldata objects from memory
-//               into files.
-//-----------------------------------------------------------------------------
-    inline bool
-Modeldata::writeModelData ()
-{
-    std::ofstream objStream(fileNames_.objFileName.c_str());
-    std::ofstream mtlStream(fileNames_.mtlFileName.c_str());
-    if ( objStream.good() ) {
-        objStream << data_.objData;
-    }
-    else {
-        return false;
-    }
-    if ( mtlStream.good() ) {
-        mtlStream << data_.mtlData;
-    }
-    else {
-        return false;
-    }
-    // Image saving isn't done via streams, but via the SFML method.
-    data_.pngData.SaveToFile(fileNames_.pngFileName);
-    return true;
-}		// -----  end of method Modeldata::writeModelData  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Modeldata
-//      Method:  extract
-// Description:  Extract doesn't actually extract the files, but rather uses
-//               the data stored in memory about the .dat file by decompressing
-//               it, and seperately reading the contents of the objects into 
-//               memory.
-//-----------------------------------------------------------------------------
-    inline bool
-Modeldata::extract ()
-{
-    if ( !fileNames_.datFileName.empty() ) {
-        // Define size and a location to store the decompressed data.
-        size_t fileStringSize = data_.datData.size();
-        std::string decompressedString;
-        // Use snappy to decompress.
-        snappy::Uncompress(data_.datData.c_str(), fileStringSize, 
-                           &decompressedString);
-
-        // Convert the string into a stringstream.
-        std::istringstream iss(decompressedString);
-        std::ostringstream objStream;
-        std::ostringstream mtlStream;
-
-        std::string line;
-        // Walk through the stringstream, while adding each line to the 
-        // objects' stringstreams. If an EOF is encountered, the next stream is
-        // used.
-        while ( iss.good() ) {
-            getline(iss, line);
-            if ( line == "EOF" ) break;
-            objStream << line << "\n";
-        }
-        while ( iss.good() ) {
-            getline(iss, line);
-            if ( line == "EOF" ) break;
-            mtlStream << line << "\n";
-        }
-        // Set the data  into memory.
-        data_.objData = objStream.str();
-        data_.mtlData = mtlStream.str();
-
-        // Height and width is stored in memory to build the array.
-        unsigned int width, height;
-        // Read it in.
-        iss >> width;
-        iss >> height;
-        size_t size = width * height * 4;
-        sf::Uint8* pixels = new sf::Uint8[size];
-        // Iterate through the remaining contents of the .dat file to build
-        // up the array of pixels.
-        for ( unsigned int i = 0; i < size; i += 1 ) {
-            short val;
-            iss >> val;
-            pixels[i] = (sf::Uint8)val;
-        }
-        // The pixels can be used to reconstruct another sf::Image.
-        sf::Image image;
-        if ( !image.LoadFromPixels(width, height, pixels) ) {
-            return false;
-        }
-        // The image can now be set in memory.
-        data_.pngData = image;
-
-        return true;
-    }
-    else {
-        return false;
-    }
-}		// -----  end of method Modeldata::extract  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Modeldata
@@ -316,17 +272,26 @@ Modeldata::create ()
     oss << data_.mtlData;
     oss << "EOF\n";
 
-    // Create a pixel array out of the image set in memory.
-    sf::Image image = data_.pngData;
-    const sf::Uint8* pixels = image.GetPixelsPtr();
-    // Get its width and height
-    size_t size = image.GetWidth() * image.GetHeight() * 4;
-    // Serialize width and height
-    oss << image.GetWidth() << "\n";
-    oss << image.GetHeight() << "\n";
-    // Serialize the array of pixels
-    for ( unsigned int i = 0; i < size; i += 1 ) {
-        oss << (short)pixels[i] << " ";
+    // Get the dimensions of the image.
+    size_t width = data_.pngData.get_width();
+    size_t height = data_.pngData.get_height();
+
+    oss << width << "\n";
+    oss << height << "\n";
+    for ( unsigned int i = 0; i < height; i += 1 ) {
+        for ( unsigned int j = 0; j < width; j += 1 ) {
+            // Each pixel contains 4 values, rgba. We need to insert these
+            // separately.
+            png::basic_rgba_pixel<unsigned char> pixel = data_.pngData[i][j];
+            short val = (unsigned char)pixel.red;
+            oss << val << " ";
+            val = (unsigned char)pixel.green;
+            oss << val << " ";
+            val = (unsigned char)pixel.blue;
+            oss << val << " ";
+            val = (unsigned char)pixel.alpha;
+            oss << val << " ";
+        }
     }
 
     // Create a string out of the stringstream to compress it.
@@ -373,9 +338,9 @@ Modeldata::getData ( MD_TYPE dataType )
 //-----------------------------------------------------------------------------
 //       Class:  Modeldata
 //      Method:  getImage
-// Description:  Returns the PNG image.
+// Description:  Returns the image data.
 //-----------------------------------------------------------------------------
-    inline sf::Image
+    inline png::image<png::rgba_pixel>
 Modeldata::getImage ()
 {
     return data_.pngData;
