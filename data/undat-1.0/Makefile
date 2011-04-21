@@ -1,10 +1,9 @@
 LIBDIR=../../lib
 FLAGS=-Wall -Wl,-rpath,$(LIBDIR)/snappy/.libs/ -g
-FLAGS+=-Wl,-rpath,$(LIBDIR)/sfml/build/lib/
-LFLAGS=-lsnappy -lsfml-graphics
+LFLAGS=-lsnappy
 
-CXXFLAGS=$(FLAGS) -L$(LIBDIR)/snappy/.libs -I$(LIBDIR)/snappy/ -I$(LIBDIR)/snappy/.libs 
-CXXFLAGS+=-I$(LIBDIR)/sfml/include/ -L$(LIBDIR)/sfml/build/lib -I../../include/ $(LFLAGS)
+CXXFLAGS=$(FLAGS) -L$(LIBDIR)/snappy/.libs -I$(LIBDIR)/snappy/ -I$(LIBDIR)/snappy/.libs -I../../include/ $(LFLAGS)
+CXXFLAGS+=`libpng-config --cflags` `libpng-config --ldflags`
 CXX=g++
 
 undat: Undat.o

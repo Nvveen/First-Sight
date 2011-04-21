@@ -67,9 +67,7 @@ printHelp ()
 {
     std::cout << "Usage: undat [mode] [file1] {[file 2] [file 3]}\n"
                  "  Modes: \n"
-                 "       --extract, -x      Extract a .dat file\n"
-                 "       --create,  -c      Create a .dat file out of a .obj, "
-                                            ".mtl and .png file. \n";
+                 "       --extract, -x      Extract a .dat file\n";
 }		// -----  end of function printHelp  -----
 
 // ===  FUNCTION  =============================================================
@@ -112,31 +110,6 @@ createFile ( std::vector<std::string> sArgv )
     }
 }		// -----  end of function createFile  -----
 
-// ===  FUNCTION  =============================================================
-//         Name:  extractFile
-//  Description:  Extracts a .dat file using the Undat library.
-// ============================================================================
-    void
-extractFile ( std::string fileName )
-{
-    std::cout << "Unpacking " << fileName << "...\n";
-    // Create the Modeldata object.
-    Modeldata data(fileName);
-    // Extract the .dat file and check for errors.
-    if ( !data.extract() ) {
-        std::cerr << "Unpacking failed horribly.\n";
-        exit(1);
-    }
-    // Write the contents of the unpacked .dat file to the modeldata files.
-    if ( !data.writeModelData() ) {
-        std::cerr << "Failed to create the model files.\n";
-        exit(1);
-    }
-    else {
-        std::cout << "Unpacked file(s).\n";
-    }
-}		// -----  end of function extractFile  -----
-
     int
 main ( int argc, char *argv[] )
 {
@@ -158,16 +131,10 @@ main ( int argc, char *argv[] )
                 createFile(sArgv);
             }
         }
-        else if ( sArgv[1] == "--extract" || sArgv[1] == "-x" ) {
-            if ( argc != 3 ) {
-                std::cerr << "Invalid number of parameters.\n";
-                printHelp();
-                exit(1);
-            }
-            else {
-                std::string fileName = sArgv[2];
-                extractFile(fileName);
-            }
+        else {
+            std::cout << "Did not recognize the modes.\n";
+            printHelp();
+            exit(1);
         }
     }
 }				// ----------  end of function main  ----------
