@@ -86,12 +86,6 @@ Texture::load ()
                                                 FALSE);
     BYTE* newBits = FreeImage_GetBits(dib);
     FreeImage_Save(FIF_PNG, dib, "test.png");
-    int size = scanWidth_*height_*4;
-    for ( int i = 0; i < size; i += 1 ) {
-        std::cout << (int)newBits[i] << " ";
-        if ( (i+1) % scanWidth_ == 0 ) std::cout << "\n";
-    }
-    std::cout << "\n";
     glGenTextures(1, &texID);
     glBindTexture(textureTarget_, texID);
     glTexParameteri(textureTarget_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

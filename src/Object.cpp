@@ -67,6 +67,31 @@ Object::~Object ()
     void
 Object::readDat ()
 {
+    std::ifstream ifs(datName_.c_str());
+    std::ostringstream oss;
+    oss << ifs.rdbuf();
+    std::string fileString = oss.str();
+    size_t fileSize = fileString.size();
+    std::string decompressedString;
+    snappy::Uncompress(fileString.c_str(), fileSize, &decompressedString);
+    std::istringstream iss(decompressedString);
+    std::ostringstream obj, mtl, png;
+    std::string line;
+    while ( iss.good() ) {
+        getline(iss, line);
+        if ( line == "EOF" ) break;
+        obj << line << "\n";
+    }
+    while ( iss.good() ) {
+        getline(iss, line);
+        if ( line == "EOF" ) break;
+        mtl << line << "\n";
+    }
+    model_ = new Model(obj.str(), mtl.str());
+    while ( iss.good() ) {
+        getline(iss, line);
+        png << line << "\n";
+    }
     texture_ = new Texture(GL_TEXTURE_2D, png.str());
 }		// -----  end of method Object::readDat  -----
 
