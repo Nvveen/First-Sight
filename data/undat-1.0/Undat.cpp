@@ -72,7 +72,7 @@ printHelp ()
 
 // ===  FUNCTION  =============================================================
 //         Name:  createFile
-//  Description:  Creates a file by making a Modeldata object, and using that
+//  Description:  Creates a file by making a ModelData object, and using that
 //                to write to a .dat file.
 // ============================================================================
     void
@@ -95,12 +95,12 @@ createFile ( std::vector<std::string> sArgv )
         }
     }
     // Create modeldata
-    Modeldata data(obj, mtl, png);
+    ModelData data(obj, mtl, png);
     if ( !data.create() ) {
         std::cerr << "Creating the data file failed horribly.\n";
         exit(1);
     }
-    // Write data contained in the Modeldata object to their respective files.
+    // Write data contained in the ModelData object to their respective files.
     if ( !data.writeDat() ) {
         std::cerr << "Failed to create the .dat file.\n";
         exit(1);

@@ -67,37 +67,6 @@ Object::~Object ()
     void
 Object::readDat ()
 {
-    // Read the file
-    std::ifstream ifs(datName_.c_str());
-    // Put the file into a stringstream
-    std::ostringstream oss;
-    oss << ifs.rdbuf();
-    std::string fileString = oss.str();
-    size_t fileSize = fileString.size();
-    std::string decompressedString;
-    // Decompress the file string
-    snappy::Uncompress(fileString.c_str(), fileSize, &decompressedString);
-    // Put the file string in a stringstream to be read as input
-    std::istringstream iss(decompressedString);
-    // The seperate files need to be sent as strings from stringstreams
-    std::ostringstream obj, mtl, png;
-    std::string line;
-    while ( iss.good() ) {
-        getline(iss, line);
-        if ( line == "EOF" ) break;
-        obj << line << "\n";
-    }
-    while ( iss.good() ) {
-        getline(iss, line);
-        if ( line == "EOF" ) break;
-        mtl << line << "\n";
-    }
-    model_ = new Model(obj.str(), mtl.str());
-    while ( iss.good() ) {
-        getline(iss, line);
-        png << line << "\n";
-    }
-    // Now we can create a new texture from the texture data sent as a string
     texture_ = new Texture(GL_TEXTURE_2D, png.str());
 }		// -----  end of method Object::readDat  -----
 
