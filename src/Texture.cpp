@@ -15,7 +15,6 @@
 // ============================================================================
 
 #include    <iostream>
-#include    <sstream>
 #include    <cstdlib>
 #include    <GL/glew.h>
 #include    "Texture.h"
@@ -34,14 +33,12 @@ Texture::Texture ()
 //      Method:  Texture
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Texture::Texture ( GLenum textureTarget, const std::string& png )
+Texture::Texture ( GLenum textureTarget, 
+                   const png::image<png::rgba_pixel>& png ) :
+    textureTarget_(textureTarget), png_(png)
 {
-    textureTarget_ = textureTarget;
-    bits_ = NULL;
-    width_ = 0;
-    height_ = 0;
-    textureSet = false;
-    this->init(png);
+    width_ = png_.get_width();
+    height_ = png_.get_height();
 }  // -----  end of method Texture::Texture  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -53,22 +50,6 @@ Texture::~Texture ()
 {
 }		// -----  end of method Texture::Texture  -----
 
-    void
-Texture::init ( const std::string& png )
-{
-    std::istringstream iss(png);
-    std::string line;
-    iss >> width_;
-    iss >> height_;
-    iss >> scanWidth_;
-    bits_ = new BYTE[height_*scanWidth_];
-    for ( long i = 0; i < height_*scanWidth_; i += 1 ) {
-        short val;
-        iss >> val;
-        bits_[i] = (BYTE)val;
-    }
-}		// -----  end of method Texture::init  -----
-
 //-----------------------------------------------------------------------------
 //       Class:  Texture
 //      Method:  load
@@ -77,25 +58,24 @@ Texture::init ( const std::string& png )
     void
 Texture::load ()
 {
-    FreeImage_Initialise();
-    FIBITMAP *dib = FreeImage_ConvertFromRawBits(bits_, width_, height_,
-                                                scanWidth_, 32,
-                                                FI_RGBA_RED_MASK,
-                                                FI_RGBA_GREEN_MASK,
-                                                FI_RGBA_BLUE_MASK,
-                                                FALSE);
-    BYTE* newBits = FreeImage_GetBits(dib);
-    FreeImage_Save(FIF_PNG, dib, "test.png");
+    std::vector<unsigned char> bytes;
+    for ( size_t i = 0; i < height_; i += 1 ) {
+        for ( size_t j = 0;j < width_; j += 1 ) {
+            bytes.push_back(png_[i][j].red);
+            bytes.push_back(png_[i][j].green);
+            bytes.push_back(png_[i][j].blue);
+            bytes.push_back(png_[i][j].alpha);
+        }
+    }
     glGenTextures(1, &texID);
     glBindTexture(textureTarget_, texID);
     glTexParameteri(textureTarget_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(textureTarget_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(textureTarget_, 0, GL_RGBA, width_, height_, 0, GL_BGRA,
-                 GL_UNSIGNED_BYTE, newBits);
+    glTexImage2D(textureTarget_, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, &bytes[0]);
     
     // Unbind everything
     glBindTexture(textureTarget_, 0);
-    FreeImage_DeInitialise();
 }		// -----  end of method Texture::load  -----
 
 //-----------------------------------------------------------------------------

@@ -36,7 +36,7 @@ class Object
         Object ( std::string datName, Shader& shader );
         ~Object ();
         GLfloat toRadians ( GLfloat angle );
-        void readDat();
+        void readDat( std::string datName );
         void init ();
         void draw ();
         void translate ( GLfloat x, GLfloat y, GLfloat z );
