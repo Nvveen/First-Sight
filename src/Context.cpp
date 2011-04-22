@@ -83,8 +83,6 @@ Context::render ()
         objects[i].bind(&proj_);
         objects[i].draw();
     }
-
-    glutSwapBuffers();
 }		// -----  end of method Context::render  -----
 
 //-----------------------------------------------------------------------------

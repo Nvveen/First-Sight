@@ -17,41 +17,21 @@
 #include    <iostream>
 #include    <GL/glew.h>
 #include    <GL/freeglut.h>
+#include    <SFML/Graphics.hpp>
 #include    "Context.h"
-
-// First, we have to setup a simple clean wrapper for the callback functions
-// to allow them to be used inside a class.
-Context* openGLContext = NULL;
-
-    void
-displayFuncWrapper ()
-{
-    openGLContext->render();
-}		// -----  end of function displayFuncWrapper  -----
-
-    void
-reshapeFuncWrapper ( int w, int h )
-{
-    openGLContext->resize( w, h );
-}		// -----  end of function reshapeFuncWrapper  -----
 
     int
 main ( int argc, char *argv[] )
 {
     int w = 1024, h = 768;
     std::string windowName = "Tech demo";
-    openGLContext = new Context(w, h, windowName);
-    // Initialize glut, the window and its modes.
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-    glutInitWindowSize(w, h);
-    glutInitWindowPosition(100, 100);
-    glutCreateWindow(windowName.c_str());
-    
-    glutDisplayFunc(displayFuncWrapper);
-    glutReshapeFunc(reshapeFuncWrapper);
-    glutIdleFunc(displayFuncWrapper);
-
+    Context windowContext(w, h, windowName);
+    sf::ContextSettings settings;
+    settings.MajorVersion = 3;
+    settings.MinorVersion = 2;
+    sf::VideoMode mode(w, h, 32);
+    sf::RenderWindow window(mode, windowName, sf::Style::Default, settings);
+    window.SetFramerateLimit(60);
     // Catch error
     GLenum res = glewInit();
     if ( res != GLEW_OK ) {
@@ -59,9 +39,25 @@ main ( int argc, char *argv[] )
         exit(1);
     }
 
-    // Setup the rendering screen.
-    openGLContext->setup();
-
-    glutMainLoop();
+    windowContext.setup();
+    bool windowOpened = true;
+    while ( window.IsOpened() && windowOpened ) {
+        sf::Event event;
+        while ( window.PollEvent(event) ) {
+            if ( event.Type == sf::Event::Closed ) {
+                windowOpened = false;
+            }
+            if ( event.Type == sf::Event::KeyPressed &&
+                 event.Key.Code == sf::Key::Escape ) {
+                windowOpened = false;
+            }
+            if ( event.Type == sf::Event::Resized ) {
+                windowContext.resize(event.Size.Width, event.Size.Height);
+            }
+        }
+        window.Clear();
+        windowContext.render();
+        window.Display();
+    }
     return 0;
 }				// ----------  end of function main  ----------
