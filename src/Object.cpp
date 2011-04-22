@@ -36,8 +36,8 @@ Object::Object ()
 //      Method:  Object
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Object::Object ( std::string datName, Shader& shader ) :
-    shader_(&shader)
+Object::Object ( std::string datName, Shader shader ) :
+    shader_(shader)
 {
     translation = glm::mat4(1.0f);
     rotation = glm::mat4(1.0f);
@@ -131,7 +131,7 @@ Object::init ()
 Object::draw ()
 {
     // Use the specified program
-    shader_->bind();
+    shader_.bind();
     // Bind the object's vertex array object
     glBindVertexArray(vao_);
     // Enable the arrays
@@ -143,12 +143,12 @@ Object::draw ()
     texture_->bind();
 
     // Set the uniform variables in the shader
-    shader_->setUniform("vProjection", proj_->getPerspective());
-    shader_->setUniform("vCamera", proj_->getCamera());
-    shader_->setUniform("vTranslate", translation);
-    shader_->setUniform("vRotate", rotation);
-    shader_->setUniform("vScale", scaling);
-    shader_->setUniform("gSampler", 0);
+    shader_.setUniform("vProjection", proj_->getPerspective());
+    shader_.setUniform("vCamera", proj_->getCamera());
+    shader_.setUniform("vTranslate", translation);
+    shader_.setUniform("vRotate", rotation);
+    shader_.setUniform("vScale", scaling);
+    shader_.setUniform("gSampler", 0);
 
     // Use the vao to draw the vertices
     glDrawArrays(GL_TRIANGLES, 0, triangleCount_);
@@ -162,7 +162,7 @@ Object::draw ()
     // Unbind the vao
     glBindVertexArray(0);
     // Unbind the shader
-    shader_->unbind();
+    shader_.unbind();
 }		// -----  end of method Object::draw  -----
 
 //-----------------------------------------------------------------------------

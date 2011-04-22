@@ -51,6 +51,19 @@ Context::~Context ()
     void
 Context::setup ()
 {
+    sf::ContextSettings settings;
+    settings.MajorVersion = 3;
+    settings.MinorVersion = 2;
+    sf::VideoMode mode(w_, h_, 32);
+    window_ = new sf::RenderWindow(mode, windowName_, sf::Style::Default, 
+                                  settings);
+    window_->SetFramerateLimit(60);
+    // Catch error
+    GLenum res = glewInit();
+    if ( res != GLEW_OK ) {
+        std::cerr << "Error: " << glewGetErrorString(res) << "\n";
+        exit(1);
+    }
     // Set the different options for the objects.
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glFrontFace(GL_CCW);
@@ -60,11 +73,6 @@ Context::setup ()
 
     // Add shaders to shaderlist
     shaders["default"] = Shader("default.vs", "default.fs");
-
-    // Create an object and initialize it
-    Object cube = Object("data/dirt.dat", shaders["default"]);
-    // Add objects to objectlist
-    objects.push_back(cube);
 }		// -----  end of method Context::setup  -----
 
 //-----------------------------------------------------------------------------
@@ -77,12 +85,15 @@ Context::render ()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | 
             GL_STENCIL_BUFFER_BIT );
+    window_->Clear();
 
     // Draw objects
     for ( unsigned int i = 0; i < objects.size(); i += 1 ) {
         objects[i].bind(&proj_);
         objects[i].draw();
     }
+
+    window_->Display();
 }		// -----  end of method Context::render  -----
 
 //-----------------------------------------------------------------------------

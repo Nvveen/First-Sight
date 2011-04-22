@@ -21,6 +21,7 @@
 #include    <string>
 #include    <vector>
 #include    <map>
+#include    <SFML/Graphics.hpp>
 #include    "Projection.h"
 #include    "Object.h"
 #include    "Shader.h"
@@ -42,11 +43,14 @@ class Context
         void resize ( int w, int h );
 
         // ====================  ACCESSORS     ================================
+        bool isOpened ();
 
         // ====================  MUTATORS      ================================
+        void push ( const Object& cube );
 
         // ====================  OPERATORS     ================================
 
+        friend class EventHandler;
     protected:
         // ====================  DATA MEMBERS  ================================
 
@@ -55,6 +59,7 @@ class Context
         GLfloat w_;
         GLfloat h_;
         std::string windowName_;
+        sf::RenderWindow* window_;
 
         Projection proj_;
 
@@ -63,5 +68,26 @@ class Context
 
 }; // -----  end of class Context  -----
 
+//-----------------------------------------------------------------------------
+//       Class:  Context
+//      Method:  isOpened
+// Description:  Returns whether the window is opened or not.
+//-----------------------------------------------------------------------------
+    inline bool
+Context::isOpened ()
+{
+    return window_->IsOpened();;
+}		// -----  end of method Context::isOpened  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Context
+//      Method:  push
+// Description:  Pushes an object onto the object stack.
+//-----------------------------------------------------------------------------
+    inline void
+Context::push ( const Object& cube )
+{
+    objects.push_back(cube);
+}		// -----  end of method Context::push  -----
 
 #endif   // ----- #ifndef CONTEXT_H  -----
