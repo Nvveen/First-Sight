@@ -35,10 +35,8 @@ class Object
         Object ();
         Object ( std::string datName, Shader& shader );
         ~Object ();
-        GLfloat toRadians ( GLfloat angle );
-        void readDat( std::string datName );
-        void init ();
         void draw ();
+
         void translate ( GLfloat x, GLfloat y, GLfloat z );
         void rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
         void scale ( GLfloat x, GLfloat y, GLfloat z );
@@ -46,6 +44,7 @@ class Object
         // ====================  ACCESSORS     ================================
 
         // ====================  MUTATORS      ================================
+        void bind ( Projection* proj );
 
         // ====================  OPERATORS     ================================
 
@@ -58,15 +57,18 @@ class Object
         GLuint vbo_;
         GLuint vao_;
 
-        std::string datName_;
         Model* model_;
         Texture* texture_;
-        std::vector<GLfloat> modelData_;
+        Projection* proj_;
+        size_t triangleCount_;
         
         glm::mat4 translation;
         glm::mat4 rotation;
         glm::mat4 scaling;
 
+        void readDat( std::string datName );
+        void init ();
+        static GLfloat toRadians ( GLfloat angle );
 }; // -----  end of class Object  -----
 
 //-----------------------------------------------------------------------------
@@ -79,5 +81,16 @@ Object::toRadians ( GLfloat angle )
 {
     return ( angle * M_PI / 180.0f);
 }		// -----  end of method Object::toRadians  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  bind
+// Description:  Binds a projection to an object.
+//-----------------------------------------------------------------------------
+    inline void
+Object::bind ( Projection* proj )
+{
+    proj_ = proj;
+}		// -----  end of method Object::bind  -----
 
 #endif   // ----- #ifndef OBJECT_INC  -----

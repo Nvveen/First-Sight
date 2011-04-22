@@ -25,9 +25,12 @@
 //      Method:  Context
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Context::Context ( GLfloat w, GLfloat h, std::string windowName ) :
+Context::Context ( GLfloat w, GLfloat h, std::string windowName,
+                   Projection* proj ) :
     w_(w), h_(h), windowName_(windowName)
 {
+    if ( proj == NULL ) proj = new Projection(w_/h_);
+    proj_ = *proj;
 }  // -----  end of method Context::Context  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -55,16 +58,8 @@ Context::setup ()
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    // Specify what shader to use
-    Shader* shader = new Shader("default.vs", "default.fs");
     // Add shaders to shaderlist
-    shaders["default"] = *shader;
-    // Clean up shaders
-    delete shader;
-
-    // Set the perspective projection and camera
-    persProj.setPerspective(45.0f, w_/h_, 0.1f, 100.0f);
-    persProj.setCamera();
+    shaders["default"] = Shader("default.vs", "default.fs");
 
     // Create an object and initialize it
     Object cube = Object("data/dirt.dat", shaders["default"]);
@@ -83,13 +78,9 @@ Context::render ()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | 
             GL_STENCIL_BUFFER_BIT );
 
-    GLuint shader = shaders["default"].getShaderProgram();
-
-    // Bind the perspective matrices to the shader
-    persProj.bind(shader);
-
     // Draw objects
     for ( unsigned int i = 0; i < objects.size(); i += 1 ) {
+        objects[i].bind(&proj_);
         objects[i].draw();
     }
 
@@ -107,31 +98,7 @@ Context::resize ( int w, int h )
     glViewport(0, 0, w, h);
     w_ = (GLfloat)w;
     h_ = (GLfloat)h;
-    persProj.setPerspective(45.0f, w_/h_, 1.0f, 100.0f);
+    // Set this function to resize with values it already has.
+    proj_.setPerspective(w_, h_);
 }		// -----  end of method Context::resize  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Context
-//      Method:  onSpecialKey
-// Description:  Handles what to do with actions that are received from the
-//               mouse and keyboard as special keys.
-//-----------------------------------------------------------------------------
-    void
-Context::onSpecialKey ( int key, int x, int y )
-{
-    persProj.moveCamera(key);
-}		// -----  end of method Context::onSpecialKey  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Context
-//      Method:  onKeyboardKey
-// Description:  Handles what to do with normal keyboard actions.
-//-----------------------------------------------------------------------------
-    void
-Context::onKeyboardKey ( unsigned char key, int x, int y )
-{
-    if ( key == 'q' ) {
-        glutLeaveMainLoop();
-    }
-}		// -----  end of method Context::onKeyboardKey  -----
 

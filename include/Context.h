@@ -34,13 +34,12 @@ class Context
     public:
 
         // ====================  LIFECYCLE     ================================
-        Context ( GLfloat w, GLfloat h, std::string windowName ); 
+        Context ( GLfloat w, GLfloat h, std::string windowName,
+                  Projection* proj=NULL ); 
         ~Context ();
         void setup ();
         void render ();
         void resize ( int w, int h );
-        void onSpecialKey ( int key, int x, int y );
-        void onKeyboardKey ( unsigned char key, int x, int y );
 
         // ====================  ACCESSORS     ================================
 
@@ -57,7 +56,7 @@ class Context
         GLfloat h_;
         std::string windowName_;
 
-        Projection persProj;
+        Projection proj_;
 
         std::vector<Object> objects;
         std::map<std::string, Shader> shaders;

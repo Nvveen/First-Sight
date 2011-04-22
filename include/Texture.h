@@ -37,7 +37,8 @@ class Texture
                   const png::image<png::rgba_pixel>& png );
         ~Texture ();
         void load ();
-        void bind ( const GLuint& shader );
+        void bind ();
+        void unbind ();
 
         // ====================  ACCESSORS     ================================
 

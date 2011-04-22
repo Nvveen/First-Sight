@@ -19,6 +19,7 @@
 
 #include    <string>
 #include    <GL/gl.h>
+#include    <glm/glm.hpp>
 
 // ============================================================================
 //        Class:  Shader
@@ -31,20 +32,21 @@ class Shader
         // ====================  LIFECYCLE     ================================
         Shader ();
         Shader ( std::string vertexShaderFile, std::string fragmentShaderFile );
-        std::string addCode ( std::string fileName );
-        GLuint compileShader ( std::string code, GLenum type );
-        void createProgram ();
+
+        void bind ();
+        void unbind ();
 
         // ====================  ACCESSORS     ================================
         GLuint getShaderProgram();
 
         // ====================  MUTATORS      ================================
+        bool setUniform ( std::string name, glm::mat4 matrix );
+        bool setUniform ( std::string name, GLfloat val );
 
         // ====================  OPERATORS     ================================
 
     protected:
         // ====================  DATA MEMBERS  ================================
-        GLuint shaderProgram;
 
     private:
         // ====================  DATA MEMBERS  ================================
@@ -52,7 +54,11 @@ class Shader
         std::string fragmentShaderCode_;
         GLuint vertexShaderObject_;
         GLuint fragmentShaderObject_;
+        GLuint shaderProgram_;
 
+        std::string addCode ( std::string fileName );
+        GLuint compileShader ( std::string code, GLenum type );
+        void createProgram ();
 }; // -----  end of class Shader  -----
 
 //-----------------------------------------------------------------------------
@@ -63,7 +69,7 @@ class Shader
     inline GLuint
 Shader::getShaderProgram ()
 {
-    return shaderProgram;
+    return shaderProgram_;
 }		// -----  end of method Shader::getShaderProgram  -----
 
 #endif   // ----- #ifndef SHADER_H  -----

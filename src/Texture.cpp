@@ -59,8 +59,8 @@ Texture::~Texture ()
 Texture::load ()
 {
     std::vector<unsigned char> bytes;
-    for ( size_t i = 0; i < height_; i += 1 ) {
-        for ( size_t j = 0;j < width_; j += 1 ) {
+    for ( int i = 0; i < height_; i += 1 ) {
+        for ( int j = 0; j < width_; j += 1 ) {
             bytes.push_back(png_[i][j].red);
             bytes.push_back(png_[i][j].green);
             bytes.push_back(png_[i][j].blue);
@@ -84,10 +84,19 @@ Texture::load ()
 // Description:  Binds the texture data into the shaders
 //-----------------------------------------------------------------------------
     void
-Texture::bind ( const GLuint& shader )
+Texture::bind ()
 {
     glBindTexture(textureTarget_, texID);
-    GLuint gSampler = glGetUniformLocation(shader, "gSampler");
-    glUniform1i(gSampler, 0);
 }		// -----  end of method Texture::bind  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Texture
+//      Method:  unbind
+// Description:  Unbinds the texture.
+//-----------------------------------------------------------------------------
+    void
+Texture::unbind ()
+{
+    glBindTexture(textureTarget_, 0);
+}		// -----  end of method Texture::unbind  -----
 
