@@ -19,6 +19,7 @@
 
 #include    <string>
 #include    "Projection.h"
+#include    "Camera.h"
 #include    "Shader.h"
 #include    "Model.h"
 #include    "Texture.h"
@@ -45,7 +46,7 @@ class Object
         // ====================  ACCESSORS     ================================
 
         // ====================  MUTATORS      ================================
-        void bind ( Projection* proj );
+        void bind ( Projection* proj, Camera* cam );
 
         // ====================  OPERATORS     ================================
 
@@ -61,6 +62,7 @@ class Object
         Model* model_;
         Texture* texture_;
         Projection* proj_;
+        Camera* cam_;
         size_t triangleCount_;
         
         glm::mat4 translation;
@@ -89,9 +91,10 @@ Object::toRadians ( GLfloat angle )
 // Description:  Binds a projection to an object.
 //-----------------------------------------------------------------------------
     inline void
-Object::bind ( Projection* proj )
+Object::bind ( Projection* proj, Camera* cam )
 {
     proj_ = proj;
+    cam_ = cam;
 }		// -----  end of method Object::bind  -----
 
 #endif   // ----- #ifndef OBJECT_INC  -----
