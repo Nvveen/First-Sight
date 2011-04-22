@@ -33,7 +33,8 @@ class Object
 
         // ====================  LIFECYCLE     ================================
         Object ();
-        Object ( std::string datName, Shader& shader );
+        Object ( std::string datName, 
+                 Shader shader=Shader("default.vs", "default.fs") );
         ~Object ();
         void draw ();
 
@@ -53,7 +54,7 @@ class Object
 
     private:
         // ====================  DATA MEMBERS  ================================
-        Shader* shader_;
+        Shader shader_;
         GLuint vbo_;
         GLuint vao_;
 

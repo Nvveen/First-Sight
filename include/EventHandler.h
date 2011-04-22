@@ -14,7 +14,7 @@
 // 
 // ============================================================================
 
-#include    <SFML/Window.hpp>
+#include    <SFML/Graphics.hpp>
 #include    "Context.h"
 
 namespace Code {

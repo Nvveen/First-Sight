@@ -41,12 +41,11 @@ EventHandler::pollEvents ()
             window_->Close();
         }
         if ( (event_.Type == sf::Event::KeyPressed) && 
-             (event_.Key.Code == sf::Key::Escape) ) {
+             (event_.Key.Code == Code::Escape) ) {
             window_->Close();
         }
         if ( event_.Type == sf::Event::Resized ) {
             context_->resize(event_.Size.Width, event_.Size.Height);
-            std::cout << "test\n";
         }
     }
 }		// -----  end of method EventHandler::pollEvents  -----
