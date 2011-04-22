@@ -17,7 +17,6 @@
 
 #include    <iostream>
 #include    <GL/glew.h>
-#include    <GL/freeglut.h>
 #include    "Context.h"
 
 //-----------------------------------------------------------------------------
@@ -26,11 +25,13 @@
 // Description:  constructor
 //-----------------------------------------------------------------------------
 Context::Context ( GLfloat w, GLfloat h, std::string windowName,
-                   Projection* proj ) :
+                   Projection* proj, Camera* cam ) :
     w_(w), h_(h), windowName_(windowName)
 {
     if ( proj == NULL ) proj = new Projection(w_/h_);
     proj_ = *proj;
+    if ( cam == NULL ) cam = new Camera;
+    cam_ = *cam;
 }  // -----  end of method Context::Context  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -89,7 +90,7 @@ Context::render ()
 
     // Draw objects
     for ( unsigned int i = 0; i < objects.size(); i += 1 ) {
-        objects[i].bind(&proj_);
+        objects[i].bind(&proj_, &cam_);
         objects[i].draw();
     }
 

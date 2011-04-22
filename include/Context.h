@@ -23,6 +23,7 @@
 #include    <map>
 #include    <SFML/Graphics.hpp>
 #include    "Projection.h"
+#include    "Camera.h"
 #include    "Object.h"
 #include    "Shader.h"
 
@@ -36,7 +37,7 @@ class Context
 
         // ====================  LIFECYCLE     ================================
         Context ( GLfloat w, GLfloat h, std::string windowName,
-                  Projection* proj=NULL ); 
+                  Projection* proj=NULL, Camera* cam=NULL ); 
         ~Context ();
         void setup ();
         void render ();
@@ -62,6 +63,7 @@ class Context
         sf::RenderWindow* window_;
 
         Projection proj_;
+        Camera cam_;
 
         std::vector<Object> objects;
         std::map<std::string, Shader> shaders;

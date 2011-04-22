@@ -28,8 +28,6 @@
 Projection::Projection ( GLfloat aspectRatio, GLfloat FOV, GLfloat zNear,
                          GLfloat zFar )
 {
-    cameraMatrix_ = glm::mat4(1.0f);
-
     perspective.aspectRatio = aspectRatio;
     perspective.FOV = FOV;
     perspective.zNear = zNear;
@@ -37,7 +35,6 @@ Projection::Projection ( GLfloat aspectRatio, GLfloat FOV, GLfloat zNear,
     perspectiveMatrix_ = glm::perspective(perspective.FOV, 
                                          perspective.aspectRatio, 
                                          perspective.zNear, perspective.zFar);
-    setCamera();
 }  // -----  end of method Projection::Projection  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -53,29 +50,4 @@ Projection::setPerspective ( GLfloat w, GLfloat h )
                                          perspective.aspectRatio, 
                                          perspective.zNear, perspective.zFar);
 }		// -----  end of method Projection::setPerspective  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Projection
-//      Method:  setCamera
-// Description:  Sets the camera to a default view, or one specified by the
-//               user.
-//-----------------------------------------------------------------------------
-    void
-Projection::setCamera ( GLfloat pos[3], GLfloat target[3], GLfloat up[3] )
-{
-    // If the provided vectors aren't specified, use a default one.
-    if ( pos == NULL && target == NULL && up == NULL ) {
-        camera.pos = glm::vec3(0.0f, 0.0f, 7.0f);
-        camera.target = glm::vec3(0.0f, 0.0f, 1.0f);
-        camera.up = glm::vec3(0.0f, 1.0f, 0.0f);
-    }
-    else {
-        camera.pos = glm::vec3(pos[0], pos[1], pos[2]);
-        camera.target = glm::vec3(target[0], target[1], target[2]);
-        camera.up = glm::vec3(up[0], up[1], up[2]);
-    }
-    cameraMatrix_ = glm::lookAt(camera.pos, camera.target, camera.up);
-    cameraMatrix_ = glm::rotate(cameraMatrix_, 45.0f, 
-                               glm::vec3(1.0f, 0.0f, 0.0f));
-}		// -----  end of method Projection::setCamera  -----
 

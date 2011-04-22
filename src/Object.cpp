@@ -144,7 +144,7 @@ Object::draw ()
 
     // Set the uniform variables in the shader
     shader_.setUniform("vProjection", proj_->getPerspective());
-    shader_.setUniform("vCamera", proj_->getCamera());
+    shader_.setUniform("vCamera", cam_->getCamera());
     shader_.setUniform("vTranslate", translation);
     shader_.setUniform("vRotate", rotation);
     shader_.setUniform("vScale", scaling);
