@@ -35,18 +35,6 @@ reshapeFuncWrapper ( int w, int h )
     openGLContext->resize( w, h );
 }		// -----  end of function reshapeFuncWrapper  -----
 
-    void
-specialFuncWrapper ( int key, int x, int y )
-{
-    openGLContext->onSpecialKey(key, x, y);
-}		// -----  end of function specialFuncWrapper  -----
-
-    void
-keyboardFuncWrapper ( unsigned char key, int x, int y )
-{
-    openGLContext->onKeyboardKey(key, x, y);
-}		// -----  end of function keyboardFuncWrapper  -----
-
     int
 main ( int argc, char *argv[] )
 {
@@ -63,8 +51,6 @@ main ( int argc, char *argv[] )
     glutDisplayFunc(displayFuncWrapper);
     glutReshapeFunc(reshapeFuncWrapper);
     glutIdleFunc(displayFuncWrapper);
-    glutSpecialFunc(specialFuncWrapper);
-    glutKeyboardFunc(keyboardFuncWrapper);
 
     // Catch error
     GLenum res = glewInit();

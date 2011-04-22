@@ -31,15 +31,16 @@ class Projection
     public:
 
         // ====================  LIFECYCLE     ================================
-        Projection ();                             // constructor
-        void setPerspective ( GLfloat FOV, GLfloat aspectRatio, GLfloat zNear, 
-                              GLfloat zFar );
+        Projection () {};
+        Projection ( GLfloat aspectRatio, GLfloat FOV=45.0f,
+                     GLfloat zNear=0.1f, GLfloat zFar=100.0f );
+        void setPerspective ( GLfloat w, GLfloat h );
         void setCamera ( GLfloat pos[3]=NULL, GLfloat target[3]=NULL, 
                          GLfloat up[3]=NULL );
-        void bind ( const GLuint& shader );
-        void moveCamera ( int key );
 
         // ====================  ACCESSORS     ================================
+        glm::mat4& getPerspective ();
+        glm::mat4& getCamera ();
 
         // ====================  MUTATORS      ================================
 
@@ -47,9 +48,6 @@ class Projection
 
     protected:
         // ====================  DATA MEMBERS  ================================
-
-        glm::mat4 perspectiveMatrix;
-        glm::mat4 cameraMatrix;
 
     private:
         // ====================  DATA MEMBERS  ================================
@@ -66,6 +64,31 @@ class Projection
             glm::vec3 target;
             glm::vec3 up;
         } camera;		// ----------  end of struct Camera  ----------
+
+        glm::mat4 perspectiveMatrix_;
+        glm::mat4 cameraMatrix_;
 }; // -----  end of class Projection  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Projection
+//      Method:  getPerspective
+// Description:  Returns the perspective matrix.
+//-----------------------------------------------------------------------------
+    inline glm::mat4&
+Projection::getPerspective ()
+{
+    return perspectiveMatrix_;
+}		// -----  end of method Projection::getPerspective  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Projection
+//      Method:  getCamera
+// Description:  Returns the camera matrix.
+//-----------------------------------------------------------------------------
+    inline glm::mat4&
+Projection::getCamera ()
+{
+    return cameraMatrix_;
+}		// -----  end of method Projection::getCamera  -----
 
 #endif   // ----- #ifndef PROJECTION_H  -----

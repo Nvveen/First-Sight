@@ -78,27 +78,34 @@ Object::readDat ( std::string datName )
     void
 Object::init ()
 {
+    // Generate VAO
     glGenVertexArrays(1, &vao_);
     glBindVertexArray(vao_);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
+    // Load modeldata into an array so it can be loaded into a buffer
+    std::vector<GLfloat> modelData;
     for ( unsigned int i = 0; i < model_->vertices.size()/3; i += 1 ) {
-        modelData_.push_back(model_->vertices[i*3]);
-        modelData_.push_back(model_->vertices[i*3+1]);
-        modelData_.push_back(model_->vertices[i*3+2]);
-        modelData_.push_back(model_->textureCoords[i*2]);
-        modelData_.push_back(model_->textureCoords[i*2+1]);
-        modelData_.push_back(model_->normals[i*3]);
-        modelData_.push_back(model_->normals[i*3+1]);
-        modelData_.push_back(model_->normals[i*3+2]);
+        modelData.push_back(model_->vertices[i*3]);
+        modelData.push_back(model_->vertices[i*3+1]);
+        modelData.push_back(model_->vertices[i*3+2]);
+        modelData.push_back(model_->textureCoords[i*2]);
+        modelData.push_back(model_->textureCoords[i*2+1]);
+        modelData.push_back(model_->normals[i*3]);
+        modelData.push_back(model_->normals[i*3+1]);
+        modelData.push_back(model_->normals[i*3+2]);
     }
+    // We need to know how many triangles are contained in the object
+    triangleCount_ = modelData.size()/8;
 
+    // Generate a buffer, and fill it with the data.
     glGenBuffers(1, &vbo_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*modelData_.size(), 
-            &modelData_[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*modelData.size(), 
+            &modelData[0], GL_STATIC_DRAW);
+    // The next 3 calls describe the layout of the data in the array.
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, 0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float)*8, 
             (const GLvoid*)12);
@@ -124,7 +131,7 @@ Object::init ()
 Object::draw ()
 {
     // Use the specified program
-    glUseProgram(shader_->getShaderProgram());
+    shader_->bind();
     // Bind the object's vertex array object
     glBindVertexArray(vao_);
     // Enable the arrays
@@ -132,28 +139,30 @@ Object::draw ()
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
-    texture_->bind(shader_->getShaderProgram());
+    // Activate the texture
+    texture_->bind();
 
-    // Locate the 3 matrices and bind them to the shader
-    GLint locTranslate = glGetUniformLocation(shader_->getShaderProgram(),
-                                                "vTranslate");
-    glUniformMatrix4fv(locTranslate, 1, GL_FALSE, glm::value_ptr(translation));
-    GLint locRotate = glGetUniformLocation(shader_->getShaderProgram(), 
-                                                "vRotate");
-    glUniformMatrix4fv(locRotate, 1, GL_FALSE, glm::value_ptr(rotation));
-    GLint locScale = glGetUniformLocation(shader_->getShaderProgram(), 
-                                                "vScale");
-    glUniformMatrix4fv(locScale, 1, GL_FALSE, glm::value_ptr(scaling));
+    // Set the uniform variables in the shader
+    shader_->setUniform("vProjection", proj_->getPerspective());
+    shader_->setUniform("vCamera", proj_->getCamera());
+    shader_->setUniform("vTranslate", translation);
+    shader_->setUniform("vRotate", rotation);
+    shader_->setUniform("vScale", scaling);
+    shader_->setUniform("gSampler", 0);
 
     // Use the vao to draw the vertices
-    glDrawArrays(GL_TRIANGLES, 0, modelData_.size()/8);
-    
+    glDrawArrays(GL_TRIANGLES, 0, triangleCount_);
+
+    // Unbind the texture
+    texture_->unbind();
     // Disable the arrays
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(2);
     // Unbind the vao
     glBindVertexArray(0);
+    // Unbind the shader
+    shader_->unbind();
 }		// -----  end of method Object::draw  -----
 
 //-----------------------------------------------------------------------------
