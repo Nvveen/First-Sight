@@ -33,6 +33,8 @@ Camera::Camera ()
                                 cameraVectors_.up);
     cameraMatrix_ = glm::rotate(cameraMatrix_, 45.0f, 
                                glm::vec3(1.0f, 0.0f, 0.0f));
+    rotate.cam_ = this;
+    move.cam_ = this;
 }  // -----  end of method Camera::Camera  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -51,5 +53,29 @@ Camera::Camera ( GLfloat pos[3], GLfloat target[3], GLfloat up[3] )
                                 cameraVectors_.up);
     cameraMatrix_ = glm::rotate(cameraMatrix_, 45.0f, 
                                glm::vec3(1.0f, 0.0f, 0.0f));
+    rotate.cam_ = this;
+    move.cam_ = this;
 }		// -----  end of method Projection::setCamera  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Camera
+//      Method:  rotateF
+// Description:  Rotate the camera
+//-----------------------------------------------------------------------------
+    void
+Camera::rotateF ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z )
+{
+    cameraMatrix_ = glm::rotate(cameraMatrix_, angle, glm::vec3(x, y, z));
+}		// -----  end of method Camera::rotateF  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Camera
+//      Method:  moveF
+// Description:  Move the camera.
+//-----------------------------------------------------------------------------
+    void
+Camera::moveF ( GLfloat x, GLfloat y, GLfloat z )
+{
+    cameraMatrix_ = glm::translate(cameraMatrix_, glm::vec3(x, y, z));
+}		// -----  end of method Camera::moveF  -----
 
