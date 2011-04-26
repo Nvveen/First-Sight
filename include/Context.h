@@ -20,7 +20,6 @@
 
 #include    <string>
 #include    <vector>
-#include    <map>
 #include    <SFML/Graphics.hpp>
 #include    "Projection.h"
 #include    "Camera.h"
@@ -45,6 +44,7 @@ class Context
 
         // ====================  ACCESSORS     ================================
         bool isOpened ();
+        Camera* getCam ();
 
         // ====================  MUTATORS      ================================
         void push ( const Object& cube );
@@ -62,8 +62,8 @@ class Context
         std::string windowName_;
         sf::RenderWindow* window_;
 
-        Projection proj_;
-        Camera cam_;
+        Projection* proj_;
+        Camera* cam_;
 
         std::vector<Object> objects;
         std::map<std::string, Shader> shaders;
@@ -91,5 +91,16 @@ Context::push ( const Object& cube )
 {
     objects.push_back(cube);
 }		// -----  end of method Context::push  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Context
+//      Method:  getCamera
+// Description:  Returns the camera object.
+//-----------------------------------------------------------------------------
+    inline Camera*
+Context::getCam ()
+{
+    return cam_;
+}		// -----  end of method Context::getCamera  -----
 
 #endif   // ----- #ifndef CONTEXT_H  -----

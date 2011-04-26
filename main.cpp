@@ -32,12 +32,15 @@ main ( int argc, char *argv[] )
 
     Object cube("data/dirt.dat");
     windowContext.push(cube);
-    while ( windowContext.isOpened() ) {
-        EventHandler event(windowContext);
-        event.pollEvents();
-        if ( event.isKeyPressed () ) {
-        }
+    EventHandler event(windowContext);
+    Camera *cam = windowContext.getCam();
+    cam->rotate(20.0f, 1.0f, 1.0f, 1.0f);
+    event.registerFnd(cam->rotate, sf::Key::A);
+    cam->move(0.1f, 0.0f, 0.0f);
+    event.registerFnd(cam->move, sf::Key::Left);
 
+    while ( windowContext.isOpened() ) {
+        event.pollEvents();
         windowContext.render();
     }
     return 0;

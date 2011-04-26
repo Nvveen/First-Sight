@@ -47,6 +47,11 @@ EventHandler::pollEvents ()
         if ( event_.Type == sf::Event::Resized ) {
             context_->resize(event_.Size.Width, event_.Size.Height);
         }
+        if ( event_.Type == sf::Event::KeyPressed ) {
+            std::map<sf::Key::Code, Functionoid*>::iterator it;
+            it = keyMap_.find(event_.Key.Code);
+            if ( it != keyMap_.end() ) (*(it->second))();
+        }
     }
 }		// -----  end of method EventHandler::pollEvents  -----
 

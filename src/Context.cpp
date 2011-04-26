@@ -29,9 +29,9 @@ Context::Context ( GLfloat w, GLfloat h, std::string windowName,
     w_(w), h_(h), windowName_(windowName)
 {
     if ( proj == NULL ) proj = new Projection(w_/h_);
-    proj_ = *proj;
+    proj_ = proj;
     if ( cam == NULL ) cam = new Camera;
-    cam_ = *cam;
+    cam_ = cam;
 }  // -----  end of method Context::Context  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -90,7 +90,7 @@ Context::render ()
 
     // Draw objects
     for ( unsigned int i = 0; i < objects.size(); i += 1 ) {
-        objects[i].bind(&proj_, &cam_);
+        objects[i].bind(proj_, cam_);
         objects[i].draw();
     }
 
@@ -109,6 +109,6 @@ Context::resize ( int w, int h )
     w_ = (GLfloat)w;
     h_ = (GLfloat)h;
     // Set this function to resize with values it already has.
-    proj_.setPerspective(w_, h_);
+    proj_->setPerspective(w_, h_);
 }		// -----  end of method Context::resize  -----
 

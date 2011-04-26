@@ -15,6 +15,7 @@
 // ============================================================================
 
 #include    <SFML/Graphics.hpp>
+#include    <map>
 #include    "Context.h"
 
 namespace Code {
@@ -122,6 +123,7 @@ namespace Code {
     using sf::Key::Count;        
 }
 
+// ============================================================================
 //        Class:  EventHandler
 //  Description:  This class intercepts all events thrown by sf::Event, and
 //                send to corresponding signals to the appropriate classes.
@@ -134,6 +136,8 @@ class EventHandler
         EventHandler ( Context& context );
         void pollEvents ();
         bool isKeyPressed ();
+        template <class Ftd>
+        void registerFnd ( Ftd& f, sf::Key::Code k );
 
         // ====================  ACCESSORS     ================================
 
@@ -152,7 +156,7 @@ class EventHandler
         sf::RenderWindow* window_;
         
         bool keyPressed_;
-
+        std::map<sf::Key::Code, Functionoid*> keyMap_;
 }; // -----  end of class EventHandler  -----
 
     inline bool
@@ -160,4 +164,11 @@ EventHandler::isKeyPressed ()
 {
     return keyPressed_;
 }		// -----  end of method EventHandler::isKeyPressed  -----
+
+template <class Ftd>
+    inline void
+EventHandler::registerFnd ( Ftd& f, sf::Key::Code k )
+{
+    keyMap_[k] = dynamic_cast<Functionoid*>(&f);
+}		// -----  end of method EventHandler::registerFnd  -----
 
