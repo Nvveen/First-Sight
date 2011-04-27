@@ -15,6 +15,8 @@
 // ============================================================================
 
 #include    <SFML/Graphics.hpp>
+#include    <boost/function.hpp>
+#include    <boost/bind.hpp>
 #include    <map>
 #include    "Context.h"
 
@@ -130,14 +132,22 @@ namespace Code {
 // ============================================================================
 class EventHandler
 {
+    typedef boost::function<void()> Functionoid;
     public:
-
+        template <class T, class U>
+            void bindFunction ( T t, U u, sf::Key::Code key );
+        template <class T, class U, class V>
+            void bind ( T t, U u, V v, sf::Key::Code key );
+        template <class T, class U, class V, class W>
+            void bind ( T t, U u, V v, W w, sf::Key::Code key );
+        template <class T, class U, class V, class W, class X>
+            void bind ( T t, U u, V v, W w, X x, sf::Key::Code key );
+        template <class T, class U, class V, class W, class X, class Y>
+            void bind ( T* t, U u, V v, W w, X x, Y y, sf::Key::Code key );
         // ====================  LIFECYCLE     ================================
         EventHandler ( Context& context );
         void pollEvents ();
         bool isKeyPressed ();
-        template <class Ftd>
-        void registerFnd ( Ftd& f, sf::Key::Code k );
 
         // ====================  ACCESSORS     ================================
 
@@ -154,9 +164,10 @@ class EventHandler
         sf::Event event_;
         Context* context_;
         sf::RenderWindow* window_;
-        
+
+        std::map<sf::Key::Code, Functionoid> keyMap_;
+
         bool keyPressed_;
-        std::map<sf::Key::Code, Functionoid*> keyMap_;
 }; // -----  end of class EventHandler  -----
 
     inline bool
@@ -165,10 +176,37 @@ EventHandler::isKeyPressed ()
     return keyPressed_;
 }		// -----  end of method EventHandler::isKeyPressed  -----
 
-template <class Ftd>
-    inline void
-EventHandler::registerFnd ( Ftd& f, sf::Key::Code k )
+template < class T, class U >
+    void
+EventHandler::bindFunction ( T t, U u, sf::Key::Code key )
 {
-    keyMap_[k] = dynamic_cast<Functionoid*>(&f);
-}		// -----  end of method EventHandler::registerFnd  -----
+    keyMap_[key] = boost::bind(u, t);
+}		// -----  end of method EventHandler::bind  -----
 
+template < class T, class U, class V >
+    void
+EventHandler::bind ( T t, U u, V v, sf::Key::Code key )
+{
+    keyMap_[key] = boost::bind(u, t, v);
+}		// -----  end of method EventHandler::bind  -----
+
+template < class T, class U, class V, class W >
+    void
+EventHandler::bind ( T t, U u, V v, W w, sf::Key::Code key )
+{
+    keyMap_[key] = boost::bind(u, t, v, w);
+}		// -----  end of method EventHandler::bind  -----
+
+template < class T, class U, class V, class W, class X >
+    void
+EventHandler::bind ( T t, U u, V v, W w, X x, sf::Key::Code key )
+{
+    keyMap_[key] = boost::bind(u, t, v, w, x);
+}		// -----  end of method EventHandler::bind  -----
+
+template < class T, class U, class V, class W, class X, class Y >
+    void
+EventHandler::bind ( T* t, U u, V v, W w, X x, Y y, sf::Key::Code key )
+{
+    keyMap_[key] = boost::bind(u, t, v, w, x, y);
+}		// -----  end of method EventHandler::bind  -----
