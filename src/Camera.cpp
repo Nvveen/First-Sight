@@ -25,14 +25,31 @@
 //-----------------------------------------------------------------------------
 Camera::Camera ()
 {
+    // Define a standard set of positions, but adjust for a topdown view.
     cameraVectors_.pos = glm::vec3(0.0f, 0.0f, 7.0f);
     cameraVectors_.target = glm::vec3(0.0f, 0.0f, 1.0f);
     cameraVectors_.up = glm::vec3(0.0f, 1.0f, 0.0f);
 
+    // Create 3 new 4-element vectors.
+    glm::vec4 pos(cameraVectors_.pos, 1.0f), 
+              target(cameraVectors_.target, 1.0f), 
+              up(cameraVectors_.up, 1.0f);
+    // Rotate every vector
+    pos    = glm::rotate(glm::mat4(1.0f), -45.0f, glm::vec3(1.0f, 0, 0)) * 
+             pos;
+    target = glm::rotate(glm::mat4(1.0f), -45.0f, glm::vec3(1.0f, 0, 0)) *
+             target;
+    up     = glm::rotate(glm::mat4(1.0f), -45.0f, glm::vec3(1.0f, 0, 0)) *
+             up;
+
+    // Set the new vectors values in memory.
+    cameraVectors_.pos = glm::vec3(pos.x, pos.y, pos.z);
+    cameraVectors_.target = glm::vec3(target.x, target.y, target.z);
+    cameraVectors_.up = glm::vec3(up.x, up.y, up.z);
+
+    // Make a matrix
     cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target, 
                                 cameraVectors_.up);
-    cameraMatrix_ = glm::rotate(cameraMatrix_, 45.0f, 
-                               glm::vec3(1.0f, 0.0f, 0.0f));
 }  // -----  end of method Camera::Camera  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -49,8 +66,6 @@ Camera::Camera ( GLfloat pos[3], GLfloat target[3], GLfloat up[3] )
     
     cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target, 
                                 cameraVectors_.up);
-    cameraMatrix_ = glm::rotate(cameraMatrix_, 45.0f, 
-                               glm::vec3(1.0f, 0.0f, 0.0f));
 }		// -----  end of method Projection::setCamera  -----
 
 //-----------------------------------------------------------------------------
@@ -61,6 +76,44 @@ Camera::Camera ( GLfloat pos[3], GLfloat target[3], GLfloat up[3] )
     void
 Camera::rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z )
 {
-    cameraMatrix_ = glm::rotate(cameraMatrix_, angle, glm::vec3(x, y, z));
+    // With rotation, all 3 vectors get adjusted.
+    glm::vec4 pos(cameraVectors_.pos, 1.0f),
+              target(cameraVectors_.target, 1.0f),
+              up(cameraVectors_.up, 1.0f);
+    pos    = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(x, y, z)) * pos;
+    target = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(x, y, z)) * target;
+    up     = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(x, y, z)) * up;
+
+    // Set the new values in the matrix vectors.
+    cameraVectors_.pos    = glm::vec3(pos.x, pos.y, pos.z);
+    cameraVectors_.target = glm::vec3(target.x, target.y, target.z);
+    cameraVectors_.up     = glm::vec3(up.x, up.y, up.z);
+
+    // Make the matrix
+    cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target,
+                                 cameraVectors_.up);
 }		// -----  end of method Camera::rotate  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Camera
+//      Method:  move
+// Description:  Moves the camera.
+//-----------------------------------------------------------------------------
+    void
+Camera::move ( GLfloat x, GLfloat y, GLfloat z )
+{
+    // To move, we don't need to adjust the up vector.
+    glm::vec4 pos(cameraVectors_.pos, 1.0f),
+              target(cameraVectors_.target, 1.0f);
+    pos    = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)) * pos;
+    target = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)) * target;
+
+    // Set the new values in the matrix vectors.
+    cameraVectors_.pos    = glm::vec3(pos.x, pos.y, pos.z);
+    cameraVectors_.target = glm::vec3(target.x, target.y, target.z);
+
+    // Make the matrix
+    cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target, 
+                                cameraVectors_.up);
+}		// -----  end of method Camera::move  -----
 
