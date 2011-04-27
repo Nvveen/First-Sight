@@ -20,7 +20,6 @@
 #include    <iostream>
 #include    <glm/glm.hpp>
 #include    <GL/gl.h>
-#include    "Functionoid.h"
 
 // ============================================================================
 //        Class:  Camera
@@ -35,6 +34,7 @@ class Camera
         Camera ( GLfloat pos[3], GLfloat target[3], GLfloat up[3] ); 
 
         void rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
+        void move ( GLfloat x, GLfloat y, GLfloat z );
 
         glm::mat4& getCamera ();
 
