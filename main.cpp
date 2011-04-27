@@ -34,10 +34,7 @@ main ( int argc, char *argv[] )
     windowContext.push(cube);
     EventHandler event(windowContext);
     Camera *cam = windowContext.getCam();
-    cam->rotate(20.0f, 1.0f, 1.0f, 1.0f);
-    event.registerFnd(cam->rotate, sf::Key::A);
-    cam->move(0.1f, 0.0f, 0.0f);
-    event.registerFnd(cam->move, sf::Key::Left);
+    event.bind(cam, &Camera::rotate, 45.0f, 1.0f, 1.0f, 1.0f, Code::Left);
 
     while ( windowContext.isOpened() ) {
         event.pollEvents();
