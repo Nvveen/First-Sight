@@ -26,26 +26,9 @@
 Camera::Camera ()
 {
     // Define a standard set of positions, but adjust for a topdown view.
-    cameraVectors_.pos = glm::vec3(0.0f, 0.0f, 7.0f);
-    cameraVectors_.target = glm::vec3(0.0f, 0.0f, 1.0f);
+    cameraVectors_.pos = glm::vec3(0.0f, 5.0f, -5.0f);
+    cameraVectors_.target = glm::vec3(0.0f, 0.0f, 0.0f);
     cameraVectors_.up = glm::vec3(0.0f, 1.0f, 0.0f);
-
-    // Create 3 new 4-element vectors.
-    glm::vec4 pos(cameraVectors_.pos, 1.0f), 
-              target(cameraVectors_.target, 1.0f), 
-              up(cameraVectors_.up, 1.0f);
-    // Rotate every vector
-    pos    = glm::rotate(glm::mat4(1.0f), -45.0f, glm::vec3(1.0f, 0, 0)) * 
-             pos;
-    target = glm::rotate(glm::mat4(1.0f), -45.0f, glm::vec3(1.0f, 0, 0)) *
-             target;
-    up     = glm::rotate(glm::mat4(1.0f), -45.0f, glm::vec3(1.0f, 0, 0)) *
-             up;
-
-    // Set the new vectors values in memory.
-    cameraVectors_.pos = glm::vec3(pos.x, pos.y, pos.z);
-    cameraVectors_.target = glm::vec3(target.x, target.y, target.z);
-    cameraVectors_.up = glm::vec3(up.x, up.y, up.z);
 
     // Make a matrix
     cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target, 
@@ -102,16 +85,18 @@ Camera::rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z )
     void
 Camera::move ( GLfloat x, GLfloat y, GLfloat z )
 {
-    // To move, we don't need to adjust the up vector.
-    glm::vec4 pos(cameraVectors_.pos, 1.0f),
-              target(cameraVectors_.target, 1.0f);
-    pos    = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)) * pos;
-    target = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)) * target;
+    // Get a forward facing vector
+    glm::vec3 forward = cameraVectors_.target - cameraVectors_.pos;
+    forward = glm::normalize(forward);
+    // We don't need the y component.
+    forward[1] = 0;
+    // Generate a vector that gives the translation needed per component.
+    glm::vec3 translation = z * forward + y * cameraVectors_.up;
+    translation += x * glm::normalize(glm::cross(cameraVectors_.up, forward));
 
-    // Set the new values in the matrix vectors.
-    cameraVectors_.pos    = glm::vec3(pos.x, pos.y, pos.z);
-    cameraVectors_.target = glm::vec3(target.x, target.y, target.z);
-
+    // Change the required vectors in th camera.
+    cameraVectors_.pos += translation;
+    cameraVectors_.target += translation;
     // Make the matrix
     cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target, 
                                 cameraVectors_.up);

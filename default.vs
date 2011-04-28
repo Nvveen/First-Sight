@@ -12,7 +12,7 @@ uniform mat4 vScale;
 out vec2 TexCoord0;
 
 void main(void) {
-    gl_Position = vProjection * vCamera * vTranslate * vRotate * vScale *
+    gl_Position = vProjection * vCamera * vTranslate * vRotate * vScale * 
                   vec4(vVertex, 1.0);
     TexCoord0 = TexCoord;
 }
