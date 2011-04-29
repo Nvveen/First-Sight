@@ -5,15 +5,15 @@ SRC=$(wildcard *.cpp)
 SRC+=$(wildcard $(SRCDIR)/*.cpp)
 OBJS=$(patsubst %.cpp,%.o,$(SRC))
 FLAGS=-g -Wall -Wl,-rpath,$(LIBDIR)/snappy/.libs/
-FLAGS+=-Wl,-rpath,$(LIBDIR)/sfml/build/lib/
 FLAGS+=-Wl,-rpath,$(LIBDIR)/boost/stage/libs/
-LFLAGS=-lGL -lGLU -lGLEW -lsnappy -lsfml-window -lsfml-graphics -lglut -lboost_signals
+FLAGS+=-Wl,-rpath,$(LIBDIR)/SDL/build/.libs/
+LFLAGS=-lGL -lGLU -lGLEW -lsnappy -lglut -lboost_signals -lSDL -lpthread
 LFLAGS+=`libpng-config --cflags` `libpng-config --ldflags`
 
 CXXFLAGS=$(FLAGS) -I$(INCDIR) -I$(LIBDIR) -I$(LIBDIR)/glm/ 
 CXXFLAGS+=-I$(LIBDIR)/snappy/ -I$(LIBDIR)/snappy/.libs -L$(LIBDIR)/snappy/.libs 
-CXXFLAGS+=-I$(LIBDIR)/boost/ -L$(LIBDIR)/boost/stage/libs/
-CXXFLAGS+=-I$(LIBDIR)/sfml/include/ -L$(LIBDIR)/sfml/build/lib $(LFLAGS)
+CXXFLAGS+=-L$(LIBDIR)/SDL/build/.libs/ -I$(LIBDIR)/SDL/include/
+CXXFLAGS+=-I$(LIBDIR)/boost/ -L$(LIBDIR)/boost/stage/libs/ $(LFLAGS)
 CXX=g++
 .SUFFIXES: .o .cpp
 

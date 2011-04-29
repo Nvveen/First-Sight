@@ -16,7 +16,6 @@
 
 #include    <iostream>
 #include    <GL/glew.h>
-#include    <SFML/Graphics.hpp>
 #include    "Context.h"
 #include    "EventHandler.h"
 #include    "Object.h"
@@ -33,15 +32,6 @@ main ( int argc, char *argv[] )
     Object cube("data/dirt.dat");
     windowContext.push(cube);
     EventHandler event(windowContext);
-    Camera *cam = windowContext.getCam();
-    event.bind(cam, &Camera::move, 0.3f, 0.0f, 0.0f, Code::Left);
-    event.bind(cam, &Camera::move, -0.3f, 0.0f, 0.0f, Code::Right);
-    event.bind(cam, &Camera::move, 0.0f, 0.0f, 0.3f, Code::Up);
-    event.bind(cam, &Camera::move, 0.0f, 0.0f, -0.3f, Code::Down);
-    event.bind(cam, &Camera::move, 0.0f, 0.3f, 0.0f, Code::PageUp);
-    event.bind(cam, &Camera::move, 0.0f, -0.3f, 0.0f, Code::PageDown);
-    event.bind(cam, &Camera::rotate, 45, 0.0f, 1.0f, 0.0f, Code::Comma);
-    event.bind(cam, &Camera::rotate, 315, 0.0f, 1.0f, 0.0f, Code::Period);
 
     while ( windowContext.isOpened() ) {
         event.pollEvents();

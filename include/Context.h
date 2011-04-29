@@ -20,7 +20,7 @@
 
 #include    <string>
 #include    <vector>
-#include    <SFML/Graphics.hpp>
+#include    <SDL.h>
 #include    "Projection.h"
 #include    "Camera.h"
 #include    "Object.h"
@@ -60,13 +60,16 @@ class Context
         GLfloat w_;
         GLfloat h_;
         std::string windowName_;
-        sf::RenderWindow* window_;
 
         Projection* proj_;
         Camera* cam_;
 
         std::vector<Object> objects;
         std::map<std::string, Shader> shaders;
+
+        SDL_Window *mainWindow_;
+        SDL_GLContext mainContext_;
+        bool windowOpened;
 
 }; // -----  end of class Context  -----
 
@@ -78,7 +81,7 @@ class Context
     inline bool
 Context::isOpened ()
 {
-    return window_->IsOpened();;
+    return windowOpened;
 }		// -----  end of method Context::isOpened  -----
 
 //-----------------------------------------------------------------------------
