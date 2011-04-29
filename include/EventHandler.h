@@ -48,7 +48,8 @@ namespace Key{
         W = SDL_SCANCODE_W,
         X = SDL_SCANCODE_X,
         Y = SDL_SCANCODE_Y,
-        Z = SDL_SCANCODE_Z
+        Z = SDL_SCANCODE_Z,
+        Escape = SDL_SCANCODE_ESCAPE,
     };
 }
 // ============================================================================
@@ -60,16 +61,28 @@ class EventHandler
 {
     typedef boost::function<void()> Functionoid;
     public:
+        typedef std::set<Key::Code> Keyset;
         template <class T, class U>
-            void bindFunction ( T t, U u, Key::Code key );
+            void bind ( T* t, U u, Key::Code key );
+        template <class T, class U>
+            void bind ( T* t, U u, std::set<Key::Code> keys );
         template <class T, class U, class V>
-            void bind ( T t, U u, V v, Key::Code key );
+            void bind ( T* t, U u, V v, Key::Code key );
+        template <class T, class U, class V>
+            void bind ( T* t, U u, V v, std::set<Key::Code> keys );
         template <class T, class U, class V, class W>
-            void bind ( T t, U u, V v, W w, Key::Code key );
+            void bind ( T* t, U u, V v, W w, Key::Code key );
+        template <class T, class U, class V, class W>
+            void bind ( T* t, U u, V v, W w, std::set<Key::Code> keys );
         template <class T, class U, class V, class W, class X>
-            void bind ( T t, U u, V v, W w, X x, Key::Code key );
+            void bind ( T* t, U u, V v, W w, X x, Key::Code key );
+        template <class T, class U, class V, class W, class X>
+            void bind ( T* t, U u, V v, W w, X x, std::set<Key::Code> keys );
         template <class T, class U, class V, class W, class X, class Y>
             void bind ( T* t, U u, V v, W w, X x, Y y, Key::Code key );
+        template <class T, class U, class V, class W, class X, class Y>
+            void bind ( T* t, U u, V v, W w, X x, Y y, 
+                        std::set<Key::Code> keys );
         // ====================  LIFECYCLE     ================================
         EventHandler ( Context& context );
         void pollEvents ();
@@ -87,41 +100,85 @@ class EventHandler
         // ====================  DATA MEMBERS  ================================
         SDL_Event event_;
         Context* context_;
-        std::set<Key::Code> keyPressed_;
-        std::map<Key::Code, Functionoid> keyMap_;
+        Keyset keyPressed_;
+        std::map<Keyset, Functionoid> keyMap_;
 }; // -----  end of class EventHandler  -----
 
 template < class T, class U >
     void
-EventHandler::bindFunction ( T t, U u, Key::Code key )
+EventHandler::bind ( T* t, U u, Key::Code key )
 {
-    keyMap_[key] = boost::bind(u, t);
+    Keyset keys;
+    keys.insert(key);
+    keyMap_[keys] = boost::bind(u, t);
+}		// -----  end of method EventHandler::bind  -----
+
+template < class T, class U >
+void EventHandler::bind ( T* t, U u, Keyset keys )
+{
+    keyMap_[keys] = boost::bind(u, t);
 }		// -----  end of method EventHandler::bind  -----
 
 template < class T, class U, class V >
     void
-EventHandler::bind ( T t, U u, V v, Key::Code key )
+EventHandler::bind ( T* t, U u, V v, Key::Code key )
 {
-    keyMap_[key] = boost::bind(u, t, v);
+    Keyset keys(1, key);
+    keyMap_[keys] = boost::bind(u, t, v);
+}		// -----  end of method EventHandler::bind  -----
+
+template < class T, class U, class V >
+    void
+EventHandler::bind ( T* t, U u, V v, Keyset keys )
+{
+    keyMap_[keys] = boost::bind(u, t, v);
 }		// -----  end of method EventHandler::bind  -----
 
 template < class T, class U, class V, class W >
     void
-EventHandler::bind ( T t, U u, V v, W w, Key::Code key )
+EventHandler::bind ( T* t, U u, V v, W w, Key::Code key )
 {
-    keyMap_[key] = boost::bind(u, t, v, w);
+    Keyset keys;
+    keys.insert(key);
+    keyMap_[keys] = boost::bind(u, t, v, w);
+}		// -----  end of method EventHandler::bind  -----
+
+template < class T, class U, class V, class W >
+    void
+EventHandler::bind ( T* t, U u, V v, W w, Keyset keys )
+{
+    keyMap_[keys] = boost::bind(u, t, v, w);
 }		// -----  end of method EventHandler::bind  -----
 
 template < class T, class U, class V, class W, class X >
     void
-EventHandler::bind ( T t, U u, V v, W w, X x, Key::Code key )
+EventHandler::bind ( T* t, U u, V v, W w, X x, Key::Code key )
 {
-    keyMap_[key] = boost::bind(u, t, v, w, x);
+    Keyset keys;
+    keys.insert(key);
+    keyMap_[keys] = boost::bind(u, t, v, w, x);
+}		// -----  end of method EventHandler::bind  -----
+
+template < class T, class U, class V, class W, class X >
+    void
+EventHandler::bind ( T* t, U u, V v, W w, X x, Keyset keys )
+{
+    keyMap_[keys] = boost::bind(u, t, v, w, x);
 }		// -----  end of method EventHandler::bind  -----
 
 template < class T, class U, class V, class W, class X, class Y >
     void
 EventHandler::bind ( T* t, U u, V v, W w, X x, Y y, Key::Code key )
 {
-    keyMap_[key] = boost::bind(u, t, v, w, x, y);
+    Keyset keys;
+    keys.insert(key);
+    keyMap_[keys] = boost::bind(u, t, v, w, x);
+}		// -----  end of method eventhandler::bind  -----
+
+template < class T, class U, class V, class W, class X, class Y >
+    void
+EventHandler::bind ( T* t, U u, V v, W w, X x, Y y, 
+                     Keyset keys )
+{
+    keyMap_[keys] = boost::bind(u, t, v, w, x, y);
 }		// -----  end of method eventhandler::bind  -----

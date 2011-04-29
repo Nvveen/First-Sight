@@ -16,6 +16,7 @@
 
 #include    <iostream>
 #include    <GL/glew.h>
+#include    <set>
 #include    "Context.h"
 #include    "EventHandler.h"
 #include    "Object.h"
@@ -34,6 +35,8 @@ main ( int argc, char *argv[] )
     Camera *cam = windowContext.getCam();
     EventHandler event(windowContext);
     event.bind(cam, &Camera::move, 0.3f, 0.0f, 0.0f, Key::A);
+    event.bind(cam, &Camera::move, 0.0f, 0.0f, 0.3f, Key::W);
+    event.bind(&windowContext, &Context::close, Key::Escape);
 
     while ( windowContext.isOpened() ) {
         event.pollEvents();

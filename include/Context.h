@@ -48,6 +48,7 @@ class Context
 
         // ====================  MUTATORS      ================================
         void push ( const Object& cube );
+        void close ();
 
         // ====================  OPERATORS     ================================
 
@@ -83,6 +84,17 @@ Context::isOpened ()
 {
     return windowOpened;
 }		// -----  end of method Context::isOpened  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Context
+//      Method:  close
+// Description:  Sets the opened window bool to false, closing the window.
+//-----------------------------------------------------------------------------
+    inline void
+Context::close ()
+{
+    windowOpened = false;
+}		// -----  end of method Context::close  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
