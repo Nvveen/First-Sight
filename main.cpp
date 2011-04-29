@@ -31,7 +31,9 @@ main ( int argc, char *argv[] )
 
     Object cube("data/dirt.dat");
     windowContext.push(cube);
+    Camera *cam = windowContext.getCam();
     EventHandler event(windowContext);
+    event.bind(cam, &Camera::move, 0.3f, 0.0f, 0.0f, Key::A);
 
     while ( windowContext.isOpened() ) {
         event.pollEvents();
