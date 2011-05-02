@@ -25,6 +25,7 @@
 EventHandler::EventHandler ( Context& context ) :
     context_(&context)
 {
+<<<<<<< HEAD
     keyPressed_ = false;
     window_ = context_->window_;
 }  // -----  end of method EventHandler::EventHandler  (constructor)  -----
@@ -51,6 +52,32 @@ EventHandler::pollEvents ()
             std::map<sf::Key::Code, Functionoid>::iterator it;
             it = keyMap_.find(event_.Key.Code);
             if ( it != keyMap_.end() ) (it->second)();
+=======
+}  // -----  end of method EventHandler::EventHandler  (constructor)  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  EventHandler
+//      Method:  pollEvents
+// Description:  This function walks through every SDL event that is polled,
+//               handlse standard events like closing a window, and stuff like
+//               opening a callback on a bound function.
+//-----------------------------------------------------------------------------
+    void
+EventHandler::pollEvents ()
+{
+    while ( SDL_PollEvent(&event_) ) {
+        if ( event_.type == SDL_WINDOWEVENT ) {
+            if ( event_.window.event == SDL_WINDOWEVENT_CLOSE ) {
+                context_->windowOpened = false;
+            }
+        }
+        if ( event_.type == SDL_KEYDOWN ) {
+            SDL_Keysym sym = event_.key.keysym;
+            Keyset keyset((Key::Mod)sym.mod, (Key::Code)sym.scancode);
+            std::map<Keyset, Functionoid>::iterator it;
+            for ( it = keyMap_.begin(); it != keyMap_.end(); it ++ )
+                if ( it->first == keyset ) (it->second)();
+>>>>>>> sdl
         }
     }
 }		// -----  end of method EventHandler::pollEvents  -----

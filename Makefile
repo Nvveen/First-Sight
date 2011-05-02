@@ -4,6 +4,7 @@ LIBDIR=lib
 SRC=$(wildcard *.cpp)
 SRC+=$(wildcard $(SRCDIR)/*.cpp)
 OBJS=$(patsubst %.cpp,%.o,$(SRC))
+<<<<<<< HEAD
 FLAGS=-g -Wall -Wl,-rpath,$(LIBDIR)/snappy/.libs/
 FLAGS+=-Wl,-rpath,$(LIBDIR)/sfml/build/lib/
 FLAGS+=-Wl,-rpath,$(LIBDIR)/boost/stage/libs/
@@ -14,6 +15,16 @@ CXXFLAGS=$(FLAGS) -I$(INCDIR) -I$(LIBDIR) -I$(LIBDIR)/glm/
 CXXFLAGS+=-I$(LIBDIR)/snappy/ -I$(LIBDIR)/snappy/.libs -L$(LIBDIR)/snappy/.libs 
 CXXFLAGS+=-I$(LIBDIR)/boost/ -L$(LIBDIR)/boost/stage/libs/
 CXXFLAGS+=-I$(LIBDIR)/sfml/include/ -L$(LIBDIR)/sfml/build/lib $(LFLAGS)
+=======
+FLAGS=-g -Wall -Wl,-rpath,$(LIBDIR)
+FLAGS+=-Wl,-rpath,$(LIBDIR)/snappy/.libs/
+LFLAGS=-lGL -lGLEW -lsnappy -lSDL -lpthread
+LFLAGS+=`libpng-config --cflags` `libpng-config --ldflags`
+LFLAGS+=`sdl-config --cflags --libs`
+
+CXXFLAGS=$(FLAGS) -I$(INCDIR) -I$(LIBDIR)/glm/ -L$(LIBDIR) $(LFLAGS)
+CXXFLAGS+=-I$(LIBDIR)/snappy/ -L$(LIBDIR)/snappy/.libs/
+>>>>>>> sdl
 CXX=g++
 .SUFFIXES: .o .cpp
 

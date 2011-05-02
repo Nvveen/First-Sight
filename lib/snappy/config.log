@@ -14,7 +14,11 @@ hostname = nealhost
 uname -m = x86_64
 uname -r = 2.6.38-ARCH
 uname -s = Linux
+<<<<<<< HEAD
 uname -v = #1 SMP PREEMPT Wed Mar 30 08:47:36 CEST 2011
+=======
+uname -v = #1 SMP PREEMPT Fri Apr 22 20:29:33 CEST 2011
+>>>>>>> sdl
 
 /usr/bin/uname -p = unknown
 /bin/uname -X     = unknown
@@ -38,6 +42,10 @@ PATH: /usr/sbin
 PATH: /sbin
 PATH: /opt/android-sdk/platform-tools
 PATH: /opt/android-sdk/tools
+<<<<<<< HEAD
+=======
+PATH: /usr/share/java/apache-ant/bin
+>>>>>>> sdl
 PATH: /opt/metasploit
 PATH: /opt/NX/bin
 PATH: /usr/bin/vendor_perl
@@ -70,8 +78,13 @@ configure:3313: found /usr/lib/colorgcc/bin/gcc
 configure:3324: result: gcc
 configure:3553: checking for C compiler version
 configure:3562: gcc --version >&5
+<<<<<<< HEAD
 gcc (GCC) 4.5.2 20110127 (prerelease)
 Copyright (C) 2010 Free Software Foundation, Inc.
+=======
+gcc (GCC) 4.6.0 20110415 (prerelease)
+Copyright (C) 2011 Free Software Foundation, Inc.
+>>>>>>> sdl
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
@@ -79,6 +92,7 @@ configure:3573: $? = 0
 configure:3562: gcc -v >&5
 Using built-in specs.
 COLLECT_GCC=/usr/bin/gcc
+<<<<<<< HEAD
 COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/lto-wrapper
 Target: x86_64-unknown-linux-gnu
 Configured with: /build/src/gcc-4.5-20110127/configure --prefix=/usr --enable-languages=c,c++,fortran,objc,obj-c++,ada --enable-shared --enable-threads=posix --enable-__cxa_atexit --enable-clocale=gnu --enable-gnu-unique-object --enable-lto --enable-plugin --enable-gold --with-plugin-ld=ld.gold --enable-multilib --disable-libstdcxx-pch --with-system-zlib --with-ppl --with-cloog --with-cloog-include=/usr/include/cloog-ppl --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info
@@ -91,6 +105,23 @@ configure:3573: $? = 1
 configure:3562: gcc -qversion >&5
 gcc: unrecognized option '-qversion'
 gcc: no input files
+=======
+COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0/lto-wrapper
+Target: x86_64-unknown-linux-gnu
+Configured with: /build/src/gcc-4.6-20110415/configure --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://bugs.archlinux.org/ --enable-languages=c,c++,ada,fortran,go,lto,objc,obj-c++ --enable-shared --enable-threads=posix --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-clocale=gnu --enable-gnu-unique-object --enable-linker-build-id --with-ppl --enable-cloog-backend=isl --enable-lto --enable-gold --enable-ld=default --enable-plugin --with-plugin-ld=ld.gold --enable-multilib --disable-libstdcxx-pch --enable-checking=release
+Thread model: posix
+gcc version 4.6.0 20110415 (prerelease) (GCC) 
+configure:3573: $? = 0
+configure:3562: gcc -V >&5
+gcc: error: unrecognized option '-V'
+gcc: fatal error: no input files
+compilation terminated.
+configure:3573: $? = 1
+configure:3562: gcc -qversion >&5
+gcc: error: unrecognized option '-qversion'
+gcc: fatal error: no input files
+compilation terminated.
+>>>>>>> sdl
 configure:3573: $? = 1
 configure:3593: checking whether the C compiler works
 configure:3615: gcc    conftest.c  >&5
@@ -270,7 +301,11 @@ configure:7164: checking for objdir
 configure:7179: result: .libs
 configure:7471: checking if gcc supports -fno-rtti -fno-exceptions
 configure:7489: gcc -c -g -O2  -fno-rtti -fno-exceptions conftest.c >&5
+<<<<<<< HEAD
 cc1: warning: command line option "-fno-rtti" is valid for C++/ObjC++ but not for C
+=======
+cc1: warning: command line option '-fno-rtti' is valid for C++/ObjC++ but not for C [enabled by default]
+>>>>>>> sdl
 configure:7493: $? = 0
 configure:7506: result: no
 configure:7526: checking for gcc option to produce PIC
@@ -314,8 +349,13 @@ configure:10770: found /usr/lib/colorgcc/bin/g++
 configure:10781: result: g++
 configure:10808: checking for C++ compiler version
 configure:10817: g++ --version >&5
+<<<<<<< HEAD
 g++ (GCC) 4.5.2 20110127 (prerelease)
 Copyright (C) 2010 Free Software Foundation, Inc.
+=======
+g++ (GCC) 4.6.0 20110415 (prerelease)
+Copyright (C) 2011 Free Software Foundation, Inc.
+>>>>>>> sdl
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
@@ -323,6 +363,7 @@ configure:10828: $? = 0
 configure:10817: g++ -v >&5
 Using built-in specs.
 COLLECT_GCC=/usr/bin/g++
+<<<<<<< HEAD
 COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/lto-wrapper
 Target: x86_64-unknown-linux-gnu
 Configured with: /build/src/gcc-4.5-20110127/configure --prefix=/usr --enable-languages=c,c++,fortran,objc,obj-c++,ada --enable-shared --enable-threads=posix --enable-__cxa_atexit --enable-clocale=gnu --enable-gnu-unique-object --enable-lto --enable-plugin --enable-gold --with-plugin-ld=ld.gold --enable-multilib --disable-libstdcxx-pch --with-system-zlib --with-ppl --with-cloog --with-cloog-include=/usr/include/cloog-ppl --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info
@@ -335,6 +376,23 @@ configure:10828: $? = 1
 configure:10817: g++ -qversion >&5
 g++: unrecognized option '-qversion'
 g++: no input files
+=======
+COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0/lto-wrapper
+Target: x86_64-unknown-linux-gnu
+Configured with: /build/src/gcc-4.6-20110415/configure --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://bugs.archlinux.org/ --enable-languages=c,c++,ada,fortran,go,lto,objc,obj-c++ --enable-shared --enable-threads=posix --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-clocale=gnu --enable-gnu-unique-object --enable-linker-build-id --with-ppl --enable-cloog-backend=isl --enable-lto --enable-gold --enable-ld=default --enable-plugin --with-plugin-ld=ld.gold --enable-multilib --disable-libstdcxx-pch --enable-checking=release
+Thread model: posix
+gcc version 4.6.0 20110415 (prerelease) (GCC) 
+configure:10828: $? = 0
+configure:10817: g++ -V >&5
+g++: error: unrecognized option '-V'
+g++: fatal error: no input files
+compilation terminated.
+configure:10828: $? = 1
+configure:10817: g++ -qversion >&5
+g++: error: unrecognized option '-qversion'
+g++: fatal error: no input files
+compilation terminated.
+>>>>>>> sdl
 configure:10828: $? = 1
 configure:10832: checking whether we are using the GNU C++ compiler
 configure:10851: g++ -c   conftest.cpp >&5
@@ -348,8 +406,13 @@ configure:10955: checking dependency style of g++
 configure:11065: result: gcc3
 configure:11193: checking for C++ compiler version
 configure:11202: g++ --version >&5
+<<<<<<< HEAD
 g++ (GCC) 4.5.2 20110127 (prerelease)
 Copyright (C) 2010 Free Software Foundation, Inc.
+=======
+g++ (GCC) 4.6.0 20110415 (prerelease)
+Copyright (C) 2011 Free Software Foundation, Inc.
+>>>>>>> sdl
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
@@ -357,6 +420,7 @@ configure:11213: $? = 0
 configure:11202: g++ -v >&5
 Using built-in specs.
 COLLECT_GCC=/usr/bin/g++
+<<<<<<< HEAD
 COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/lto-wrapper
 Target: x86_64-unknown-linux-gnu
 Configured with: /build/src/gcc-4.5-20110127/configure --prefix=/usr --enable-languages=c,c++,fortran,objc,obj-c++,ada --enable-shared --enable-threads=posix --enable-__cxa_atexit --enable-clocale=gnu --enable-gnu-unique-object --enable-lto --enable-plugin --enable-gold --with-plugin-ld=ld.gold --enable-multilib --disable-libstdcxx-pch --with-system-zlib --with-ppl --with-cloog --with-cloog-include=/usr/include/cloog-ppl --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info
@@ -369,6 +433,23 @@ configure:11213: $? = 1
 configure:11202: g++ -qversion >&5
 g++: unrecognized option '-qversion'
 g++: no input files
+=======
+COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0/lto-wrapper
+Target: x86_64-unknown-linux-gnu
+Configured with: /build/src/gcc-4.6-20110415/configure --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib --mandir=/usr/share/man --infodir=/usr/share/info --with-bugurl=https://bugs.archlinux.org/ --enable-languages=c,c++,ada,fortran,go,lto,objc,obj-c++ --enable-shared --enable-threads=posix --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-clocale=gnu --enable-gnu-unique-object --enable-linker-build-id --with-ppl --enable-cloog-backend=isl --enable-lto --enable-gold --enable-ld=default --enable-plugin --with-plugin-ld=ld.gold --enable-multilib --disable-libstdcxx-pch --enable-checking=release
+Thread model: posix
+gcc version 4.6.0 20110415 (prerelease) (GCC) 
+configure:11213: $? = 0
+configure:11202: g++ -V >&5
+g++: error: unrecognized option '-V'
+g++: fatal error: no input files
+compilation terminated.
+configure:11213: $? = 1
+configure:11202: g++ -qversion >&5
+g++: error: unrecognized option '-qversion'
+g++: fatal error: no input files
+compilation terminated.
+>>>>>>> sdl
 configure:11213: $? = 1
 configure:11217: checking whether we are using the GNU C++ compiler
 configure:11245: result: yes
@@ -826,6 +907,10 @@ on nealhost
 config.status:1150: creating Makefile
 config.status:1150: creating snappy-stubs-public.h
 config.status:1150: creating config.h
+<<<<<<< HEAD
+=======
+config.status:1322: config.h is unchanged
+>>>>>>> sdl
 config.status:1370: executing depfiles commands
 config.status:1370: executing libtool commands
 

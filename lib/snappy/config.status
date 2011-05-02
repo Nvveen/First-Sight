@@ -667,8 +667,13 @@ postuninstall_cmds=''
 finish_cmds='PATH="\$PATH:/sbin" ldconfig -n $libdir'
 finish_eval=''
 hardcode_into_libs='yes'
+<<<<<<< HEAD
 sys_lib_search_path_spec='/usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2 /usr/lib /lib'
 sys_lib_dlsearch_path_spec='/lib /usr/lib /usr/lib/libfakeroot /usr/lib32 /usr/lib/xulrunner-2.0 '
+=======
+sys_lib_search_path_spec='/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0 /usr/lib /lib'
+sys_lib_dlsearch_path_spec='/lib /usr/lib /usr/lib/libfakeroot /usr/lib/gnome-bluetooth /usr/lib32 /usr/lib/xulrunner-2.0 '
+>>>>>>> sdl
 hardcode_action='immediate'
 enable_dlopen='unknown'
 enable_dlopen_self='unknown'
@@ -722,12 +727,21 @@ include_expsyms_CXX=''
 prelink_cmds_CXX=''
 file_list_spec_CXX=''
 hardcode_action_CXX='immediate'
+<<<<<<< HEAD
 compiler_lib_search_dirs_CXX='/usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2 /usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/../../../../lib /lib/../lib /usr/lib/../lib /usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/../../..'
 predep_objects_CXX='/usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/../../../../lib/crti.o /usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/crtbeginS.o'
 postdep_objects_CXX='/usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/crtendS.o /usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/../../../../lib/crtn.o'
 predeps_CXX=''
 postdeps_CXX='-lstdc++ -lm -lgcc_s -lc -lgcc_s'
 compiler_lib_search_path_CXX='-L/usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2 -L/usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/../../..'
+=======
+compiler_lib_search_dirs_CXX='/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0 /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0/../../../../lib /lib/../lib /usr/lib/../lib /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0/../../..'
+predep_objects_CXX='/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0/../../../../lib/crti.o /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0/crtbeginS.o'
+postdep_objects_CXX='/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0/crtendS.o /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0/../../../../lib/crtn.o'
+predeps_CXX=''
+postdeps_CXX='-lstdc++ -lm -lgcc_s -lc -lgcc_s'
+compiler_lib_search_path_CXX='-L/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0 -L/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0/../../../../lib -L/lib/../lib -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.0/../../..'
+>>>>>>> sdl
 
 LTCC='gcc'
 LTCFLAGS='-g -O2'

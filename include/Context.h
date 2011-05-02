@@ -20,7 +20,11 @@
 
 #include    <string>
 #include    <vector>
+<<<<<<< HEAD
 #include    <SFML/Graphics.hpp>
+=======
+#include    <SDL.h>
+>>>>>>> sdl
 #include    "Projection.h"
 #include    "Camera.h"
 #include    "Object.h"
@@ -48,6 +52,10 @@ class Context
 
         // ====================  MUTATORS      ================================
         void push ( const Object& cube );
+<<<<<<< HEAD
+=======
+        void close ();
+>>>>>>> sdl
 
         // ====================  OPERATORS     ================================
 
@@ -60,7 +68,10 @@ class Context
         GLfloat w_;
         GLfloat h_;
         std::string windowName_;
+<<<<<<< HEAD
         sf::RenderWindow* window_;
+=======
+>>>>>>> sdl
 
         Projection* proj_;
         Camera* cam_;
@@ -68,6 +79,13 @@ class Context
         std::vector<Object> objects;
         std::map<std::string, Shader> shaders;
 
+<<<<<<< HEAD
+=======
+        SDL_Window *mainWindow_;
+        SDL_GLContext mainContext_;
+        bool windowOpened;
+
+>>>>>>> sdl
 }; // -----  end of class Context  -----
 
 //-----------------------------------------------------------------------------
@@ -78,11 +96,29 @@ class Context
     inline bool
 Context::isOpened ()
 {
+<<<<<<< HEAD
     return window_->IsOpened();;
+=======
+    return windowOpened;
+>>>>>>> sdl
 }		// -----  end of method Context::isOpened  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
+<<<<<<< HEAD
+=======
+//      Method:  close
+// Description:  Sets the opened window bool to false, closing the window.
+//-----------------------------------------------------------------------------
+    inline void
+Context::close ()
+{
+    windowOpened = false;
+}		// -----  end of method Context::close  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Context
+>>>>>>> sdl
 //      Method:  push
 // Description:  Pushes an object onto the object stack.
 //-----------------------------------------------------------------------------
