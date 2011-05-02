@@ -32,11 +32,8 @@ Context::Context ( GLfloat w, GLfloat h, std::string windowName,
     proj_ = proj;
     if ( cam == NULL ) cam = new Camera;
     cam_ = cam;
-<<<<<<< HEAD
-=======
     mainWindow_ = NULL;
     windowOpened = true;
->>>>>>> sdl
 }  // -----  end of method Context::Context  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -57,15 +54,6 @@ Context::~Context ()
     void
 Context::setup ()
 {
-<<<<<<< HEAD
-    sf::ContextSettings settings;
-    settings.MajorVersion = 3;
-    settings.MinorVersion = 2;
-    sf::VideoMode mode(w_, h_, 32);
-    window_ = new sf::RenderWindow(mode, windowName_, sf::Style::Default, 
-                                  settings);
-    window_->SetFramerateLimit(60);
-=======
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
@@ -77,7 +65,6 @@ Context::setup ()
                                   SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     mainContext_ = SDL_GL_CreateContext(mainWindow_);
 
->>>>>>> sdl
     // Catch error
     GLenum res = glewInit();
     if ( res != GLEW_OK ) {
@@ -105,10 +92,6 @@ Context::render ()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | 
             GL_STENCIL_BUFFER_BIT );
-<<<<<<< HEAD
-    window_->Clear();
-=======
->>>>>>> sdl
 
     // Draw objects
     for ( unsigned int i = 0; i < objects.size(); i += 1 ) {
@@ -116,12 +99,7 @@ Context::render ()
         objects[i].draw();
     }
 
-<<<<<<< HEAD
-    window_->Display();
-=======
     SDL_GL_SwapWindow(mainWindow_);
-//    window_->Display();
->>>>>>> sdl
 }		// -----  end of method Context::render  -----
 
 //-----------------------------------------------------------------------------
