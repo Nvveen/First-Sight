@@ -27,6 +27,13 @@ EventHandler::EventHandler ( Context& context ) :
 {
 }  // -----  end of method EventHandler::EventHandler  (constructor)  -----
 
+//-----------------------------------------------------------------------------
+//       Class:  EventHandler
+//      Method:  pollEvents
+// Description:  This function walks through every SDL event that is polled,
+//               handlse standard events like closing a window, and stuff like
+//               opening a callback on a bound function.
+//-----------------------------------------------------------------------------
     void
 EventHandler::pollEvents ()
 {
@@ -37,19 +44,11 @@ EventHandler::pollEvents ()
             }
         }
         if ( event_.type == SDL_KEYDOWN ) {
-            int size;
-            Uint8 *keys = SDL_GetKeyboardState(&size);
-            for ( int i = 0; i < size; i += 1 )
-                if ( keys[i] ) keyPressed_.insert((Key::Code)i);
+            SDL_Keysym sym = event_.key.keysym;
+            Keyset keyset((Key::Mod)sym.mod, (Key::Code)sym.scancode);
             std::map<Keyset, Functionoid>::iterator it;
-            for ( it = keyMap_.begin(); it != keyMap_.end(); it ++ ) {
-                if ( it->first == keyPressed_ ) (it->second)();
-            }
-        }
-        if ( event_.type == SDL_KEYUP ) {
-            SDL_keysym key = event_.key.keysym;
-            Key::Code scanCode = (Key::Code)key.scancode;
-            keyPressed_.erase(keyPressed_.find(scanCode));
+            for ( it = keyMap_.begin(); it != keyMap_.end(); it ++ )
+                if ( it->first == keyset ) (it->second)();
         }
     }
 }		// -----  end of method EventHandler::pollEvents  -----
