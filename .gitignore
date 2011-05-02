@@ -7,3 +7,4 @@ test/
 data/undat-1.0/
 lib/
 lib/*
+lib/boost/*
