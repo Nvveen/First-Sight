@@ -34,7 +34,7 @@
 
 #include    <string>
 #include    <vector>
-#include    <SDL.h>
+#include    <SDL/SDL.h>
 #include    "Projection.h"
 #include    "Camera.h"
 #include    "Object.h"

@@ -28,7 +28,7 @@
 // 
 // ============================================================================
 
-#include    <SDL.h>
+#include    <SDL/SDL.h>
 #include    <boost/function.hpp>
 #include    <boost/bind.hpp>
 #include    <set>

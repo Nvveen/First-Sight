@@ -1,7 +1,6 @@
 Dependencies:
 
 libpng-1.4
-png++-0.2.5 (provided)
 snappy-1.0.1 (provided)
 boost-1.46.0-4
 sdl-1.3 (source provided)
@@ -10,7 +9,10 @@ For some dependencies, except for SDL, an older version number may work. I
 haven't tested this yet. It's up to you.
 
 Installation:
+    cd build/
+    cmake ..
     make
 
 Run:
-    ./main
+    Go to the project root directory.
+    ./firstsight
