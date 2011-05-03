@@ -71,7 +71,6 @@ class Object
         // ====================  DATA MEMBERS  ================================
         Shader shader_;
         GLuint vbo_;
-        GLuint vao_;
 
         Model* model_;
         Texture* texture_;

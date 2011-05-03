@@ -12,13 +12,12 @@ more details.
  
 You should have received a copy of the GNU General Public License along with 
 First Sight. If not, see <http://www.gnu.org/licenses/>. */
-#version 330
+#version 120
 
 in vec2 TexCoord0;
-out vec4 FragColor;
 
 uniform sampler2D gSampler;
 
 void main(void) {
-    FragColor = texture2D(gSampler, TexCoord0);
+    gl_FragColor = texture2D(gSampler, TexCoord0);
 }

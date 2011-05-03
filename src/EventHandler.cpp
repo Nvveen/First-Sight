@@ -52,17 +52,16 @@ EventHandler::EventHandler ( Context& context ) :
 EventHandler::pollEvents ()
 {
     while ( SDL_PollEvent(&event_) ) {
-        if ( event_.type == SDL_WINDOWEVENT ) {
-            if ( event_.window.event == SDL_WINDOWEVENT_CLOSE ) {
-                context_->windowOpened = false;
-            }
+        if ( event_.type == SDL_QUIT ) {
+            context_->windowOpened = false;
         }
         if ( event_.type == SDL_KEYDOWN ) {
-            SDL_Keysym sym = event_.key.keysym;
-            Keyset keyset((Key::Mod)sym.mod, (Key::Code)sym.scancode);
+            SDL_keysym sym = event_.key.keysym;
+            Keyset keyset((Key::Mod)sym.mod, (Key::Code)sym.sym);
             std::map<Keyset, Functionoid>::iterator it;
-            for ( it = keyMap_.begin(); it != keyMap_.end(); it ++ )
+            for ( it = keyMap_.begin(); it != keyMap_.end(); it ++ ) {
                 if ( it->first == keyset ) (it->second)();
+            }
         }
     }
 }		// -----  end of method EventHandler::pollEvents  -----

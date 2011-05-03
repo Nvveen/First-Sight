@@ -12,10 +12,12 @@ more details.
  
 You should have received a copy of the GNU General Public License along with 
 First Sight. If not, see <http://www.gnu.org/licenses/>. */
-#version 330
+#version 120
 
-layout(location = 0) in vec3 vVertex;
-layout(location = 1) in vec2 TexCoord;
+/*layout(location = 0) in vec3 vVertex;
+layout(location = 1) in vec2 TexCoord;*/
+in vec3 vVertex;
+in vec2 TexCoord;
 
 uniform mat4 vProjection;
 uniform mat4 vCamera;
@@ -23,7 +25,7 @@ uniform mat4 vTranslate;
 uniform mat4 vRotate;
 uniform mat4 vScale;
 
-out vec2 TexCoord0;
+varying vec2 TexCoord0;
 
 void main(void) {
     gl_Position = vProjection * vCamera * vTranslate * vRotate * vScale * 

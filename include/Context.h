@@ -82,8 +82,7 @@ class Context
         std::vector<Object> objects;
         std::map<std::string, Shader> shaders;
 
-        SDL_Window *mainWindow_;
-        SDL_GLContext mainContext_;
+        SDL_Surface *mainWindow_;
         bool windowOpened;
 
 }; // -----  end of class Context  -----

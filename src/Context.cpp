@@ -68,16 +68,23 @@ Context::~Context ()
     void
 Context::setup ()
 {
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
+        std::cerr << "Couldn't initialize SDL.\n";
+        exit(1);
+    }
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    mainWindow_ = SDL_SetVideoMode(w_, h_, 32, SDL_OPENGL);
+    if ( mainWindow_ == NULL ) {
+        std::cerr << "Error setting videomode.\n";
+        exit(1);
+    }
 
-    mainWindow_ = SDL_CreateWindow(windowName_.c_str(), SDL_WINDOWPOS_CENTERED,
-                                  SDL_WINDOWPOS_CENTERED, w_, h_,
-                                  SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-    mainContext_ = SDL_GL_CreateContext(mainWindow_);
+    SDL_WM_SetCaption(windowName_.c_str(), NULL);
 
     // Catch error
     GLenum res = glewInit();
@@ -113,7 +120,7 @@ Context::render ()
         objects[i].draw();
     }
 
-    SDL_GL_SwapWindow(mainWindow_);
+    SDL_GL_SwapBuffers();
 }		// -----  end of method Context::render  -----
 
 //-----------------------------------------------------------------------------
