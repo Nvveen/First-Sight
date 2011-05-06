@@ -50,6 +50,8 @@ class Object
         Object ();
         Object ( std::string datName, 
                  Shader shader=Shader("default.vs", "default.fs") );
+        Object ( std::vector<GLfloat> modelData, Texture *texture, 
+                 Shader shader=Shader("default.vs", "default.fs"));
         ~Object ();
         void draw ();
 
@@ -60,7 +62,7 @@ class Object
         // ====================  ACCESSORS     ================================
 
         // ====================  MUTATORS      ================================
-        void bind ( Projection* proj, Camera* cam );
+        void bind ( Projection *proj, Camera *cam );
 
         // ====================  OPERATORS     ================================
 
@@ -69,15 +71,17 @@ class Object
 
     private:
         // ====================  DATA MEMBERS  ================================
+
+        std::vector<GLfloat> modelData_;
+        Model *model_;
+        Texture *texture_;
+        size_t triangleCount_;
+
         Shader shader_;
         GLuint vbo_;
-
-        Model* model_;
-        Texture* texture_;
-        Projection* proj_;
-        Camera* cam_;
-        size_t triangleCount_;
         
+        glm::mat4 projection_;
+        glm::mat4 camera_;
         glm::mat4 translation;
         glm::mat4 rotation;
         glm::mat4 scaling;
@@ -104,10 +108,10 @@ Object::toRadians ( GLfloat angle )
 // Description:  Binds a projection to an object.
 //-----------------------------------------------------------------------------
     inline void
-Object::bind ( Projection* proj, Camera* cam )
+Object::bind ( Projection *proj, Camera *cam )
 {
-    proj_ = proj;
-    cam_ = cam;
+    projection_ = proj->getProjection();
+    camera_ = cam->getCamera();
 }		// -----  end of method Object::bind  -----
 
 #endif   // ----- #ifndef OBJECT_INC  -----

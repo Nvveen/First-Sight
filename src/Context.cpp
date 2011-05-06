@@ -114,8 +114,6 @@ Context::render ()
         objects[i].bind(proj_, cam_);
         objects[i].draw();
     }
-    Text text("Hello, world!", "arial.ttf");
-    text.render();
 
     SDL_GL_SwapBuffers();
 }		// -----  end of method Context::render  -----

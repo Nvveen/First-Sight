@@ -50,7 +50,7 @@ class Projection
         void setPerspective ( GLfloat w, GLfloat h );
 
         // ====================  ACCESSORS     ================================
-        glm::mat4& getPerspective ();
+        glm::mat4& getProjection ();
 
         // ====================  MUTATORS      ================================
 
@@ -70,18 +70,18 @@ class Projection
         } perspective;	// ----------  end of struct Perspective  ----------
 
 
-        glm::mat4 perspectiveMatrix_;
+        glm::mat4 projectionMatrix_;
 }; // -----  end of class Projection  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Projection
-//      Method:  getPerspective
+//      Method:  getProjection
 // Description:  Returns the perspective matrix.
 //-----------------------------------------------------------------------------
     inline glm::mat4&
-Projection::getPerspective ()
+Projection::getProjection ()
 {
-    return perspectiveMatrix_;
-}		// -----  end of method Projection::getPerspective  -----
+    return projectionMatrix_;
+}		// -----  end of method Projection::getProjection  -----
 
 #endif   // ----- #ifndef PROJECTION_H  -----

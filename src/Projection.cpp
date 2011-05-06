@@ -45,7 +45,7 @@ Projection::Projection ( GLfloat aspectRatio, GLfloat FOV, GLfloat zNear,
     perspective.FOV = FOV;
     perspective.zNear = zNear;
     perspective.zFar = zFar;
-    perspectiveMatrix_ = glm::perspective(perspective.FOV, 
+    projectionMatrix_ = glm::perspective(perspective.FOV, 
                                          perspective.aspectRatio, 
                                          perspective.zNear, perspective.zFar);
 }  // -----  end of method Projection::Projection  (constructor)  -----
@@ -59,7 +59,7 @@ Projection::Projection ( GLfloat aspectRatio, GLfloat FOV, GLfloat zNear,
 Projection::setPerspective ( GLfloat w, GLfloat h )
 {
     perspective.aspectRatio = w/h;
-    perspectiveMatrix_ = glm::perspective(perspective.FOV, 
+    projectionMatrix_ = glm::perspective(perspective.FOV, 
                                          perspective.aspectRatio, 
                                          perspective.zNear, perspective.zFar);
 }		// -----  end of method Projection::setPerspective  -----
