@@ -32,6 +32,7 @@
 #include    <iostream>
 #include    <GL/glew.h>
 #include    "Context.h"
+#include    "Text.h"
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
@@ -72,12 +73,6 @@ Context::setup ()
         std::cerr << "Couldn't initialize SDL.\n";
         exit(1);
     }
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     mainWindow_ = SDL_SetVideoMode(w_, h_, 32, SDL_OPENGL);
     if ( mainWindow_ == NULL ) {
         std::cerr << "Error setting videomode.\n";
@@ -119,6 +114,8 @@ Context::render ()
         objects[i].bind(proj_, cam_);
         objects[i].draw();
     }
+    Text text("Hello, world!", "arial.ttf");
+    text.render();
 
     SDL_GL_SwapBuffers();
 }		// -----  end of method Context::render  -----

@@ -6,10 +6,12 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules/)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(SDL REQUIRED)
+find_package(SDL_ttf REQUIRED)
 
 set(CMAKE_CXX_FLAGS "-std=c++0x -Wall -Wextra -g")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
 
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 include_directories(${PROJECT_SOURCE_DIR}/lib/glm/)
+include_directories(${PROJECT_SOURCE_DIR}/lib/snappy/)
 add_subdirectory(src)

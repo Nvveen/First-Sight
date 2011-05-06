@@ -92,7 +92,6 @@ Object::readDat ( std::string datName )
     void
 Object::init ()
 {
-    // Generate VAO
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
@@ -143,7 +142,6 @@ Object::draw ()
 {
     // Use the specified program
     shader_.bind();
-    // Bind the object's vertex array object
     // Enable the arrays
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -169,7 +167,6 @@ Object::draw ()
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(2);
-    // Unbind the vao
     // Unbind the shader
     shader_.unbind();
 }		// -----  end of method Object::draw  -----
