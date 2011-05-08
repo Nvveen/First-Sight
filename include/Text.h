@@ -2,10 +2,10 @@
 // 
 //       Filename:  Text.h
 // 
-//    Description:  Class for displaying text in the window.
+//    Description:  Class that generates an object for text displaying.
 // 
 //        Version:  1.0
-//        Created:  05/06/2011 11:30:23 AM
+//        Created:  05/07/2011 09:28:19 PM
 //       Revision:  none
 //       Compiler:  g++
 // 
@@ -18,30 +18,20 @@
 #define  TEXT_H
 
 #include    <string>
-#include    <GL/glew.h>
-#include    <SDL/SDL.h>
 #include    <SDL/SDL_ttf.h>
-
-#include    "Shader.h"
-#include    "Camera.h"
+#include    "Object.h"
 
 // ============================================================================
 //        Class:  Text
-//  Description:  This class implements the rendering of text on the screen.
+//  Description:  Class that is derived from an object and is displayed as 
+//                a 2D surface for projection the text texture on it.
 // ============================================================================
-class Text
+class Text : public Object
 {
     public:
 
         // ====================  LIFECYCLE     ================================
-        Text ( std::string string, std::string fontName, unsigned char red=255, 
-               unsigned char green=255, unsigned char blue=255, Shader shader=
-               Shader("shaders/default.vs", "shaders/default.fs"));
-        ~Text ();
-        void init ();
-        bool loadFont ( std::string font );
-        void render ();
-        void bind ( Camera* cam );
+        Text ( std::string textString );
 
         // ====================  ACCESSORS     ================================
 
@@ -54,33 +44,16 @@ class Text
 
     private:
         // ====================  DATA MEMBERS  ================================
-        std::string string_;
+        std::string textString_;
+        std::string fontFile_;
+
         TTF_Font *font_;
         SDL_Color color_;
-        SDL_Surface* text_;
+        SDL_Surface *textSurface_;
 
-        Camera* cam_;
-        Shader shader_;
-
-        GLfloat w_;
-        GLfloat h_;
-        GLfloat x_;
-        GLfloat y_;
-
-        GLuint vbo_;
-        GLuint texID_;
-
+        void init ();
+        bool openFont ();
 }; // -----  end of class Text  -----
 
-//-----------------------------------------------------------------------------
-//       Class:  Text
-//      Method:  bind
-// Description:  Binds the camera matrix to the text.
-//-----------------------------------------------------------------------------
-    inline void
-Text::bind ( Camera* cam )
-{
-    cam_ = cam;
-}		// -----  end of method Text::bind  -----
 
 #endif   // ----- #ifndef TEXT_H  -----

@@ -2,10 +2,10 @@
 // 
 //       Filename:  Text.cpp
 // 
-//    Description:  Class for displaying text in the window.
+//    Description:  Class that generates an object for text displaying.
 // 
 //        Version:  1.0
-//        Created:  05/06/2011 11:29:55 AM
+//        Created:  05/07/2011 09:27:49 PM
 //       Revision:  none
 //       Compiler:  g++
 // 
@@ -14,72 +14,53 @@
 // 
 // ============================================================================
 
-#include    <iostream>
-#include    <glm/gtc/matrix_transform.hpp>
-#include    "Text.h" 
+#include    "Text.h"
 
 //-----------------------------------------------------------------------------
 //       Class:  Text
 //      Method:  Text
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Text::Text ( std::string string, std::string fontName, unsigned char red, 
-             unsigned char green, unsigned char blue, Shader shader ) :
-    string_(string), font_(NULL), shader_(shader), x_(0.0f), y_(0.0f)
+Text::Text ( std::string textString ) :
+    textString_(textString), fontFile_("arial.ttf")
 {
-    cam_ = NULL;
+    color_ = {255, 255, 255, 0};
+    font_ = NULL;
+    textSurface_ = NULL;
+    TTF_Init();
     init();
-    loadFont(fontName);
-    color_ = { (Uint8)red, (Uint8)green, (Uint8)blue, 0 };
-    render();
 }  // -----  end of method Text::Text  (constructor)  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Text
-//      Method:  ~Text
-// Description:  destructor
-//-----------------------------------------------------------------------------
-Text::~Text ()
-{
-    TTF_CloseFont(font_);
-    TTF_Quit();
-}  // -----  end of method Text::~Text  (destructor)  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Text
 //      Method:  init
-// Description:  Initiates the text-renderer.
+// Description:  Initializes the Text object.
 //-----------------------------------------------------------------------------
     void
 Text::init ()
 {
+    if ( !openFont() ) {
+        std::cerr << "Error loading font: " << TTF_GetError() << "\n";
+        exit(1);
+    }
+    textSurface_ = TTF_RenderText_Solid(font_, textString_.c_str(), color_);
+    if ( textSurface_ == NULL ) {
+        std::cerr << "Error rendering text: " << TTF_GetError() << "\n";
+        exit(1);
+    }
 }		// -----  end of method Text::init  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Text
-//      Method:  loadFont
-// Description:  Loads the font from the filename and sets it in memory.
+//      Method:  openFont
+// Description:  Tries to open the font file.
 //-----------------------------------------------------------------------------
     bool
-Text::loadFont ( std::string font )
+Text::openFont ()
 {
-    font_ = TTF_OpenFont(font.c_str(), 30);
-    if ( font_ == NULL ) {
-        std::cerr << "Err loading font\n";
+    font_ = TTF_OpenFont(fontFile_.c_str(), 18);
+    if ( font_ == NULL )
         return false;
-    }
-    else {
+    else
         return true;
-    }
-}		// -----  end of method Text::loadFont  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Text
-//      Method:  render
-// Description:  Renders the text as an OpenGL texture on a 2D surface.
-//-----------------------------------------------------------------------------
-    void
-Text::render ()
-{
-}		// -----  end of method Text::render  -----
-
+}		// -----  end of method Text::openFont  -----

@@ -49,10 +49,23 @@ Texture::Texture ()
 //-----------------------------------------------------------------------------
 Texture::Texture ( GLenum textureTarget, 
                    const png::image<png::rgba_pixel>& png ) :
-    textureTarget_(textureTarget), png_(png)
+    textureTarget_(textureTarget)
 {
-    width_ = png_.get_width();
-    height_ = png_.get_height();
+    width_ = png.get_width();
+    height_ = png.get_height();
+    setBytesFromPNG(png);
+}  // -----  end of method Texture::Texture  (constructor)  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Texture
+//      Method:  Texture
+// Description:  constructor
+//-----------------------------------------------------------------------------
+Texture::Texture ( GLenum textureTarget, std::vector<unsigned char> bytes, 
+                   unsigned char w, unsigned char h ) :
+    textureTarget_(textureTarget), width_(w), height_(h)
+{
+    bytes_ = bytes;
 }  // -----  end of method Texture::Texture  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -67,30 +80,39 @@ Texture::~Texture ()
 //-----------------------------------------------------------------------------
 //       Class:  Texture
 //      Method:  load
-// Description:  Loads a targa image from the file.
+// Description:  Loads a png image from the file.
 //-----------------------------------------------------------------------------
     void
 Texture::load ()
 {
-    std::vector<unsigned char> bytes;
-    for ( int i = 0; i < height_; i += 1 ) {
-        for ( int j = 0; j < width_; j += 1 ) {
-            bytes.push_back(png_[i][j].red);
-            bytes.push_back(png_[i][j].green);
-            bytes.push_back(png_[i][j].blue);
-            bytes.push_back(png_[i][j].alpha);
-        }
-    }
     glGenTextures(1, &texID);
     glBindTexture(textureTarget_, texID);
     glTexParameteri(textureTarget_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(textureTarget_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexImage2D(textureTarget_, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, &bytes[0]);
+                 GL_UNSIGNED_BYTE, &bytes_[0]);
     
     // Unbind everything
     glBindTexture(textureTarget_, 0);
 }		// -----  end of method Texture::load  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Texture
+//      Method:  setBytesFromPNG
+// Description:  Sets the bytes in an array when passing a PNG object.
+//-----------------------------------------------------------------------------
+    void
+Texture::setBytesFromPNG ( const png::image<png::rgba_pixel>& png )
+{
+    for ( int i = 0; i < height_; i += 1 ) {
+        for ( int j = 0; j < width_; j += 1 ) {
+            bytes_.push_back(png[i][j].red);
+            bytes_.push_back(png[i][j].green);
+            bytes_.push_back(png[i][j].blue);
+            bytes_.push_back(png[i][j].alpha);
+        }
+    }
+}		// -----  end of method Texture::setBytesFromPNG  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Texture

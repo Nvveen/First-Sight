@@ -68,11 +68,11 @@ class Object
 
     protected:
         // ====================  DATA MEMBERS  ================================
+        std::vector<GLfloat> modelData_;
 
     private:
         // ====================  DATA MEMBERS  ================================
 
-        std::vector<GLfloat> modelData_;
         Model *model_;
         Texture *texture_;
         size_t triangleCount_;

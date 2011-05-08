@@ -44,35 +44,29 @@
 class Texture
 {
     public:
-
-        // ====================  LIFECYCLE     ================================
         Texture ();
         Texture ( GLenum textureTarget, 
                   const png::image<png::rgba_pixel>& png );
+        Texture ( GLenum textureTarget, std::vector<unsigned char> bytes,
+                  unsigned char w, unsigned char h );
         ~Texture ();
-        void load ();
         void bind ();
         void unbind ();
 
-        // ====================  ACCESSORS     ================================
-
-        // ====================  MUTATORS      ================================
-
-        // ====================  OPERATORS     ================================
         friend class Object;
 
     protected:
-        // ====================  DATA MEMBERS  ================================
 
     private:
+        void load ();
+        void setBytesFromPNG ( const png::image<png::rgba_pixel>& png );
+
         // ====================  DATA MEMBERS  ================================
         GLenum textureTarget_;
         int width_;
         int height_;
-        png::image<png::rgba_pixel> png_;
+        std::vector<unsigned char> bytes_;
         GLuint texID;
-
-        bool textureSet;
 
 }; // -----  end of class Texture  -----
 
