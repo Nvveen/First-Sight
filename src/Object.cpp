@@ -60,9 +60,8 @@ Object::Object ( std::string datName, Shader shader ) :
 //      Method:  Object
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Object::Object ( std::vector<GLfloat> modelData, Texture *texture, 
-                 Shader shader ) :
-    modelData_(modelData), texture_(texture), shader_(shader)
+Object::Object ( Shader shader ) :
+    shader_(shader)
 {
     projection_ = glm::mat4(1.0f);
     camera_ = glm::mat4(1.0f);
@@ -70,17 +69,7 @@ Object::Object ( std::vector<GLfloat> modelData, Texture *texture,
     rotation = glm::mat4(1.0f);
     scaling = glm::mat4(1.0f);
     model_ = NULL;
-    triangleCount_ = modelData_.size()/8;
-    this->init();
-}  // -----  end of method Object::Object  (constructor)  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Object
-//      Method:  Object
-// Description:  constructor
-//-----------------------------------------------------------------------------
-Object::Object ()
-{
+    texture_ = NULL;
 }  // -----  end of method Object::Object  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -104,6 +93,8 @@ Object::readDat ( std::string datName )
     ModelData mod(datName);
     model_ = new Model(mod.getData(MD_OBJ), mod.getData(MD_MTL));
     texture_ = new Texture(GL_TEXTURE_2D, mod.getImage());
+    // Load the texture
+    texture_->load();
     
     // Load modeldata into an array so it can be loaded into a buffer
     for ( unsigned int i = 0; i < model_->vertices.size()/3; i += 1 ) {
@@ -116,41 +107,27 @@ Object::readDat ( std::string datName )
         modelData_.push_back(model_->normals[i*3+1]);
         modelData_.push_back(model_->normals[i*3+2]);
     }
-    // We need to know how many triangles are contained in the object
-    triangleCount_ = modelData_.size()/8;
 }		// -----  end of method Object::readDat  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Objectmodel->vertices.size()
 //      Method:  init
-// Description:  Initializes all the buffers and binds them to a vao.
+// Description:  Initializes all the buffers and binds them.
 //-----------------------------------------------------------------------------
     void
 Object::init ()
 {
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
+    // We need to know how many triangles are contained in the object
+    triangleCount_ = modelData_.size()/8;
 
     // Generate a buffer, and fill it with the data.
     glGenBuffers(1, &vbo_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*modelData_.size(), 
             &modelData_[0], GL_STATIC_DRAW);
-    // The next 3 calls describe the layout of the data in the array.
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, 0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float)*8, 
-            (const GLvoid*)12);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, 
-            (const GLvoid*)20);
-
-    // Load the texture
-    texture_->load();
-
+    
     // Clean up
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }		// -----  end of method Object::init  -----
 
 //-----------------------------------------------------------------------------
@@ -164,9 +141,17 @@ Object::draw ()
     // Use the specified program
     shader_.bind();
     // Enable the arrays
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
+
+    // Point the attribute pointers to the data in the array.
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, 0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float)*8, 
+            (const GLvoid*)12);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, 
+            (const GLvoid*)20);
 
     // Activate the texture
     texture_->bind();
@@ -188,6 +173,7 @@ Object::draw ()
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     // Unbind the shader
     shader_.unbind();
 }		// -----  end of method Object::draw  -----

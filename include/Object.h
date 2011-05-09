@@ -47,11 +47,9 @@ class Object
     public:
 
         // ====================  LIFECYCLE     ================================
-        Object ();
+        Object ( Shader shader=Shader("default.vs", "default.fs") );
         Object ( std::string datName, 
                  Shader shader=Shader("default.vs", "default.fs") );
-        Object ( std::vector<GLfloat> modelData, Texture *texture, 
-                 Shader shader=Shader("default.vs", "default.fs"));
         ~Object ();
         void draw ();
 
@@ -69,15 +67,17 @@ class Object
     protected:
         // ====================  DATA MEMBERS  ================================
         std::vector<GLfloat> modelData_;
+        Model *model_;
+        Texture *texture_;
+        Shader shader_;
+
+        void init ();
 
     private:
         // ====================  DATA MEMBERS  ================================
 
-        Model *model_;
-        Texture *texture_;
         size_t triangleCount_;
 
-        Shader shader_;
         GLuint vbo_;
         
         glm::mat4 projection_;
@@ -87,7 +87,6 @@ class Object
         glm::mat4 scaling;
 
         void readDat( std::string datName );
-        void init ();
         static GLfloat toRadians ( GLfloat angle );
 }; // -----  end of class Object  -----
 
