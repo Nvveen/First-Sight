@@ -20,6 +20,8 @@
 #include    <string>
 #include    <SDL/SDL_ttf.h>
 #include    "Object.h"
+#include    "Projection.h"
+#include    "Camera.h"
 
 // ============================================================================
 //        Class:  Text
@@ -53,7 +55,7 @@ class Text : public Object
 
         void init ();
         bool openFont ();
+        std::vector<GLfloat>  createVertexData ();
 }; // -----  end of class Text  -----
-
 
 #endif   // ----- #ifndef TEXT_H  -----

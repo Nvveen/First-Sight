@@ -31,7 +31,6 @@
 #include    <iostream>
 
 #include    <glm/gtc/matrix_transform.hpp>
-#include    <glm/gtc/type_ptr.hpp>
 #include    <GL/glew.h>
 #include    "Undat.h"
 #include    "Object.h"
@@ -93,8 +92,6 @@ Object::readDat ( std::string datName )
     ModelData mod(datName);
     model_ = new Model(mod.getData(MD_OBJ), mod.getData(MD_MTL));
     texture_ = new Texture(GL_TEXTURE_2D, mod.getImage());
-    // Load the texture
-    texture_->load();
     
     // Load modeldata into an array so it can be loaded into a buffer
     for ( unsigned int i = 0; i < model_->vertices.size()/3; i += 1 ) {

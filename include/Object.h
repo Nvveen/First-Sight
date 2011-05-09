@@ -67,9 +67,13 @@ class Object
     protected:
         // ====================  DATA MEMBERS  ================================
         std::vector<GLfloat> modelData_;
-        Model *model_;
         Texture *texture_;
-        Shader shader_;
+
+        glm::mat4 projection_;
+        glm::mat4 camera_;
+        glm::mat4 translation;
+        glm::mat4 rotation;
+        glm::mat4 scaling;
 
         void init ();
 
@@ -79,13 +83,10 @@ class Object
         size_t triangleCount_;
 
         GLuint vbo_;
-        
-        glm::mat4 projection_;
-        glm::mat4 camera_;
-        glm::mat4 translation;
-        glm::mat4 rotation;
-        glm::mat4 scaling;
 
+        Model *model_;
+        Shader shader_;
+        
         void readDat( std::string datName );
         static GLfloat toRadians ( GLfloat angle );
 }; // -----  end of class Object  -----

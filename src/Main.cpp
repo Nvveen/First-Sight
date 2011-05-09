@@ -33,6 +33,7 @@
 #include    "Context.h"
 #include    "EventHandler.h"
 #include    "Object.h"
+#include    "Text.h"
 
     int
 main ( int argc, char *argv[] )
@@ -45,6 +46,7 @@ main ( int argc, char *argv[] )
 
     Object cube("data/dirt.dat");
     windowContext.push(cube);
+    Text test("Hello, world!");
     Camera *cam = windowContext.getCam();
     EventHandler event(windowContext);
     event.bind(cam, &Camera::move, 0.3f, 0.0f, 0.0f, Key::Left);
@@ -59,6 +61,8 @@ main ( int argc, char *argv[] )
 
     while ( windowContext.isOpened() ) {
         event.pollEvents();
+        windowContext.clear();
+        test.draw();
         windowContext.render();
     }
     return 0;

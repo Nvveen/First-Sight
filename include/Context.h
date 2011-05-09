@@ -53,6 +53,7 @@ class Context
                   Projection* proj=NULL, Camera* cam=NULL ); 
         ~Context ();
         void setup ();
+        void clear ();
         void render ();
         void resize ( int w, int h );
 

@@ -29,7 +29,6 @@
 // ============================================================================
 
 #include    <iostream>
-#include    <cstdlib>
 #include    <GL/glew.h>
 #include    "Texture.h"
 
@@ -53,7 +52,8 @@ Texture::Texture ( GLenum textureTarget,
 {
     width_ = png.get_width();
     height_ = png.get_height();
-    setBytesFromPNG(png);
+    load();
+    setFromPNG(png);
 }  // -----  end of method Texture::Texture  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -61,11 +61,13 @@ Texture::Texture ( GLenum textureTarget,
 //      Method:  Texture
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Texture::Texture ( GLenum textureTarget, std::vector<unsigned char> bytes, 
-                   unsigned char w, unsigned char h ) :
-    textureTarget_(textureTarget), width_(w), height_(h)
+Texture::Texture ( GLenum textureTarget, SDL_Surface *surface ) :
+    textureTarget_(textureTarget)
 {
-    bytes_ = bytes;
+    width_ = surface->w;
+    height_ = surface->h;
+    load();
+    setFromSDL_Surface(surface);
 }  // -----  end of method Texture::Texture  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -89,30 +91,42 @@ Texture::load ()
     glBindTexture(textureTarget_, texID);
     glTexParameteri(textureTarget_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(textureTarget_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(textureTarget_, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, &bytes_[0]);
-    
-    // Unbind everything
-    glBindTexture(textureTarget_, 0);
 }		// -----  end of method Texture::load  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Texture
-//      Method:  setBytesFromPNG
+//      Method:  setFromPNG
 // Description:  Sets the bytes in an array when passing a PNG object.
 //-----------------------------------------------------------------------------
     void
-Texture::setBytesFromPNG ( const png::image<png::rgba_pixel>& png )
+Texture::setFromPNG ( const png::image<png::rgba_pixel>& png )
 {
+    std::vector<unsigned char> bytes;
     for ( int i = 0; i < height_; i += 1 ) {
         for ( int j = 0; j < width_; j += 1 ) {
-            bytes_.push_back(png[i][j].red);
-            bytes_.push_back(png[i][j].green);
-            bytes_.push_back(png[i][j].blue);
-            bytes_.push_back(png[i][j].alpha);
+            bytes.push_back(png[i][j].red);
+            bytes.push_back(png[i][j].green);
+            bytes.push_back(png[i][j].blue);
+            bytes.push_back(png[i][j].alpha);
         }
     }
-}		// -----  end of method Texture::setBytesFromPNG  -----
+    glTexImage2D(textureTarget_, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, &bytes[0]);
+}		// -----  end of method Texture::setFromPNG  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Texture
+//      Method:  setFromSDL_Surface
+// Description:  Sets the texture data from an SDL Surface.
+//-----------------------------------------------------------------------------
+    void
+Texture::setFromSDL_Surface ( SDL_Surface *surface )
+{
+    SDL_LockSurface(surface);
+    glTexImage2D(textureTarget_, 0, GL_RGBA, width_, height_, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, surface->pixels);
+    SDL_UnlockSurface(surface);
+}		// -----  end of method Texture::setFromSDL_Surface  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Texture

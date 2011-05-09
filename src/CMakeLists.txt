@@ -11,5 +11,6 @@ set(firstsight_SRCS
     Texture.cpp)
 
 add_executable(firstsight ${firstsight_SRCS})
-target_link_libraries(firstsight ${SDL_LIBRARY} ${SDLTTF_LIBRARY} ${GLEW_LIBRARY}
+target_link_libraries(firstsight ${SDL_LIBRARY} ${SDLTTF_LIBRARY}
+    ${GLEW_LIBRARY} ${PNG_LIBRARY}
     ${PROJECT_SOURCE_DIR}/lib/snappy/.libs/libsnappy.so)

@@ -14,6 +14,8 @@
 // 
 // ============================================================================
 
+#include    <png++/png.hpp>
+#include    <glm/gtc/matrix_transform.hpp>
 #include    "Text.h"
 
 //-----------------------------------------------------------------------------
@@ -29,6 +31,7 @@ Text::Text ( std::string textString ) :
     textSurface_ = NULL;
     TTF_Init();
     init();
+    TTF_Quit();
 }  // -----  end of method Text::Text  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -48,6 +51,16 @@ Text::init ()
         std::cerr << "Error rendering text: " << TTF_GetError() << "\n";
         exit(1);
     }
+    SDL_Surface *inmed = SDL_CreateRGBSurface(SDL_SWSURFACE, textSurface_->w,
+                                              textSurface_->h, 32, 0, 0, 0, 0);
+    SDL_BlitSurface(textSurface_, NULL, inmed, NULL);
+    this->modelData_ = createVertexData();
+    texture_ = new Texture(GL_TEXTURE_2D, inmed);
+    projection_ = glm::ortho(0.0f, 1024.0f, 768.0f, 0.0f);
+
+    this->Object::init();
+
+    TTF_CloseFont(font_);
 }		// -----  end of method Text::init  -----
 
 //-----------------------------------------------------------------------------
@@ -64,3 +77,27 @@ Text::openFont ()
     else
         return true;
 }		// -----  end of method Text::openFont  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Text
+//      Method:  createVertexData
+// Description:  Creates an array of vertex data for the texture.
+//-----------------------------------------------------------------------------
+    std::vector<GLfloat>
+Text::createVertexData ()
+{
+    GLfloat w = textSurface_->w;
+    GLfloat h = textSurface_->h;
+    GLfloat x = 0.0f;
+    GLfloat y = 0.0f;
+    GLfloat data[48] = { x,   y,   1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                         x,   y+h, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+                         x+w, y+h, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+                         x,   y,   1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                         x+w, y+h, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+                         x+w, y,   1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f};
+    std::vector<GLfloat> vectorData;
+    vectorData.assign(data, data+48);
+    return vectorData;
+}		// -----  end of method Text::createVertexData  -----
+

@@ -32,7 +32,6 @@
 #include    <iostream>
 #include    <GL/glew.h>
 #include    "Context.h"
-#include    "Text.h"
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
@@ -100,15 +99,24 @@ Context::setup ()
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
+//      Method:  clear
+// Description:  Clears the screen with an OpenGL call.
+//-----------------------------------------------------------------------------
+    void
+Context::clear ()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | 
+            GL_STENCIL_BUFFER_BIT );
+}		// -----  end of method Context::clear  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Context
 //      Method:  render
 // Description:  For each frame, render the scene by setting up the objects.
 //-----------------------------------------------------------------------------
     void
 Context::render ()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | 
-            GL_STENCIL_BUFFER_BIT );
-
     // Draw objects
     for ( unsigned int i = 0; i < objects.size(); i += 1 ) {
         objects[i].bind(proj_, cam_);

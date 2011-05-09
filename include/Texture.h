@@ -31,10 +31,9 @@
 #ifndef  TEXTURE_H
 #define  TEXTURE_H
 
-#include    <string>
-#include    <vector>
 #include    <GL/gl.h>
 #include    <png++/png.hpp>
+#include    <SDL/SDL.h>
 
 // ============================================================================
 //        Class:  Texture
@@ -47,8 +46,8 @@ class Texture
         Texture ();
         Texture ( GLenum textureTarget, 
                   const png::image<png::rgba_pixel>& png );
-        Texture ( GLenum textureTarget, std::vector<unsigned char> bytes,
-                  unsigned char w, unsigned char h );
+        Texture ( GLenum textureTarget,
+                  SDL_Surface *surface );
         ~Texture ();
         void bind ();
         void unbind ();
@@ -59,13 +58,13 @@ class Texture
 
     private:
         void load ();
-        void setBytesFromPNG ( const png::image<png::rgba_pixel>& png );
+        void setFromPNG ( const png::image<png::rgba_pixel>& png );
+        void setFromSDL_Surface ( SDL_Surface *surface );
 
         // ====================  DATA MEMBERS  ================================
         GLenum textureTarget_;
         int width_;
         int height_;
-        std::vector<unsigned char> bytes_;
         GLuint texID;
 
 }; // -----  end of class Texture  -----
