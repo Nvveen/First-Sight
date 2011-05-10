@@ -28,8 +28,8 @@
 // 
 // ============================================================================
 
-#ifndef  OBJECT_INC
-#define  OBJECT_INC
+#ifndef  OBJECT_H
+#define  OBJECT_H
 
 #include    <string>
 #include    "Projection.h"
@@ -61,6 +61,7 @@ class Object
 
         // ====================  MUTATORS      ================================
         void bind ( Projection *proj, Camera *cam );
+        void push ( GLfloat vert[3], GLfloat tex[2], GLfloat normal[3] );
 
         // ====================  OPERATORS     ================================
 
@@ -114,4 +115,22 @@ Object::bind ( Projection *proj, Camera *cam )
     camera_ = cam->getCamera();
 }		// -----  end of method Object::bind  -----
 
-#endif   // ----- #ifndef OBJECT_INC  -----
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  push
+// Description:  Pushes a vertex onto the modeldata matrix.
+//-----------------------------------------------------------------------------
+    inline void
+Object::push ( GLfloat vert[3], GLfloat tex[2], GLfloat normal[3] )
+{
+    modelData_.push_back(vert[0]);
+    modelData_.push_back(vert[1]);
+    modelData_.push_back(vert[2]);
+    modelData_.push_back(tex[0]);
+    modelData_.push_back(tex[1]);
+    modelData_.push_back(normal[0]);
+    modelData_.push_back(normal[1]);
+    modelData_.push_back(normal[2]);
+}		// -----  end of method Object::push  -----
+
+#endif   // ----- #ifndef OBJECT_H  -----

@@ -1,3 +1,17 @@
+// This file is part of First Sight.
+// 
+// First Sight is free software: you can redistribute it and/or modify it under 
+// the terms of the GNU General Public License as published by the 
+// Free Software Foundation, either version 3 of the License, or 
+// (at your option) any later version.
+// 
+// First Sight is distributed in the hope that it will be useful, but WITHOUT 
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+// more details.
+// 
+// You should have received a copy of the GNU General Public License along with 
+// First Sight. If not, see <http://www.gnu.org/licenses/>.
 // ============================================================================
 // 
 //       Filename:  Text.h
@@ -18,10 +32,9 @@
 #define  TEXT_H
 
 #include    <string>
-#include    <SDL/SDL_ttf.h>
+#include    <vector>
 #include    "Object.h"
-#include    "Projection.h"
-#include    "Camera.h"
+#include    "Font.h"
 
 // ============================================================================
 //        Class:  Text
@@ -33,7 +46,8 @@ class Text : public Object
     public:
 
         // ====================  LIFECYCLE     ================================
-        Text ( std::string textString );
+        Text ( std::string textString, int x, int y, Font& font );
+        void draw ();
 
         // ====================  ACCESSORS     ================================
 
@@ -47,15 +61,13 @@ class Text : public Object
     private:
         // ====================  DATA MEMBERS  ================================
         std::string textString_;
-        std::string fontFile_;
+        int x_;
+        int y_;
 
-        TTF_Font *font_;
-        SDL_Color color_;
-        SDL_Surface *textSurface_;
+        Font *font_;
 
         void init ();
-        bool openFont ();
-        std::vector<GLfloat>  createVertexData ();
+        void createLetterQuad ( char c, float x, float y );
 }; // -----  end of class Text  -----
 
 #endif   // ----- #ifndef TEXT_H  -----

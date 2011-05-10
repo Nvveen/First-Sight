@@ -43,13 +43,6 @@
 Object::Object ( std::string datName, Shader shader ) :
     shader_(shader)
 {
-    projection_ = glm::mat4(1.0f);
-    camera_ = glm::mat4(1.0f);
-    translation = glm::mat4(1.0f);
-    rotation = glm::mat4(1.0f);
-    scaling = glm::mat4(1.0f);
-    model_ = NULL;
-    texture_ = NULL;
     this->readDat(datName);
     this->init();
 }  // -----  end of method Object::Object  (constructor)  -----

@@ -1,3 +1,17 @@
+// This file is part of First Sight.
+// 
+// First Sight is free software: you can redistribute it and/or modify it under 
+// the terms of the GNU General Public License as published by the 
+// Free Software Foundation, either version 3 of the License, or 
+// (at your option) any later version.
+// 
+// First Sight is distributed in the hope that it will be useful, but WITHOUT 
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+// more details.
+// 
+// You should have received a copy of the GNU General Public License along with 
+// First Sight. If not, see <http://www.gnu.org/licenses/>.
 // ============================================================================
 // 
 //       Filename:  Text.cpp
@@ -23,15 +37,10 @@
 //      Method:  Text
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Text::Text ( std::string textString ) :
-    textString_(textString), fontFile_("arial.ttf")
+Text::Text ( std::string textString, int x, int y, Font& font ) :
+    textString_(textString), x_(x), y_(y), font_(&font)
 {
-    color_ = {255, 255, 255, 0};
-    font_ = NULL;
-    textSurface_ = NULL;
-    TTF_Init();
     init();
-    TTF_Quit();
 }  // -----  end of method Text::Text  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -42,62 +51,75 @@ Text::Text ( std::string textString ) :
     void
 Text::init ()
 {
-    if ( !openFont() ) {
-        std::cerr << "Error loading font: " << TTF_GetError() << "\n";
-        exit(1);
+    // For every character in a string, we need to loop through its letters,
+    // generate a quad, and set that quad next to the previous one.
+    float k = x_;
+    for ( unsigned int i = 0; i < textString_.size(); i += 1 ) {
+        // Get current character from string.
+        char c = textString_[i];
+        // Create quad.
+        createLetterQuad(c, k, y_);
+        // Get the letters texture coordinate values.
+        SDL_Rect *rect = &font_->charMap_[c];
+        // Set the location for the next quad.
+        k += (float)rect->w;
     }
-    textSurface_ = TTF_RenderText_Solid(font_, textString_.c_str(), color_);
-    if ( textSurface_ == NULL ) {
-        std::cerr << "Error rendering text: " << TTF_GetError() << "\n";
-        exit(1);
-    }
-    SDL_Surface *inmed = SDL_CreateRGBSurface(SDL_SWSURFACE, textSurface_->w,
-                                              textSurface_->h, 32, 0, 0, 0, 0);
-    SDL_BlitSurface(textSurface_, NULL, inmed, NULL);
-    this->modelData_ = createVertexData();
-    texture_ = new Texture(GL_TEXTURE_2D, inmed);
+    // Set the texture that contains the bitmap font from the Font object.
+    texture_ = font_->tex_;
+    // This is not a 3D projection, so we're going orthogonal, baby!
     projection_ = glm::ortho(0.0f, 1024.0f, 768.0f, 0.0f);
-
+    // Do normal object inits.
     this->Object::init();
-
-    TTF_CloseFont(font_);
 }		// -----  end of method Text::init  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Text
-//      Method:  openFont
-// Description:  Tries to open the font file.
+//      Method:  createLetterQuad
+// Description:  Creates a quad for a letter at position (x,y).
 //-----------------------------------------------------------------------------
-    bool
-Text::openFont ()
+    void
+Text::createLetterQuad ( char c, float x, float y )
 {
-    font_ = TTF_OpenFont(fontFile_.c_str(), 18);
-    if ( font_ == NULL )
-        return false;
-    else
-        return true;
-}		// -----  end of method Text::openFont  -----
+    // Get the current letter's texture coordinates.
+    SDL_Rect *rect = &font_->charMap_[c];
+    float cw = rect->w; // Current char width
+    float ch = rect->h; // Current char height
+    float charPosX = (float)rect->x/(float)font_->w_; // Char pos in font
+    float charPosY = (float)rect->y/(float)font_->h_; // Char pos in font
+    float cwNorm = cw/(float)font_->w_; // Char width and height normalized to
+    float chNorm = ch/(float)font_->h_; // values in an orthogonal projection.
+    // Every quad needs 6 vertex specifications (2 triangles). Texture
+    // coordinates are specified by getting the characters position in the
+    // bitmap, and depending on the position of the tex coord, adding the
+    // normalized values of the char's width or height. We don't need normals,
+    // so we're just setting that to default values.
+    // This means the layout is as follows:
+    //
+    // vertexX vertexY vertexZ texX texY normalX normalY normalZ
+    //
+    GLfloat data[48] = {
+        x,    y,    1.0f, charPosX,        charPosY,        1.0f, 0.0f, 0.0f,
+        x,    y+ch, 1.0f, charPosX,        charPosY+chNorm, 1.0f, 0.0f, 0.0f,
+        x+cw, y+ch, 1.0f, charPosX+cwNorm, charPosY+chNorm, 1.0f, 0.0f, 0.0f,
+        x,    y,    1.0f, charPosX,        charPosY,        1.0f, 0.0f, 0.0f,
+        x+cw, y+ch, 1.0f, charPosX+cwNorm, charPosY+chNorm, 1.0f, 0.0f, 0.0f,
+        x+cw, y,    1.0f, charPosX+cwNorm, charPosY,        1.0f, 0.0f, 0.0f
+    };
+    // When done, push all the vertex data into the model.
+    for ( int i = 0; i < 48; i += 1 ) modelData_.push_back(data[i]);
+}		// -----  end of method Text::createLetterQuad  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Text
-//      Method:  createVertexData
-// Description:  Creates an array of vertex data for the texture.
+//      Method:  draw
+// Description:  Wrap the object draw method to disable depth testing, since
+//               this is an orthographic rendering.
 //-----------------------------------------------------------------------------
-    std::vector<GLfloat>
-Text::createVertexData ()
+    void
+Text::draw ()
 {
-    GLfloat w = textSurface_->w;
-    GLfloat h = textSurface_->h;
-    GLfloat x = 0.0f;
-    GLfloat y = 0.0f;
-    GLfloat data[48] = { x,   y,   1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-                         x,   y+h, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-                         x+w, y+h, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-                         x,   y,   1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-                         x+w, y+h, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-                         x+w, y,   1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f};
-    std::vector<GLfloat> vectorData;
-    vectorData.assign(data, data+48);
-    return vectorData;
-}		// -----  end of method Text::createVertexData  -----
+    glDisable(GL_DEPTH_TEST);
+    this->Object::draw();
+    glEnable(GL_DEPTH_TEST);
+}		// -----  end of method Text::draw  -----
 

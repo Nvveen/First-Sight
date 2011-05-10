@@ -2,6 +2,7 @@ set(firstsight_SRCS
     Camera.cpp
     Context.cpp
     EventHandler.cpp
+    Font.cpp
     Main.cpp
     Model.cpp
     Object.cpp

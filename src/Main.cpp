@@ -33,6 +33,7 @@
 #include    "Context.h"
 #include    "EventHandler.h"
 #include    "Object.h"
+#include    "Font.h"
 #include    "Text.h"
 
     int
@@ -46,7 +47,11 @@ main ( int argc, char *argv[] )
 
     Object cube("data/dirt.dat");
     windowContext.push(cube);
-    Text test("Hello, world!");
+    Object cube2("data/dirt.dat");
+    cube2.translate(0.0f, -0.25f, 0.0f);
+    windowContext.push(cube2);
+    Font arial("arial.ttf");
+    Text test("Hello, world!", 1024/2, 768/2, arial);
     Camera *cam = windowContext.getCam();
     EventHandler event(windowContext);
     event.bind(cam, &Camera::move, 0.3f, 0.0f, 0.0f, Key::Left);
