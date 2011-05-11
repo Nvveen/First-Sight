@@ -64,6 +64,9 @@ EventHandler::pollEvents ()
                 if ( it->first == keyset ) (it->second)();
             }
         }
+        if ( event_.type == SDL_VIDEORESIZE ) {
+            context_->resize(event_.resize.w, event_.resize.h);
+        }
     }
 }		// -----  end of method EventHandler::pollEvents  -----
 

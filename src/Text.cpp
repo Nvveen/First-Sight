@@ -65,8 +65,6 @@ Text::init ()
     }
     // Set the texture that contains the bitmap font from the Font object.
     texture_ = font_->tex_;
-    // This is not a 3D projection, so we're going orthogonal, baby!
-    projection_ = glm::ortho(0.0f, 1024.0f, 768.0f, 0.0f);
     // Do normal object inits.
     this->Object::init();
 }		// -----  end of method Text::init  -----

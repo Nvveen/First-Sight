@@ -54,6 +54,7 @@ main ( int argc, char *argv[] )
     windowContext.push(cube2);
     Font arial("arial.ttf");
     Text test("Hello, world!", 1024/2, 768/2, arial);
+    windowContext.pushOrtho(test);
 
     EventHandler event(windowContext);
     Camera *cam = windowContext.getCam();
@@ -70,7 +71,6 @@ main ( int argc, char *argv[] )
     while ( windowContext.isOpened() ) {
         event.pollEvents();
         windowContext.clear();
-        test.draw();
         windowContext.render();
     }
     return 0;

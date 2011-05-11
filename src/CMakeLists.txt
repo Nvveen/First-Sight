@@ -6,7 +6,6 @@ set(firstsight_SRCS
     Main.cpp
     Model.cpp
     Object.cpp
-    Projection.cpp
     Shader.cpp
     Text.cpp
     Texture.cpp)

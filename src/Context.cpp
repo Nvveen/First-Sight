@@ -39,13 +39,15 @@
 // Description:  constructor
 //-----------------------------------------------------------------------------
 Context::Context ( GLfloat w, GLfloat h, std::string windowName,
-                   Projection* proj, Camera* cam ) :
+                   Projection* pers, Camera* cam ) :
     w_(w), h_(h), windowName_(windowName)
 {
-    if ( proj == NULL ) proj = new Projection(w_/h_);
-    proj_ = proj;
+    if ( pers == NULL ) pers = new Projection(w_/h_);
+    pers_ = pers;
     if ( cam == NULL ) cam = new Camera;
     cam_ = cam;
+    ortho_ = new Projection;
+    *ortho_ = Projection::ortho(w_, h_);
 
     mainWindow_ = NULL;
     windowOpened_ = true;
@@ -74,7 +76,7 @@ Context::setup ()
         std::cerr << "Couldn't initialize SDL.\n";
         exit(1);
     }
-    mainWindow_ = SDL_SetVideoMode(w_, h_, 32, SDL_OPENGL);
+    mainWindow_ = SDL_SetVideoMode(w_, h_, 32, SDL_OPENGL | SDL_RESIZABLE);
     if ( mainWindow_ == NULL ) {
         std::cerr << "Error setting videomode.\n";
         exit(1);
@@ -123,8 +125,12 @@ Context::render ()
 {
     // Draw objects
     for ( unsigned int i = 0; i < objects_.size(); i += 1 ) {
-        objects_[i].bind(proj_, cam_);
+        objects_[i].bind(pers_, cam_);
         objects_[i].draw();
+    }
+    for ( unsigned int i = 0; i < orthoObjects_.size(); i += 1 ) {
+        orthoObjects_[i].bind(ortho_, NULL);
+        orthoObjects_[i].draw();
     }
 
     SDL_GL_SwapBuffers();
@@ -154,6 +160,7 @@ Context::resize ( int w, int h )
     w_ = (GLfloat)w;
     h_ = (GLfloat)h;
     // Set this function to resize with values it already has.
-    proj_->setPerspective(w_, h_);
+    pers_->setAspectRatio(w_, h_);
+    ortho_->setOrtho(w_, h_);
 }		// -----  end of method Context::resize  -----
 

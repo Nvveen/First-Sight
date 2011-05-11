@@ -50,7 +50,7 @@ class Context
 
         // ====================  LIFECYCLE     ================================
         Context ( GLfloat w, GLfloat h, std::string windowName,
-                  Projection* proj=NULL, Camera* cam=NULL ); 
+                  Projection* pers=NULL, Camera* cam=NULL ); 
         ~Context ();
         void setup ();
         void clear ();
@@ -62,7 +62,8 @@ class Context
         Camera* getCam ();
 
         // ====================  MUTATORS      ================================
-        void push ( const Object& cube );
+        void push ( const Object& obj );
+        void pushOrtho ( const Object& obj );
         void close ();
         void setFramerateLimit ( int limit );
 
@@ -78,10 +79,12 @@ class Context
         GLfloat h_;
         std::string windowName_;
 
-        Projection* proj_;
+        Projection* pers_;
+        Projection* ortho_;
         Camera* cam_;
 
         std::vector<Object> objects_;
+        std::vector<Object> orthoObjects_;
         std::map<std::string, Shader> shaders_;
 
         SDL_Surface *mainWindow_;
@@ -138,10 +141,21 @@ Context::setFramerateLimit ( int limit )
 // Description:  Pushes an object onto the object stack.
 //-----------------------------------------------------------------------------
     inline void
-Context::push ( const Object& cube )
+Context::push ( const Object& obj )
 {
-    objects_.push_back(cube);
+    objects_.push_back(obj);
 }		// -----  end of method Context::push  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Context
+//      Method:  pushOrtho
+// Description:  Pushes an orthogonal object onto the object stack.
+//-----------------------------------------------------------------------------
+    inline void
+Context::pushOrtho ( const Object& obj )
+{
+    orthoObjects_.push_back(obj);
+}		// -----  end of method Context::pushOrtho  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Context

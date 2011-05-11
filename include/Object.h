@@ -112,7 +112,7 @@ Object::toRadians ( GLfloat angle )
 Object::bind ( Projection *proj, Camera *cam )
 {
     projection_ = proj->getProjection();
-    camera_ = cam->getCamera();
+    if ( cam != NULL ) camera_ = cam->getCamera();
 }		// -----  end of method Object::bind  -----
 
 //-----------------------------------------------------------------------------

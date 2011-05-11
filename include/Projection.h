@@ -34,6 +34,7 @@
 
 #include    <GL/glew.h>
 #include    <glm/glm.hpp>
+#include    <glm/gtc/matrix_transform.hpp>
 
 // ============================================================================
 //        Class:  Projection
@@ -47,12 +48,14 @@ class Projection
         Projection () {};
         Projection ( GLfloat aspectRatio, GLfloat FOV=45.0f,
                      GLfloat zNear=0.1f, GLfloat zFar=100.0f );
-        void setPerspective ( GLfloat w, GLfloat h );
+        static Projection ortho ( GLfloat width, GLfloat h );
 
         // ====================  ACCESSORS     ================================
         glm::mat4& getProjection ();
 
         // ====================  MUTATORS      ================================
+        void setAspectRatio ( GLfloat width, GLfloat height );
+        void setOrtho ( GLfloat w, GLfloat h );
 
         // ====================  OPERATORS     ================================
 
@@ -61,17 +64,77 @@ class Projection
 
     private:
         // ====================  DATA MEMBERS  ================================
+        void init ();
+        void initOrtho ();
 
-        struct Perspective {
+        struct {
             GLfloat FOV;
             GLfloat aspectRatio;
             GLfloat zNear;
             GLfloat zFar;
-        } perspective;	// ----------  end of struct Perspective  ----------
-
+        } pers_;
+        
+        struct {
+            GLfloat w;
+            GLfloat h;
+        } ortho_;
 
         glm::mat4 projectionMatrix_;
 }; // -----  end of class Projection  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Projection
+//      Method:  Projection
+// Description:  constructor
+//-----------------------------------------------------------------------------
+    inline
+Projection::Projection ( GLfloat aspectRatio, GLfloat FOV, GLfloat zNear,
+                         GLfloat zFar )
+{
+    pers_.aspectRatio = aspectRatio;
+    pers_.FOV = FOV; 
+    pers_.zNear = zNear;
+    pers_.zFar = zFar;
+    init();
+}  // -----  end of method Projection::Projection  (constructor)  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Projection
+//      Method:  ortho
+// Description:  Returns an orthogonal projection instead of a normal one.
+//-----------------------------------------------------------------------------
+    inline Projection
+Projection::ortho ( GLfloat width, GLfloat height )
+{
+    Projection ortho;
+    ortho.ortho_.w = width;
+    ortho.ortho_.h = height;
+    ortho.initOrtho();
+    return ortho;
+}		// -----  end of method Projection::ortho  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Projection
+//      Method:  init
+// Description:  Initialises a basic perspective projection.
+//-----------------------------------------------------------------------------
+    inline void
+Projection::init ()
+{
+    projectionMatrix_ = glm::perspective(pers_.FOV, pers_.aspectRatio, 
+                                         pers_.zNear, pers_.zFar);
+}		// -----  end of method Projection::init  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Projection
+//      Method:  initOrtho
+// Description:  Initialies the projection as an orthogonal one.
+//-----------------------------------------------------------------------------
+    inline void
+Projection::initOrtho ()
+{
+    projectionMatrix_ = glm::ortho(0.0f, ortho_.w, ortho_.h, 0.0f);
+}		// -----  end of method Projection::initOrtho  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Projection
@@ -83,5 +146,30 @@ Projection::getProjection ()
 {
     return projectionMatrix_;
 }		// -----  end of method Projection::getProjection  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Projection
+//      Method:  setAspectRatio
+// Description:  Sets the aspect ratio and reinitializes the projection.
+//-----------------------------------------------------------------------------
+    inline void
+Projection::setAspectRatio ( GLfloat width, GLfloat height )
+{
+    pers_.aspectRatio = width/height;
+    init();
+}		// -----  end of method Projection::setAspectRatio  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Projection
+//      Method:  setOrtho
+// Description:  Sets the width and height for an orthogonal projection.
+//-----------------------------------------------------------------------------
+    inline void
+Projection::setOrtho ( GLfloat w, GLfloat h )
+{
+    ortho_.w = w;
+    ortho_.h = h;
+    initOrtho();
+}		// -----  end of method Projection::setOrtho  -----
 
 #endif   // ----- #ifndef PROJECTION_H  -----
