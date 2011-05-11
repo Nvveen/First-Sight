@@ -61,6 +61,7 @@ class Object
         // ====================  MUTATORS      ================================
         void bind ( Projection *proj, Camera *cam );
         void push ( GLfloat vert[3], GLfloat tex[2], GLfloat normal[3] );
+        void setColor ( GLfloat r, GLfloat g, GLfloat b, GLfloat a );
 
         // ====================  OPERATORS     ================================
 
@@ -76,6 +77,7 @@ class Object
         glm::mat4 translation_;
         glm::mat4 rotation_;
         glm::mat4 scaling_;
+        glm::vec4 color_;
 
         virtual void init ();
 
@@ -132,5 +134,16 @@ Object::push ( GLfloat vert[3], GLfloat tex[2], GLfloat normal[3] )
     modelData_.push_back(normal[1]);
     modelData_.push_back(normal[2]);
 }		// -----  end of method Object::push  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  setColor
+// Description:  Sets the color (overlay) for the object.
+//-----------------------------------------------------------------------------
+    inline void
+Object::setColor ( GLfloat r, GLfloat g, GLfloat b, GLfloat a )
+{
+    color_ = glm::vec4(r, g, b, a);
+}		// -----  end of method Object::setColor  -----
 
 #endif   // ----- #ifndef OBJECT_H  -----

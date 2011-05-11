@@ -50,6 +50,7 @@ Object::Object ( std::string datName, Shader *shader ) :
     translation_ = glm::mat4(1.0f);
     rotation_ = glm::mat4(1.0f);
     scaling_ = glm::mat4(1.0f);
+    color_ = glm::vec4(1.0f);
     model_ = NULL;
     texture_ = NULL;
     this->readDat(datName);
@@ -70,6 +71,7 @@ Object::Object ( Shader *shader ) :
     translation_ = glm::mat4(1.0f);
     rotation_ = glm::mat4(1.0f);
     scaling_ = glm::mat4(1.0f);
+    color_ = glm::vec4(1.0f);
     model_ = NULL;
     texture_ = NULL;
 }  // -----  end of method Object::Object  (constructor)  -----
@@ -162,6 +164,7 @@ Object::draw ()
     shader_->setUniform("vTranslate", translation_);
     shader_->setUniform("vRotate", rotation_);
     shader_->setUniform("vScale", scaling_);
+    shader_->setUniform("varyingColor", color_);
     shader_->setUniform("gSampler", 0);
 
     // Use the vao to draw the vertices

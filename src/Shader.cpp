@@ -68,7 +68,8 @@ Shader::getUniformLocation ( std::string name )
 {
     GLint loc = glGetUniformLocation(shaderProgram_, name.c_str());
     if ( loc == -1 ) {
-        std::cerr << "Could not find the uniform in the shader.\n";
+        std::cerr << "Could not find the uniform " << name;
+        std::cerr << " in the shader.\n";
         exit(1);
     }
     return loc;

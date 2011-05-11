@@ -17,7 +17,8 @@ First Sight. If not, see <http://www.gnu.org/licenses/>. */
 in vec2 TexCoord0;
 
 uniform sampler2D gSampler;
+uniform vec4 varyingColor;
 
 void main(void) {
-    gl_FragColor = texture2D(gSampler, TexCoord0);
+    gl_FragColor = texture2D(gSampler, TexCoord0) * varyingColor;
 }

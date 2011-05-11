@@ -54,6 +54,7 @@ main ( int argc, char *argv[] )
     windowContext.push(cube2);
     Font arial("arial.ttf");
     Text test("Hello, world!", 1024/2, 768/2, arial);
+    test.setColor(1.0f, 0.0f, 0.0f, 1.0f);
     windowContext.pushOrtho(test);
 
     EventHandler event(windowContext);
