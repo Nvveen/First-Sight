@@ -37,7 +37,7 @@
 // Description:  constructor
 //-----------------------------------------------------------------------------
 Text::Text ( std::string textString, int x, int y, Font& font ) :
-    textString_(textString), x_(x), y_(y), font_(&font)
+    Object(), textString_(textString), x_(x), y_(y), font_(&font)
 {
     init();
 }  // -----  end of method Text::Text  (constructor)  -----

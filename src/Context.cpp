@@ -15,7 +15,7 @@
 // ============================================================================
 // 
 //       Filename:  Context.cpp
-// 
+//
 //    Description:  Class that handles the context creation of the window in
 //                  freeglut.
 // 
@@ -32,6 +32,8 @@
 #include    <iostream>
 #include    <GL/glew.h>
 #include    "Context.h"
+
+std::map<std::string, Shader> Context::shaders;
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
@@ -100,7 +102,7 @@ Context::setup ()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Add shaders to shaderlist
-    shaders_["default"] = Shader("default.vs", "default.fs");
+    shaders["default"] = Shader("default.vs", "default.fs");
 }		// -----  end of method Context::setup  -----
 
 //-----------------------------------------------------------------------------

@@ -47,11 +47,10 @@ class Object
     public:
 
         // ====================  LIFECYCLE     ================================
-        Object ( Shader shader=Shader("default.vs", "default.fs") );
-        Object ( std::string datName, 
-                 Shader shader=Shader("default.vs", "default.fs") );
+        Object ( Shader *shader=NULL );
+        Object ( std::string datName, Shader *shader=NULL );
         ~Object ();
-        void draw ();
+        virtual void draw ();
 
         void translate ( GLfloat x, GLfloat y, GLfloat z );
         void rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
@@ -70,15 +69,15 @@ class Object
         std::vector<GLfloat> modelData_;
         Texture *texture_;
 
-        Shader shader_;
+        Shader *shader_;
 
         glm::mat4 projection_;
         glm::mat4 camera_;
-        glm::mat4 translation;
-        glm::mat4 rotation;
-        glm::mat4 scaling;
+        glm::mat4 translation_;
+        glm::mat4 rotation_;
+        glm::mat4 scaling_;
 
-        void init ();
+        virtual void init ();
 
     private:
         // ====================  DATA MEMBERS  ================================

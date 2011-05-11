@@ -57,6 +57,7 @@ class Context
         void render ();
         void resize ( int w, int h );
 
+        static std::map<std::string, Shader> shaders;
         // ====================  ACCESSORS     ================================
         bool isOpened ();
         Camera* getCam ();
@@ -70,7 +71,6 @@ class Context
         // ====================  OPERATORS     ================================
 
         friend class EventHandler;
-    protected:
         // ====================  DATA MEMBERS  ================================
 
     private:
@@ -85,7 +85,6 @@ class Context
 
         std::vector<Object> objects_;
         std::vector<Object> orthoObjects_;
-        std::map<std::string, Shader> shaders_;
 
         SDL_Surface *mainWindow_;
         bool windowOpened_;

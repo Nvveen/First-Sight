@@ -33,7 +33,6 @@
 #include    <cstdlib>
 #include    <GL/glew.h>
 #include    <glm/gtc/type_ptr.hpp>
-
 #include    "Shader.h"
 
 //-----------------------------------------------------------------------------
@@ -58,28 +57,6 @@ Shader::Shader ( std::string vertexShaderFile, std::string fragmentShaderFile )
     // Create shader program
     createProgram();
 }  // -----  end of method Shader::Shader  (constructor)  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Shader
-//      Method:  bind
-// Description:  Binds a shader program for active use.
-//-----------------------------------------------------------------------------
-    void
-Shader::bind ()
-{
-    if ( shaderProgram_ ) glUseProgram(shaderProgram_);
-}		// -----  end of method Shader::bind  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Shader
-//      Method:  unbind
-// Description:  Unbinds the bound shader program.
-//-----------------------------------------------------------------------------
-    void
-Shader::unbind ()
-{
-    if ( shaderProgram_ ) glUseProgram(0);
-}		// -----  end of method Shader::unbind  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Shader
@@ -207,6 +184,7 @@ Shader::compileShader ( std::string code, GLenum type )
     void
 Shader::createProgram ()
 {
+    // Create the shader program
     shaderProgram_ = glCreateProgram();
     // Create the two shader objects
     vertexShaderObject_ = compileShader(vertexShaderCode_, GL_VERTEX_SHADER);

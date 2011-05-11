@@ -88,4 +88,26 @@ Shader::getShaderProgram ()
     return shaderProgram_;
 }		// -----  end of method Shader::getShaderProgram  -----
 
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  bind
+// Description:  Binds a shader program for active use.
+//-----------------------------------------------------------------------------
+    inline void
+Shader::bind ()
+{
+    if ( shaderProgram_ ) glUseProgram(shaderProgram_);
+}		// -----  end of method Shader::bind  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  unbind
+// Description:  Unbinds the bound shader program.
+//-----------------------------------------------------------------------------
+    inline void
+Shader::unbind ()
+{
+    if ( shaderProgram_ ) glUseProgram(0);
+}		// -----  end of method Shader::unbind  -----
+
 #endif   // ----- #ifndef SHADER_H  -----

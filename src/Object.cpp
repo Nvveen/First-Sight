@@ -34,15 +34,24 @@
 #include    <GL/glew.h>
 #include    "Undat.h"
 #include    "Object.h"
+#include    "Context.h"
 
 //-----------------------------------------------------------------------------
 //       Class:  Object
 //      Method:  Object
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Object::Object ( std::string datName, Shader shader ) :
+Object::Object ( std::string datName, Shader *shader ) :
     shader_(shader)
 {
+    if ( shader_ == NULL ) shader_ = &Context::shaders["default"];
+    projection_ = glm::mat4(1.0f);
+    camera_ = glm::mat4(1.0f);
+    translation_ = glm::mat4(1.0f);
+    rotation_ = glm::mat4(1.0f);
+    scaling_ = glm::mat4(1.0f);
+    model_ = NULL;
+    texture_ = NULL;
     this->readDat(datName);
     this->init();
 }  // -----  end of method Object::Object  (constructor)  -----
@@ -52,14 +61,15 @@ Object::Object ( std::string datName, Shader shader ) :
 //      Method:  Object
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Object::Object ( Shader shader ) :
+Object::Object ( Shader *shader ) :
     shader_(shader)
 {
+    if ( shader_ == NULL ) shader_ = &Context::shaders["default"];
     projection_ = glm::mat4(1.0f);
     camera_ = glm::mat4(1.0f);
-    translation = glm::mat4(1.0f);
-    rotation = glm::mat4(1.0f);
-    scaling = glm::mat4(1.0f);
+    translation_ = glm::mat4(1.0f);
+    rotation_ = glm::mat4(1.0f);
+    scaling_ = glm::mat4(1.0f);
     model_ = NULL;
     texture_ = NULL;
 }  // -----  end of method Object::Object  (constructor)  -----
@@ -129,7 +139,7 @@ Object::init ()
 Object::draw ()
 {
     // Use the specified program
-    shader_.bind();
+    shader_->bind();
     // Enable the arrays
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     glEnableVertexAttribArray(0);
@@ -147,12 +157,12 @@ Object::draw ()
     texture_->bind();
 
     // Set the uniform variables in the shader
-    shader_.setUniform("vProjection", projection_);
-    shader_.setUniform("vCamera", camera_);
-    shader_.setUniform("vTranslate", translation);
-    shader_.setUniform("vRotate", rotation);
-    shader_.setUniform("vScale", scaling);
-    shader_.setUniform("gSampler", 0);
+    shader_->setUniform("vProjection", projection_);
+    shader_->setUniform("vCamera", camera_);
+    shader_->setUniform("vTranslate", translation_);
+    shader_->setUniform("vRotate", rotation_);
+    shader_->setUniform("vScale", scaling_);
+    shader_->setUniform("gSampler", 0);
 
     // Use the vao to draw the vertices
     glDrawArrays(GL_TRIANGLES, 0, triangleCount_);
@@ -165,7 +175,7 @@ Object::draw ()
     glDisableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     // Unbind the shader
-    shader_.unbind();
+    shader_->unbind();
 }		// -----  end of method Object::draw  -----
 
 //-----------------------------------------------------------------------------
@@ -178,7 +188,7 @@ Object::draw ()
 Object::translate ( GLfloat x, GLfloat y, GLfloat z )
 {
     glm::vec3 loc(x, y, z);
-    translation = glm::translate(glm::mat4(1.0f), loc);
+    translation_ = glm::translate(glm::mat4(1.0f), loc);
 }		// -----  end of method Object::translate  -----
 
 //-----------------------------------------------------------------------------
@@ -191,7 +201,7 @@ Object::translate ( GLfloat x, GLfloat y, GLfloat z )
 Object::rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z )
 {
     glm::vec3 axis(x, y, z);
-    rotation = glm::rotate(glm::mat4(1.0f), toRadians(angle), axis);
+    rotation_ = glm::rotate(glm::mat4(1.0f), toRadians(angle), axis);
 }		// -----  end of method Object::rotate  -----
 
 //-----------------------------------------------------------------------------
@@ -204,6 +214,6 @@ Object::rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z )
 Object::scale ( GLfloat x, GLfloat y, GLfloat z )
 {
     glm::vec3 scaleVec(x, y, z);
-    scaling = glm::scale(glm::mat4(1.0f), scaleVec);
+    scaling_ = glm::scale(glm::mat4(1.0f), scaleVec);
 }		// -----  end of method Object::scale  -----
 
