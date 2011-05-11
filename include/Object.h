@@ -70,6 +70,8 @@ class Object
         std::vector<GLfloat> modelData_;
         Texture *texture_;
 
+        Shader shader_;
+
         glm::mat4 projection_;
         glm::mat4 camera_;
         glm::mat4 translation;
@@ -86,7 +88,6 @@ class Object
         GLuint vbo_;
 
         Model *model_;
-        Shader shader_;
         
         void readDat( std::string datName );
         static GLfloat toRadians ( GLfloat angle );

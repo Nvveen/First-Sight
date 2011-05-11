@@ -40,6 +40,8 @@ Font::Font ()
 {
     w_ = 0;
     h_ = 0;
+    charW_ = 0;
+    charH_ = 0;
 }  // -----  end of method Font::Font  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -51,6 +53,8 @@ Font::Font ( std::string fileName ) : fileName_(fileName)
 {
     w_ = 0;
     h_ = 0;
+    charW_ = 0;
+    charH_ = 0;
     init ();
 }  // -----  end of method Font::Font  (constructor)  -----
 
@@ -63,6 +67,7 @@ Font::~Font ()
 {
     TTF_CloseFont(font_);
     SDL_FreeSurface(bitmap_);
+    if ( tex_ != NULL ) delete tex_;
 }  // -----  end of method Font::~Font  (destructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -139,7 +144,7 @@ Font::loadFont ()
     void
 Font::generateBitmap ()
 {
-    SDL_Color color = { 255, 0, 255, 0 };
+    SDL_Color color = { 255, 255, 255, 0 };
     // We have to loop through every ASCII letter again.
     for ( int i = 0; i < 16; i += 1 ) {
         for ( int j = 0; j < 16; j += 1 ) {

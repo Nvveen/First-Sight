@@ -56,6 +56,7 @@ class Shader
         // ====================  MUTATORS      ================================
         bool setUniform ( std::string name, glm::mat4 matrix );
         bool setUniform ( std::string name, GLfloat val );
+        bool setUniform ( std::string name, glm::vec4 vec );
 
         // ====================  OPERATORS     ================================
 
@@ -73,6 +74,7 @@ class Shader
         std::string addCode ( std::string fileName );
         GLuint compileShader ( std::string code, GLenum type );
         void createProgram ();
+        GLint getUniformLocation ( std::string name );
 }; // -----  end of class Shader  -----
 
 //-----------------------------------------------------------------------------

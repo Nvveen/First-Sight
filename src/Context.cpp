@@ -97,7 +97,7 @@ Context::setup ()
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Add shaders to shaderlist
     shaders_["default"] = Shader("default.vs", "default.fs");

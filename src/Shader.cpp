@@ -83,6 +83,22 @@ Shader::unbind ()
 
 //-----------------------------------------------------------------------------
 //       Class:  Shader
+//      Method:  getUniformLocation
+// Description:  Gets the location of an uniform in the shader.
+//-----------------------------------------------------------------------------
+    GLint
+Shader::getUniformLocation ( std::string name )
+{
+    GLint loc = glGetUniformLocation(shaderProgram_, name.c_str());
+    if ( loc == -1 ) {
+        std::cerr << "Could not find the uniform in the shader.\n";
+        exit(1);
+    }
+    return loc;
+}		// -----  end of method Shader::getUniformLocation  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
 //      Method:  setUniform
 // Description:  Sets a uniform variable for the shader.
 //-----------------------------------------------------------------------------
@@ -90,12 +106,8 @@ Shader::unbind ()
 Shader::setUniform ( std::string name, glm::mat4 matrix )
 {
     if ( shaderProgram_ ) {
-        GLint loc = glGetUniformLocation(shaderProgram_, name.c_str());
-        if ( loc == -1 ) {
-            std::cerr << "Could not find the uniform in the shader.\n";
-            return false;
-        }
-        glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(matrix));
+        glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, 
+                           glm::value_ptr(matrix));
     }
     return true;
 }		// -----  end of method Shader::setUniform  -----
@@ -109,12 +121,21 @@ Shader::setUniform ( std::string name, glm::mat4 matrix )
 Shader::setUniform ( std::string name, GLfloat val )
 {
     if ( shaderProgram_ ) {
-        GLint loc = glGetUniformLocation(shaderProgram_, name.c_str());
-        if ( loc == -1 ) {
-            std::cerr << "Could not find the uniform in the shader.\n";
-            return false;
-        }
-        glUniform1i(loc, val);
+        glUniform1i(getUniformLocation(name), val);
+    }
+    return true;
+}		// -----  end of method Shader::setUniform  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  setUniform
+// Description:  Sets a uniform variable for the shader.
+//-----------------------------------------------------------------------------
+    bool
+Shader::setUniform ( std::string name, glm::vec4 vec )
+{
+    if ( shaderProgram_ ) {
+        glUniform4f(getUniformLocation(name), vec.x, vec.y, vec.z, vec.w);
     }
     return true;
 }		// -----  end of method Shader::setUniform  -----
