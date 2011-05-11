@@ -29,6 +29,7 @@
 // ============================================================================
 
 #include    <iostream>
+#include    <sstream>
 #include    <GL/glew.h>
 #include    "Context.h"
 #include    "EventHandler.h"
@@ -44,6 +45,7 @@ main ( int argc, char *argv[] )
 
     Context windowContext(w, h, windowName);
     windowContext.setup();
+    windowContext.setFramerateLimit(60);
 
     Object cube("data/dirt.dat");
     windowContext.push(cube);
@@ -52,8 +54,9 @@ main ( int argc, char *argv[] )
     windowContext.push(cube2);
     Font arial("arial.ttf");
     Text test("Hello, world!", 1024/2, 768/2, arial);
-    Camera *cam = windowContext.getCam();
+
     EventHandler event(windowContext);
+    Camera *cam = windowContext.getCam();
     event.bind(cam, &Camera::move, 0.3f, 0.0f, 0.0f, Key::Left);
     event.bind(cam, &Camera::move, -0.3f, 0.0f, 0.0f, Key::Right);
     event.bind(cam, &Camera::move, 0.0f, 0.0f, 0.3f, Key::Up);

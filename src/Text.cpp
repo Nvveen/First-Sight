@@ -28,7 +28,6 @@
 // 
 // ============================================================================
 
-#include    <png++/png.hpp>
 #include    <glm/gtc/matrix_transform.hpp>
 #include    "Text.h"
 

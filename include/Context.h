@@ -64,6 +64,7 @@ class Context
         // ====================  MUTATORS      ================================
         void push ( const Object& cube );
         void close ();
+        void setFramerateLimit ( int limit );
 
         // ====================  OPERATORS     ================================
 
@@ -80,12 +81,18 @@ class Context
         Projection* proj_;
         Camera* cam_;
 
-        std::vector<Object> objects;
-        std::map<std::string, Shader> shaders;
+        std::vector<Object> objects_;
+        std::map<std::string, Shader> shaders_;
 
         SDL_Surface *mainWindow_;
-        bool windowOpened;
+        bool windowOpened_;
 
+        struct {
+            int prevTime;
+            int timeElapsed;
+            int limit;
+            bool limitSet;
+        } fpsLimit_;
 }; // -----  end of class Context  -----
 
 //-----------------------------------------------------------------------------
@@ -96,7 +103,7 @@ class Context
     inline bool
 Context::isOpened ()
 {
-    return windowOpened;
+    return windowOpened_;
 }		// -----  end of method Context::isOpened  -----
 
 //-----------------------------------------------------------------------------
@@ -107,8 +114,23 @@ Context::isOpened ()
     inline void
 Context::close ()
 {
-    windowOpened = false;
+    windowOpened_ = false;
 }		// -----  end of method Context::close  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Context
+//      Method:  setFramerateLimit
+// Description:  Sets the framerate to a certain limit, disallowing SDL to
+//               render more frames in a second.
+//-----------------------------------------------------------------------------
+    inline void
+Context::setFramerateLimit ( int limit )
+{
+    fpsLimit_.limitSet = true;
+    // The user inputs a maximum fps, we need to convert that to the limit each
+    // frame gets in time allowed to render.
+    fpsLimit_.limit = 1000/limit;
+}		// -----  end of method Context::setFramerateLimit  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
@@ -118,7 +140,7 @@ Context::close ()
     inline void
 Context::push ( const Object& cube )
 {
-    objects.push_back(cube);
+    objects_.push_back(cube);
 }		// -----  end of method Context::push  -----
 
 //-----------------------------------------------------------------------------

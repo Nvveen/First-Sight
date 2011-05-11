@@ -39,6 +39,7 @@
 EventHandler::EventHandler ( Context& context ) :
     context_(&context)
 {
+    SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 }  // -----  end of method EventHandler::EventHandler  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -53,7 +54,7 @@ EventHandler::pollEvents ()
 {
     while ( SDL_PollEvent(&event_) ) {
         if ( event_.type == SDL_QUIT ) {
-            context_->windowOpened = false;
+            context_->windowOpened_ = false;
         }
         if ( event_.type == SDL_KEYDOWN ) {
             SDL_keysym sym = event_.key.keysym;

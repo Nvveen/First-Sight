@@ -46,8 +46,10 @@ Context::Context ( GLfloat w, GLfloat h, std::string windowName,
     proj_ = proj;
     if ( cam == NULL ) cam = new Camera;
     cam_ = cam;
+
     mainWindow_ = NULL;
-    windowOpened = true;
+    windowOpened_ = true;
+    fpsLimit_ = {0, 0, 0, false};
 }  // -----  end of method Context::Context  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -96,7 +98,7 @@ Context::setup ()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
     // Add shaders to shaderlist
-    shaders["default"] = Shader("default.vs", "default.fs");
+    shaders_["default"] = Shader("default.vs", "default.fs");
 }		// -----  end of method Context::setup  -----
 
 //-----------------------------------------------------------------------------
@@ -120,12 +122,24 @@ Context::clear ()
 Context::render ()
 {
     // Draw objects
-    for ( unsigned int i = 0; i < objects.size(); i += 1 ) {
-        objects[i].bind(proj_, cam_);
-        objects[i].draw();
+    for ( unsigned int i = 0; i < objects_.size(); i += 1 ) {
+        objects_[i].bind(proj_, cam_);
+        objects_[i].draw();
     }
 
     SDL_GL_SwapBuffers();
+    // Get the amount of time that has passed since SDL_Init()
+    int currTime = SDL_GetTicks();
+    // Calculate the time that has elapsed.
+    fpsLimit_.timeElapsed = currTime - fpsLimit_.prevTime;
+    // If a limit is set and the current frame rendered faster than it is
+    // allowed to, do an SDL_Delay and reset the counters.
+    if ( fpsLimit_.timeElapsed < fpsLimit_.limit && fpsLimit_.limitSet ) {
+        SDL_Delay(fpsLimit_.limit - fpsLimit_.timeElapsed);
+        currTime = SDL_GetTicks();
+        fpsLimit_.timeElapsed = currTime - fpsLimit_.prevTime;
+    }
+    fpsLimit_.prevTime = currTime;
 }		// -----  end of method Context::render  -----
 
 //-----------------------------------------------------------------------------

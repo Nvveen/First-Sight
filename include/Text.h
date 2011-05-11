@@ -32,7 +32,6 @@
 #define  TEXT_H
 
 #include    <string>
-#include    <vector>
 #include    "Object.h"
 #include    "Font.h"
 
@@ -50,6 +49,7 @@ class Text : public Object
         void draw ();
 
         // ====================  ACCESSORS     ================================
+        void setText ( std::string textString );
 
         // ====================  MUTATORS      ================================
 
@@ -69,5 +69,18 @@ class Text : public Object
         void init ();
         void createLetterQuad ( char c, float x, float y );
 }; // -----  end of class Text  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Text
+//      Method:  setText
+// Description:  Sets the interal text string.
+//-----------------------------------------------------------------------------
+    inline void
+Text::setText ( std::string textString )
+{
+    textString_ = textString;
+    modelData_.clear();
+    init();
+}		// -----  end of method Text::setText  -----
 
 #endif   // ----- #ifndef TEXT_H  -----
