@@ -156,7 +156,7 @@ Font::generateBitmap ()
             TTF_SizeText(font_, string.c_str(), &charW, &charH);
             if ( charW == 0 ) string = " ";
             // We create a temporary surface by rendering the character.
-            SDL_Surface *charSurface = TTF_RenderText_Blended(font_,
+            SDL_Surface *charSurface = TTF_RenderText_Solid(font_,
                                                        string.c_str(),
                                                        color);
             if ( charSurface == NULL ) {

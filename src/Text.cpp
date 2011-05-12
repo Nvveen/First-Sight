@@ -29,6 +29,7 @@
 // ============================================================================
 
 #include    <glm/gtc/matrix_transform.hpp>
+#include    "Context.h"
 #include    "Text.h"
 
 //-----------------------------------------------------------------------------
@@ -39,7 +40,9 @@
 Text::Text ( std::string textString, int x, int y, Font& font ) :
     Object(), textString_(textString), x_(x), y_(y), font_(&font)
 {
+    bgColor_ = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     init();
+    shader_ = &Context::shaders["text"];
 }  // -----  end of method Text::Text  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -119,4 +122,19 @@ Text::draw ()
     this->Object::draw();
     glEnable(GL_DEPTH_TEST);
 }		// -----  end of method Text::draw  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Text
+//      Method:  setUniforms
+// Description:  Sets the uniforms in the shader.
+//-----------------------------------------------------------------------------
+    void
+Text::setUniforms ()
+{
+    shader_->setUniform("vProjection", projection_);
+    shader_->setUniform("vCamera", camera_);
+    shader_->setUniform("varyingColor", color_);
+    shader_->setUniform("backgroundColor", bgColor_);
+    shader_->setUniform("gSampler", 0);
+}		// -----  end of method Text::setUniforms  -----
 

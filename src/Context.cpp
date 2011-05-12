@@ -102,7 +102,8 @@ Context::setup ()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Add shaders to shaderlist
-    shaders["default"] = Shader("default.vs", "default.fs");
+    shaders["default"] = Shader("shaders/default.vs", "shaders/default.fs");
+    shaders["text"] = Shader("shaders/text.vs", "shaders/text.fs");
 }		// -----  end of method Context::setup  -----
 
 //-----------------------------------------------------------------------------
@@ -127,12 +128,12 @@ Context::render ()
 {
     // Draw objects
     for ( unsigned int i = 0; i < objects_.size(); i += 1 ) {
-        objects_[i].bind(pers_, cam_);
-        objects_[i].draw();
+        objects_[i]->bind(pers_, cam_);
+        objects_[i]->draw();
     }
     for ( unsigned int i = 0; i < orthoObjects_.size(); i += 1 ) {
-        orthoObjects_[i].bind(ortho_, NULL);
-        orthoObjects_[i].draw();
+        orthoObjects_[i]->bind(ortho_, NULL);
+        orthoObjects_[i]->draw();
     }
 
     SDL_GL_SwapBuffers();

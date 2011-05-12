@@ -46,12 +46,14 @@ class Text : public Object
 
         // ====================  LIFECYCLE     ================================
         Text ( std::string textString, int x, int y, Font& font );
-        void draw ();
+        virtual void draw ();
+        virtual void setUniforms ();
 
         // ====================  ACCESSORS     ================================
         void setText ( std::string textString );
 
         // ====================  MUTATORS      ================================
+        void setBGColor ( GLfloat r, GLfloat g, GLfloat b, GLfloat a );
 
         // ====================  OPERATORS     ================================
 
@@ -65,6 +67,7 @@ class Text : public Object
         int y_;
 
         Font *font_;
+        glm::vec4 bgColor_;
 
         void init ();
         void createLetterQuad ( char c, float x, float y );
@@ -82,5 +85,16 @@ Text::setText ( std::string textString )
     modelData_.clear();
     init();
 }		// -----  end of method Text::setText  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Text
+//      Method:  setBGColor
+// Description:  Sets the object background color.
+//-----------------------------------------------------------------------------
+    inline void
+Text::setBGColor ( GLfloat r, GLfloat g, GLfloat b, GLfloat a )
+{
+    bgColor_ = glm::vec4(r, g, b, a);
+}		// -----  end of method Text::setBGColor  -----
 
 #endif   // ----- #ifndef TEXT_H  -----

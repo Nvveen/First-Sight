@@ -46,6 +46,7 @@ class Shader
         // ====================  LIFECYCLE     ================================
         Shader ();
         Shader ( std::string vertexShaderFile, std::string fragmentShaderFile );
+        virtual ~Shader ();
 
         void bind ();
         void unbind ();

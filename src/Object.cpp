@@ -154,18 +154,14 @@ Object::draw ()
             (const GLvoid*)12);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, 
             (const GLvoid*)20);
+    glBindAttribLocation(shader_->getShaderProgram(), 0, "vVertex");
+    glBindAttribLocation(shader_->getShaderProgram(), 1, "TexCoord");
 
     // Activate the texture
     texture_->bind();
 
     // Set the uniform variables in the shader
-    shader_->setUniform("vProjection", projection_);
-    shader_->setUniform("vCamera", camera_);
-    shader_->setUniform("vTranslate", translation_);
-    shader_->setUniform("vRotate", rotation_);
-    shader_->setUniform("vScale", scaling_);
-    shader_->setUniform("varyingColor", color_);
-    shader_->setUniform("gSampler", 0);
+    setUniforms();
 
     // Use the vao to draw the vertices
     glDrawArrays(GL_TRIANGLES, 0, triangleCount_);
@@ -180,6 +176,23 @@ Object::draw ()
     // Unbind the shader
     shader_->unbind();
 }		// -----  end of method Object::draw  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  setUniforms
+// Description:  Sets the uniform variables in the shader.
+//-----------------------------------------------------------------------------
+    void
+Object::setUniforms ()
+{
+    shader_->setUniform("vProjection", projection_);
+    shader_->setUniform("vCamera", camera_);
+    shader_->setUniform("vTranslate", translation_);
+    shader_->setUniform("vRotate", rotation_);
+    shader_->setUniform("vScale", scaling_);
+    shader_->setUniform("varyingColor", color_);
+    shader_->setUniform("gSampler", 0);
+}		// -----  end of method Object::setUniforms  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Object

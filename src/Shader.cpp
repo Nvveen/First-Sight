@@ -60,6 +60,15 @@ Shader::Shader ( std::string vertexShaderFile, std::string fragmentShaderFile )
 
 //-----------------------------------------------------------------------------
 //       Class:  Shader
+//      Method:  ~Shader
+// Description:  destructor
+//-----------------------------------------------------------------------------
+Shader::~Shader ()
+{
+}  // -----  end of method Shader::~Shader  (destructor)  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
 //      Method:  getUniformLocation
 // Description:  Gets the location of an uniform in the shader.
 //-----------------------------------------------------------------------------
@@ -69,7 +78,7 @@ Shader::getUniformLocation ( std::string name )
     GLint loc = glGetUniformLocation(shaderProgram_, name.c_str());
     if ( loc == -1 ) {
         std::cerr << "Could not find the uniform " << name;
-        std::cerr << " in the shader.\n";
+        std::cerr << " in the shader: " << shaderProgram_ << "\n";
         exit(1);
     }
     return loc;
@@ -170,7 +179,7 @@ Shader::compileShader ( std::string code, GLenum type )
         GLchar infoLog[1024];
         glGetShaderInfoLog(shader, 1024, NULL, infoLog);
         std::cerr << "Error compiling shader " << type << ": ";
-        std::cerr << infoLog << "\n";
+        std::cerr << infoLog << " in shader " << shaderProgram_ << "\n";
         exit(1);
     }
     return shader;
@@ -216,4 +225,5 @@ Shader::createProgram ()
         std::cerr << "Invalid shader program: " << errorLog << "\n";
         exit(1);
     }
+    unbind();
 }		// -----  end of method Shader::createProgram  -----

@@ -63,8 +63,8 @@ class Context
         Camera* getCam ();
 
         // ====================  MUTATORS      ================================
-        void push ( const Object& obj );
-        void pushOrtho ( const Object& obj );
+        void push ( Object& obj );
+        void pushOrtho ( Object& obj );
         void close ();
         void setFramerateLimit ( int limit );
 
@@ -83,8 +83,8 @@ class Context
         Projection* ortho_;
         Camera* cam_;
 
-        std::vector<Object> objects_;
-        std::vector<Object> orthoObjects_;
+        std::vector<Object*> objects_;
+        std::vector<Object*> orthoObjects_;
 
         SDL_Surface *mainWindow_;
         bool windowOpened_;
@@ -140,9 +140,9 @@ Context::setFramerateLimit ( int limit )
 // Description:  Pushes an object onto the object stack.
 //-----------------------------------------------------------------------------
     inline void
-Context::push ( const Object& obj )
+Context::push ( Object& obj )
 {
-    objects_.push_back(obj);
+    objects_.push_back(&obj);
 }		// -----  end of method Context::push  -----
 
 //-----------------------------------------------------------------------------
@@ -151,9 +151,9 @@ Context::push ( const Object& obj )
 // Description:  Pushes an orthogonal object onto the object stack.
 //-----------------------------------------------------------------------------
     inline void
-Context::pushOrtho ( const Object& obj )
+Context::pushOrtho ( Object& obj )
 {
-    orthoObjects_.push_back(obj);
+    orthoObjects_.push_back(&obj);
 }		// -----  end of method Context::pushOrtho  -----
 
 //-----------------------------------------------------------------------------

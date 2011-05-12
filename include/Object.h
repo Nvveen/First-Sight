@@ -51,6 +51,7 @@ class Object
         Object ( std::string datName, Shader *shader=NULL );
         ~Object ();
         virtual void draw ();
+        virtual void setUniforms ();
 
         void translate ( GLfloat x, GLfloat y, GLfloat z );
         void rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
