@@ -41,8 +41,9 @@
 //      Method:  Object
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Object::Object ( std::string datName, Shader *shader ) :
-    shader_(shader)
+Object::Object ( std::string datName, Uint8 x, Uint8 y, Uint8 z, 
+                 Shader *shader ) :
+    x_(x), y_(y), z_(z), shader_(shader)
 {
     if ( shader_ == NULL ) shader_ = &Context::shaders["default"];
     projection_ = glm::mat4(1.0f);
@@ -62,8 +63,8 @@ Object::Object ( std::string datName, Shader *shader ) :
 //      Method:  Object
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Object::Object ( Shader *shader ) :
-    shader_(shader)
+Object::Object ( Uint8 x, Uint8 y, Uint8 z, Shader *shader ) :
+    x_(x), y_(y), z_(z), shader_(shader)
 {
     if ( shader_ == NULL ) shader_ = &Context::shaders["default"];
     projection_ = glm::mat4(1.0f);
@@ -119,6 +120,11 @@ Object::readDat ( std::string datName )
     void
 Object::init ()
 {
+    // Determine object max dimensions.
+    width_ = getSize(0);
+    height_ = getSize(1);
+    depth_ = getSize(2);
+    
     // We need to know how many triangles are contained in the object
     triangleCount_ = modelData_.size()/8;
 
@@ -193,6 +199,27 @@ Object::setUniforms ()
     shader_->setUniform("varyingColor", color_);
     shader_->setUniform("gSampler", 0);
 }		// -----  end of method Object::setUniforms  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  getSize
+// Description:  Calculates an object's size on the axis specified by k.
+//-----------------------------------------------------------------------------
+    GLfloat
+Object::getSize ( int axis )
+{
+    if ( axis != 0 && axis != 1 && axis != 2 ) {
+        std::cerr << "An invalid axis is specified for the size calculation\n";
+        exit(1);
+    }
+    GLfloat maxWidth = 0;
+    GLfloat minWidth = 0;
+    for ( unsigned int i = axis; i < modelData_.size(); i += 8 ) {
+        if ( modelData_[i] > maxWidth ) maxWidth = modelData_[i];
+        if ( modelData_[i] < minWidth ) minWidth = modelData_[i];
+    }
+    return maxWidth - minWidth;
+}		// -----  end of method Object::getSize  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Object

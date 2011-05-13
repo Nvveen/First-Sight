@@ -47,8 +47,9 @@ class Object
     public:
 
         // ====================  LIFECYCLE     ================================
-        Object ( Shader *shader=NULL );
-        Object ( std::string datName, Shader *shader=NULL );
+        Object ( Uint8 x=0, Uint8 y=0, Uint8 z=0,  Shader *shader=NULL );
+        Object ( std::string datName, Uint8 x=0, Uint8 y=0, Uint8 z=0,
+                 Shader *shader=NULL );
         ~Object ();
         virtual void draw ();
         virtual void setUniforms ();
@@ -69,8 +70,15 @@ class Object
     protected:
         // ====================  DATA MEMBERS  ================================
         std::vector<GLfloat> modelData_;
-        Texture *texture_;
 
+        GLfloat width_;
+        GLfloat height_;
+        GLfloat depth_;
+        Uint8 x_;
+        Uint8 y_;
+        Uint8 z_;
+        
+        Texture *texture_;
         Shader *shader_;
 
         glm::mat4 projection_;
@@ -93,6 +101,8 @@ class Object
         
         void readDat( std::string datName );
         static GLfloat toRadians ( GLfloat angle );
+        GLfloat getSize ( int axis );
+
 }; // -----  end of class Object  -----
 
 //-----------------------------------------------------------------------------

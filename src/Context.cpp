@@ -34,6 +34,9 @@
 #include    "Context.h"
 
 std::map<std::string, Shader> Context::shaders;
+Uint8 Context::gridWidth = 100;
+Uint8 Context::gridHeight = 100;
+Uint8 Context::gridDepth = 100;
 
 //-----------------------------------------------------------------------------
 //       Class:  Context

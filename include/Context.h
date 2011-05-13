@@ -57,7 +57,6 @@ class Context
         void render ();
         void resize ( int w, int h );
 
-        static std::map<std::string, Shader> shaders;
         // ====================  ACCESSORS     ================================
         bool isOpened ();
         Camera* getCam ();
@@ -72,6 +71,11 @@ class Context
 
         friend class EventHandler;
         // ====================  DATA MEMBERS  ================================
+        static std::map<std::string, Shader> shaders;
+
+        static Uint8 gridWidth;
+        static Uint8 gridHeight;
+        static Uint8 gridDepth;
 
     private:
         // ====================  DATA MEMBERS  ================================
@@ -79,9 +83,9 @@ class Context
         GLfloat h_;
         std::string windowName_;
 
-        Projection* pers_;
-        Projection* ortho_;
-        Camera* cam_;
+        Projection *pers_;
+        Projection *ortho_;
+        Camera *cam_;
 
         std::vector<Object*> objects_;
         std::vector<Object*> orthoObjects_;

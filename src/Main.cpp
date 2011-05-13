@@ -47,15 +47,10 @@ main ( int argc, char *argv[] )
     windowContext.setup();
     windowContext.setFramerateLimit(60);
 
-    Object cube("data/dirt.dat");
+    Object cube("data/dirt.dat", 1, 0, 0);
     windowContext.push(cube);
-    Object cube2("data/dirt.dat");
-    cube2.translate(0.0f, -0.25f, 0.0f);
+    Object cube2("data/dirt.dat", 2, 0, 0);
     windowContext.push(cube2);
-    Font arial("arial.ttf");
-    Text test("Hello, world!", 1024/2, 768/2, arial);
-    test.setColor(1.0f, 0.0f, 0.0f, 1.0f);
-    windowContext.pushOrtho(test);
 
     EventHandler event(windowContext);
     Camera *cam = windowContext.getCam();
@@ -68,6 +63,8 @@ main ( int argc, char *argv[] )
     event.bind(cam, &Camera::rotate, -45.0f, 0.0f, 1.0f, 0.0f,
                EventHandler::Keyset(Key::Lctrl, Key::Right));
     event.bind(&windowContext, &Context::close, Key::Escape);
+    event.bind(&cube, &Object::translate, -0.1f, 0.0f, 0.0f, Key::A);
+    event.bind(&cube, &Object::translate, 0.1f, 0.0f, 0.0f, Key::D);
 
     while ( windowContext.isOpened() ) {
         event.pollEvents();

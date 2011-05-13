@@ -1,5 +1,6 @@
 lib/
 tempdata/
+tempdata/*
 data/undat-1.0
 build/
 firstsight
