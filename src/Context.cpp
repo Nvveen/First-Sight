@@ -129,16 +129,6 @@ Context::clear ()
     void
 Context::render ()
 {
-    // Draw objects
-    for ( unsigned int i = 0; i < objects_.size(); i += 1 ) {
-        objects_[i]->bind(pers_, cam_);
-        objects_[i]->draw();
-    }
-    for ( unsigned int i = 0; i < orthoObjects_.size(); i += 1 ) {
-        orthoObjects_[i]->bind(ortho_, NULL);
-        orthoObjects_[i]->draw();
-    }
-
     SDL_GL_SwapBuffers();
     // Get the amount of time that has passed since SDL_Init()
     int currTime = SDL_GetTicks();

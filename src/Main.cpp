@@ -47,13 +47,10 @@ main ( int argc, char *argv[] )
     windowContext.setup();
     windowContext.setFramerateLimit(60);
 
-    Object cube("data/dirt.dat", 1, 0, 0);
-    windowContext.push(cube);
-    Object cube2("data/dirt.dat", 2, 0, 0);
-    windowContext.push(cube2);
+    Object cube("data/dirt.dat", 0, 1, 0);
 
     EventHandler event(windowContext);
-    Camera *cam = windowContext.getCam();
+    Camera *cam = windowContext.getCamera();
     event.bind(cam, &Camera::move, 0.3f, 0.0f, 0.0f, Key::Left);
     event.bind(cam, &Camera::move, -0.3f, 0.0f, 0.0f, Key::Right);
     event.bind(cam, &Camera::move, 0.0f, 0.0f, 0.3f, Key::Up);
@@ -63,12 +60,17 @@ main ( int argc, char *argv[] )
     event.bind(cam, &Camera::rotate, -45.0f, 0.0f, 1.0f, 0.0f,
                EventHandler::Keyset(Key::Lctrl, Key::Right));
     event.bind(&windowContext, &Context::close, Key::Escape);
-    event.bind(&cube, &Object::translate, -0.1f, 0.0f, 0.0f, Key::A);
-    event.bind(&cube, &Object::translate, 0.1f, 0.0f, 0.0f, Key::D);
 
     while ( windowContext.isOpened() ) {
         event.pollEvents();
         windowContext.clear();
+        for ( int i = 0; i < 100; i += 1 ) {
+            for ( int j = 0; j < 100; j += 1 ) {
+                cube.translateGrid(i, 0, j);
+                cube.bind(windowContext);
+                cube.draw();
+            }
+        }
         windowContext.render();
     }
     return 0;

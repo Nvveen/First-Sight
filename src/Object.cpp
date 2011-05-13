@@ -34,7 +34,6 @@
 #include    <GL/glew.h>
 #include    "Undat.h"
 #include    "Object.h"
-#include    "Context.h"
 
 //-----------------------------------------------------------------------------
 //       Class:  Object
@@ -233,6 +232,20 @@ Object::translate ( GLfloat x, GLfloat y, GLfloat z )
     glm::vec3 loc(x, y, z);
     translation_ = glm::translate(glm::mat4(1.0f), loc);
 }		// -----  end of method Object::translate  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  translateGrid
+// Description:  Give a translation matrix with the params set to the proper
+//               ranges, and pass it to the shader.
+//-----------------------------------------------------------------------------
+    void
+Object::translateGrid ( unsigned int x, unsigned int y, unsigned int z )
+{
+    x_ = x; y_ = y; z_ = z;
+    glm::vec3 loc(2.9 - width_ * x_, height_ * y_, -2.5 + depth_ * z_ );
+    translation_ = glm::translate(glm::mat4(1.0f), loc);
+}		// -----  end of method Object::translateGrid  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Object

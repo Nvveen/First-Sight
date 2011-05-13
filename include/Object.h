@@ -32,8 +32,7 @@
 #define  OBJECT_H
 
 #include    <string>
-#include    "Projection.h"
-#include    "Camera.h"
+#include    "Context.h"
 #include    "Shader.h"
 #include    "Model.h"
 #include    "Texture.h"
@@ -55,13 +54,14 @@ class Object
         virtual void setUniforms ();
 
         void translate ( GLfloat x, GLfloat y, GLfloat z );
+        void translateGrid ( unsigned int x, unsigned int y, unsigned int z );
         void rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
         void scale ( GLfloat x, GLfloat y, GLfloat z );
 
         // ====================  ACCESSORS     ================================
 
         // ====================  MUTATORS      ================================
-        void bind ( Projection *proj, Camera *cam );
+        void bind ( Context& context, bool isOrtho=false );
         void push ( GLfloat vert[3], GLfloat tex[2], GLfloat normal[3] );
         void setColor ( GLfloat r, GLfloat g, GLfloat b, GLfloat a );
 
@@ -102,6 +102,7 @@ class Object
         void readDat( std::string datName );
         static GLfloat toRadians ( GLfloat angle );
         GLfloat getSize ( int axis );
+        void bind ( Projection *proj, Camera *cam );
 
 }; // -----  end of class Object  -----
 
@@ -115,6 +116,20 @@ Object::toRadians ( GLfloat angle )
 {
     return ( angle * M_PI / 180.0f);
 }		// -----  end of method Object::toRadians  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  bind
+// Description:  Binds a camera and projection to an object.
+//-----------------------------------------------------------------------------
+    inline void
+Object::bind ( Context& context, bool isOrtho )
+{
+    if ( !isOrtho )
+        bind(context.getPerspective(), context.getCamera());
+    else
+        bind(context.getOrtho(), context.getCamera());
+}		// -----  end of method Object::bind  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Object

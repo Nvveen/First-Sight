@@ -34,10 +34,10 @@
 
 #include    <string>
 #include    <vector>
+#include    <map>
 #include    <SDL/SDL.h>
 #include    "Projection.h"
 #include    "Camera.h"
-#include    "Object.h"
 #include    "Shader.h"
 
 // ============================================================================
@@ -59,11 +59,11 @@ class Context
 
         // ====================  ACCESSORS     ================================
         bool isOpened ();
-        Camera* getCam ();
+        Projection* getPerspective ();
+        Projection* getOrtho ();
+        Camera* getCamera ();
 
         // ====================  MUTATORS      ================================
-        void push ( Object& obj );
-        void pushOrtho ( Object& obj );
         void close ();
         void setFramerateLimit ( int limit );
 
@@ -86,9 +86,6 @@ class Context
         Projection *pers_;
         Projection *ortho_;
         Camera *cam_;
-
-        std::vector<Object*> objects_;
-        std::vector<Object*> orthoObjects_;
 
         SDL_Surface *mainWindow_;
         bool windowOpened_;
@@ -140,25 +137,25 @@ Context::setFramerateLimit ( int limit )
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
-//      Method:  push
-// Description:  Pushes an object onto the object stack.
+//      Method:  getPerspective
+// Description:  Returns the perspective matrix.
 //-----------------------------------------------------------------------------
-    inline void
-Context::push ( Object& obj )
+    inline Projection*
+Context::getPerspective ()
 {
-    objects_.push_back(&obj);
-}		// -----  end of method Context::push  -----
+    return pers_;
+}		// -----  end of method Context::getPerspective  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
-//      Method:  pushOrtho
-// Description:  Pushes an orthogonal object onto the object stack.
+//      Method:  getOrtho
+// Description:  Returns the orthographic matrix.
 //-----------------------------------------------------------------------------
-    inline void
-Context::pushOrtho ( Object& obj )
+    inline Projection*
+Context::getOrtho ()
 {
-    orthoObjects_.push_back(&obj);
-}		// -----  end of method Context::pushOrtho  -----
+    return ortho_;
+}		// -----  end of method Context::getOrtho  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
@@ -166,7 +163,7 @@ Context::pushOrtho ( Object& obj )
 // Description:  Returns the camera object.
 //-----------------------------------------------------------------------------
     inline Camera*
-Context::getCam ()
+Context::getCamera ()
 {
     return cam_;
 }		// -----  end of method Context::getCamera  -----
