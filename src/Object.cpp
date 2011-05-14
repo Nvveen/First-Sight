@@ -35,6 +35,8 @@
 #include    "Undat.h"
 #include    "Object.h"
 
+std::map<std::string, Object> Object::objectCache;
+
 //-----------------------------------------------------------------------------
 //       Class:  Object
 //      Method:  Object
@@ -42,19 +44,22 @@
 //-----------------------------------------------------------------------------
 Object::Object ( std::string datName, Uint8 x, Uint8 y, Uint8 z, 
                  Shader *shader ) :
-    x_(x), y_(y), z_(z), shader_(shader)
+    shader_(shader)
 {
     if ( shader_ == NULL ) shader_ = &Context::shaders["default"];
-    projection_ = glm::mat4(1.0f);
-    camera_ = glm::mat4(1.0f);
-    translation_ = glm::mat4(1.0f);
-    rotation_ = glm::mat4(1.0f);
-    scaling_ = glm::mat4(1.0f);
-    color_ = glm::vec4(1.0f);
+
+    projection_ = NULL;
+    camera_ = NULL;
     model_ = NULL;
     texture_ = NULL;
+    color_ = glm::vec4(1.0f);
+
     this->readDat(datName);
-    this->init();
+    // Determine object max dimensions.
+    x_ = x;
+    y_ = y;
+    z_ = z;
+    translateGrid(x_, y_, z_);
 }  // -----  end of method Object::Object  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -66,12 +71,9 @@ Object::Object ( Uint8 x, Uint8 y, Uint8 z, Shader *shader ) :
     x_(x), y_(y), z_(z), shader_(shader)
 {
     if ( shader_ == NULL ) shader_ = &Context::shaders["default"];
-    projection_ = glm::mat4(1.0f);
-    camera_ = glm::mat4(1.0f);
-    translation_ = glm::mat4(1.0f);
-    rotation_ = glm::mat4(1.0f);
-    scaling_ = glm::mat4(1.0f);
-    color_ = glm::vec4(1.0f);
+
+    projection_ = NULL;
+    camera_ = NULL;
     model_ = NULL;
     texture_ = NULL;
 }  // -----  end of method Object::Object  (constructor)  -----
@@ -94,20 +96,29 @@ Object::~Object ()
     void
 Object::readDat ( std::string datName )
 {
-    ModelData mod(datName);
-    model_ = new Model(mod.getData(MD_OBJ), mod.getData(MD_MTL));
-    texture_ = new Texture(GL_TEXTURE_2D, mod.getImage());
-    
-    // Load modeldata into an array so it can be loaded into a buffer
-    for ( unsigned int i = 0; i < model_->vertices.size()/3; i += 1 ) {
-        modelData_.push_back(model_->vertices[i*3]);
-        modelData_.push_back(model_->vertices[i*3+1]);
-        modelData_.push_back(model_->vertices[i*3+2]);
-        modelData_.push_back(model_->textureCoords[i*2]);
-        modelData_.push_back(model_->textureCoords[i*2+1]);
-        modelData_.push_back(model_->normals[i*3]);
-        modelData_.push_back(model_->normals[i*3+1]);
-        modelData_.push_back(model_->normals[i*3+2]);
+    std::map<std::string, Object>::iterator it;
+    it = objectCache.find(datName);
+    if ( it != objectCache.end() ) {
+        *this = it->second;
+    }
+    else {
+        ModelData mod(datName);
+        model_ = new Model(mod.getData(MD_OBJ), mod.getData(MD_MTL));
+        texture_ = new Texture(GL_TEXTURE_2D, mod.getImage());
+        
+        // Load modeldata into an array so it can be loaded into a buffer
+        for ( unsigned int i = 0; i < model_->vertices.size()/3; i += 1 ) {
+            modelData_.push_back(model_->vertices[i*3]);
+            modelData_.push_back(model_->vertices[i*3+1]);
+            modelData_.push_back(model_->vertices[i*3+2]);
+            modelData_.push_back(model_->textureCoords[i*2]);
+            modelData_.push_back(model_->textureCoords[i*2+1]);
+            modelData_.push_back(model_->normals[i*3]);
+            modelData_.push_back(model_->normals[i*3+1]);
+            modelData_.push_back(model_->normals[i*3+2]);
+        }
+        init ();
+        objectCache[datName] = *this;
     }
 }		// -----  end of method Object::readDat  -----
 
@@ -119,11 +130,10 @@ Object::readDat ( std::string datName )
     void
 Object::init ()
 {
-    // Determine object max dimensions.
+    // Get the object dimensions
     width_ = getSize(0);
     height_ = getSize(1);
     depth_ = getSize(2);
-    
     // We need to know how many triangles are contained in the object
     triangleCount_ = modelData_.size()/8;
 
@@ -164,8 +174,7 @@ Object::draw ()
 
     // Activate the texture
     texture_->bind();
-
-    // Set the uniform variables in the shader
+    // Set the program's uniforms.
     setUniforms();
 
     // Use the vao to draw the vertices
@@ -190,8 +199,8 @@ Object::draw ()
     void
 Object::setUniforms ()
 {
-    shader_->setUniform("vProjection", projection_);
-    shader_->setUniform("vCamera", camera_);
+    shader_->setUniform("vProjection", projection_->getProjection());
+    shader_->setUniform("vCamera", camera_->getCamera());
     shader_->setUniform("vTranslate", translation_);
     shader_->setUniform("vRotate", rotation_);
     shader_->setUniform("vScale", scaling_);
@@ -229,8 +238,8 @@ Object::getSize ( int axis )
     void
 Object::translate ( GLfloat x, GLfloat y, GLfloat z )
 {
-    glm::vec3 loc(x, y, z);
-    translation_ = glm::translate(glm::mat4(1.0f), loc);
+    translation_ = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+    shader_->setUniform("vTranslate", translation_);
 }		// -----  end of method Object::translate  -----
 
 //-----------------------------------------------------------------------------
@@ -243,8 +252,11 @@ Object::translate ( GLfloat x, GLfloat y, GLfloat z )
 Object::translateGrid ( unsigned int x, unsigned int y, unsigned int z )
 {
     x_ = x; y_ = y; z_ = z;
-    glm::vec3 loc(2.9 - width_ * x_, height_ * y_, -2.5 + depth_ * z_ );
-    translation_ = glm::translate(glm::mat4(1.0f), loc);
+    translation_ = glm::translate(glm::mat4(1.0f), 
+                                  glm::vec3(2.9 - width_ * x_, 
+                                            height_ * y_, 
+                                            -2.5 + depth_ * z_ ));
+    shader_->setUniform("vTranslate", translation_);
 }		// -----  end of method Object::translateGrid  -----
 
 //-----------------------------------------------------------------------------
@@ -256,8 +268,9 @@ Object::translateGrid ( unsigned int x, unsigned int y, unsigned int z )
     void
 Object::rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z )
 {
-    glm::vec3 axis(x, y, z);
-    rotation_ = glm::rotate(glm::mat4(1.0f), toRadians(angle), axis);
+    rotation_ = glm::rotate(glm::mat4(1.0f), toRadians(angle), 
+                            glm::vec3(x, y, z));
+    shader_->setUniform("vRotate", rotation_);
 }		// -----  end of method Object::rotate  -----
 
 //-----------------------------------------------------------------------------
@@ -269,7 +282,7 @@ Object::rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z )
     void
 Object::scale ( GLfloat x, GLfloat y, GLfloat z )
 {
-    glm::vec3 scaleVec(x, y, z);
-    scaling_ = glm::scale(glm::mat4(1.0f), scaleVec);
+    scaling_ = glm::scale(glm::mat4(1.0f), glm::vec3(x, y, z));
+    shader_->setUniform("vScale", scaling_);
 }		// -----  end of method Object::scale  -----
 

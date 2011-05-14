@@ -76,11 +76,6 @@ Shader::~Shader ()
 Shader::getUniformLocation ( std::string name )
 {
     GLint loc = glGetUniformLocation(shaderProgram_, name.c_str());
-    if ( loc == -1 ) {
-        std::cerr << "Could not find the uniform " << name;
-        std::cerr << " in the shader: " << shaderProgram_ << "\n";
-        exit(1);
-    }
     return loc;
 }		// -----  end of method Shader::getUniformLocation  -----
 
@@ -90,7 +85,7 @@ Shader::getUniformLocation ( std::string name )
 // Description:  Sets a uniform variable for the shader.
 //-----------------------------------------------------------------------------
     bool
-Shader::setUniform ( std::string name, glm::mat4 matrix )
+Shader::setUniform ( std::string name, glm::mat4& matrix )
 {
     if ( shaderProgram_ ) {
         glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, 
@@ -119,7 +114,7 @@ Shader::setUniform ( std::string name, GLfloat val )
 // Description:  Sets a uniform variable for the shader.
 //-----------------------------------------------------------------------------
     bool
-Shader::setUniform ( std::string name, glm::vec4 vec )
+Shader::setUniform ( std::string name, glm::vec4& vec )
 {
     if ( shaderProgram_ ) {
         glUniform4f(getUniformLocation(name), vec.x, vec.y, vec.z, vec.w);

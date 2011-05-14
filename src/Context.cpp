@@ -56,7 +56,7 @@ Context::Context ( GLfloat w, GLfloat h, std::string windowName,
 
     mainWindow_ = NULL;
     windowOpened_ = true;
-    fpsLimit_ = {0, 0, 0, false};
+    fpsLimit_ = {0, 0, 0, 0, false};
 }  // -----  end of method Context::Context  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -105,8 +105,9 @@ Context::setup ()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Add shaders to shaderlist
-    shaders["default"] = Shader("shaders/default.vs", "shaders/default.fs");
-    shaders["text"] = Shader("shaders/text.vs", "shaders/text.fs");
+    Shader def = Shader("shaders/default.vs", "shaders/default.fs");
+    shaders["default"] = def;
+//    shaders["text"] = Shader("shaders/text.vs", "shaders/text.fs");
 }		// -----  end of method Context::setup  -----
 
 //-----------------------------------------------------------------------------

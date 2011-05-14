@@ -91,6 +91,7 @@ class Context
         bool windowOpened_;
 
         struct {
+            int frames;
             int prevTime;
             int timeElapsed;
             int limit;

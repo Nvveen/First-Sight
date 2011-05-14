@@ -66,7 +66,10 @@ class Object
         void setColor ( GLfloat r, GLfloat g, GLfloat b, GLfloat a );
 
         // ====================  OPERATORS     ================================
+        Object& operator= ( Object const& r);
 
+        // ====================  DATA MEMBERS  ================================
+        static std::map<std::string, Object> objectCache;
     protected:
         // ====================  DATA MEMBERS  ================================
         std::vector<GLfloat> modelData_;
@@ -80,9 +83,9 @@ class Object
         
         Texture *texture_;
         Shader *shader_;
+        Projection *projection_;
+        Camera *camera_;
 
-        glm::mat4 projection_;
-        glm::mat4 camera_;
         glm::mat4 translation_;
         glm::mat4 rotation_;
         glm::mat4 scaling_;
@@ -139,8 +142,8 @@ Object::bind ( Context& context, bool isOrtho )
     inline void
 Object::bind ( Projection *proj, Camera *cam )
 {
-    projection_ = proj->getProjection();
-    if ( cam != NULL ) camera_ = cam->getCamera();
+    projection_ = proj;
+    if ( cam != NULL ) camera_ = cam;
 }		// -----  end of method Object::bind  -----
 
 //-----------------------------------------------------------------------------
@@ -171,5 +174,34 @@ Object::setColor ( GLfloat r, GLfloat g, GLfloat b, GLfloat a )
 {
     color_ = glm::vec4(r, g, b, a);
 }		// -----  end of method Object::setColor  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  operator=
+// Description:  Handles the assignment operation correctly.
+//-----------------------------------------------------------------------------
+    inline Object&
+Object::operator= ( Object const& r )
+{
+    texture_ = r.texture_;
+    shader_ = r.shader_;
+    model_ = r.model_;
+    modelData_ = r.modelData_;
+    width_ = r.width_;
+    height_ = r.height_;
+    depth_ = r.depth_;
+    x_ = r.x_;
+    y_ = r.y_;
+    z_ = r.z_;
+    projection_ = r.projection_;
+    camera_ = r.camera_;
+    translation_ = r.translation_;
+    rotation_ = r.rotation_;
+    scaling_ = r.scaling_;
+    color_ = r.color_;
+    vbo_ = r.vbo_;
+    triangleCount_ = r.triangleCount_;
+    return *this;
+}		// -----  end of method Object::operator=  -----
 
 #endif   // ----- #ifndef OBJECT_H  -----

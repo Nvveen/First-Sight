@@ -55,9 +55,9 @@ class Shader
         GLuint getShaderProgram();
 
         // ====================  MUTATORS      ================================
-        bool setUniform ( std::string name, glm::mat4 matrix );
+        bool setUniform ( std::string name, glm::mat4& matrix );
         bool setUniform ( std::string name, GLfloat val );
-        bool setUniform ( std::string name, glm::vec4 vec );
+        bool setUniform ( std::string name, glm::vec4& vec );
 
         // ====================  OPERATORS     ================================
 

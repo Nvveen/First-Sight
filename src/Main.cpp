@@ -45,9 +45,16 @@ main ( int argc, char *argv[] )
 
     Context windowContext(w, h, windowName);
     windowContext.setup();
-    windowContext.setFramerateLimit(60);
+//    windowContext.setFramerateLimit(60);
 
-    Object cube("data/dirt.dat", 0, 1, 0);
+    Object objects[10000];
+    for ( int i = 0; i < 100; i += 1 ) {
+        for ( int j = 0; j < 100; j += 1 ) {
+            Object cube("data/dirt.dat", i, 0, j);
+            cube.bind(windowContext);
+            objects[i*100+j] = cube;
+        }
+    }
 
     EventHandler event(windowContext);
     Camera *cam = windowContext.getCamera();
@@ -61,17 +68,22 @@ main ( int argc, char *argv[] )
                EventHandler::Keyset(Key::Lctrl, Key::Right));
     event.bind(&windowContext, &Context::close, Key::Escape);
 
+    int frames = 0;
+    int prevTime = SDL_GetTicks();
     while ( windowContext.isOpened() ) {
         event.pollEvents();
         windowContext.clear();
-        for ( int i = 0; i < 100; i += 1 ) {
-            for ( int j = 0; j < 100; j += 1 ) {
-                cube.translateGrid(i, 0, j);
-                cube.bind(windowContext);
-                cube.draw();
-            }
+        frames += 1;
+        for ( unsigned int i = 0; i < 10000; i += 1 ) {
+            objects[i].draw();
         }
         windowContext.render();
+        int currTime = SDL_GetTicks();
+        if ( currTime - prevTime >= 1000 ) {
+            prevTime = currTime;
+            std::cout << frames << "\n";
+            frames = 0;
+        }
     }
     return 0;
 }				// ----------  end of function main  ----------

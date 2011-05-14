@@ -131,8 +131,8 @@ Text::draw ()
     void
 Text::setUniforms ()
 {
-    shader_->setUniform("vProjection", projection_);
-    shader_->setUniform("vCamera", camera_);
+    shader_->setUniform("vProjection", projection_->getProjection());
+    shader_->setUniform("vCamera", camera_->getCamera());
     shader_->setUniform("varyingColor", color_);
     shader_->setUniform("backgroundColor", bgColor_);
     shader_->setUniform("gSampler", 0);
