@@ -32,6 +32,7 @@
 #define  SHADER_H
 
 #include    <string>
+#include    <map>
 #include    <GL/gl.h>
 #include    <glm/glm.hpp>
 
@@ -58,6 +59,7 @@ class Shader
         bool setUniform ( std::string name, glm::mat4& matrix );
         bool setUniform ( std::string name, GLfloat val );
         bool setUniform ( std::string name, glm::vec4& vec );
+        void setUniformLocation ( std::string name );
 
         // ====================  OPERATORS     ================================
 
@@ -68,14 +70,16 @@ class Shader
         // ====================  DATA MEMBERS  ================================
         std::string vertexShaderCode_;
         std::string fragmentShaderCode_;
+
         GLuint vertexShaderObject_;
         GLuint fragmentShaderObject_;
         GLuint shaderProgram_;
 
+        std::map<std::string, int> uniformLocs;
+
         std::string addCode ( std::string fileName );
-        GLuint compileShader ( std::string code, GLenum type );
-        void createProgram ();
-        GLint getUniformLocation ( std::string name );
+        GLuint      compileShader ( std::string code, GLenum type );
+        void        createProgram ();
 }; // -----  end of class Shader  -----
 
 //-----------------------------------------------------------------------------
@@ -110,5 +114,17 @@ Shader::unbind ()
 {
     if ( shaderProgram_ ) glUseProgram(0);
 }		// -----  end of method Shader::unbind  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  setUniformLocation
+// Description:  Sets the uniform location in memory for easy access.
+//-----------------------------------------------------------------------------
+    inline void
+Shader::setUniformLocation ( std::string name )
+{
+    GLint loc = glGetUniformLocation(shaderProgram_, name.c_str());
+    uniformLocs[name] = loc;
+}		// -----  end of method Shader::setUniformLocation  -----
 
 #endif   // ----- #ifndef SHADER_H  -----

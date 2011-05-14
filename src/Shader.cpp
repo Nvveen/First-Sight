@@ -69,18 +69,6 @@ Shader::~Shader ()
 
 //-----------------------------------------------------------------------------
 //       Class:  Shader
-//      Method:  getUniformLocation
-// Description:  Gets the location of an uniform in the shader.
-//-----------------------------------------------------------------------------
-    GLint
-Shader::getUniformLocation ( std::string name )
-{
-    GLint loc = glGetUniformLocation(shaderProgram_, name.c_str());
-    return loc;
-}		// -----  end of method Shader::getUniformLocation  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Shader
 //      Method:  setUniform
 // Description:  Sets a uniform variable for the shader.
 //-----------------------------------------------------------------------------
@@ -88,7 +76,7 @@ Shader::getUniformLocation ( std::string name )
 Shader::setUniform ( std::string name, glm::mat4& matrix )
 {
     if ( shaderProgram_ ) {
-        glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, 
+        glUniformMatrix4fv(uniformLocs[name], 1, GL_FALSE, 
                            glm::value_ptr(matrix));
     }
     return true;
@@ -103,7 +91,7 @@ Shader::setUniform ( std::string name, glm::mat4& matrix )
 Shader::setUniform ( std::string name, GLfloat val )
 {
     if ( shaderProgram_ ) {
-        glUniform1i(getUniformLocation(name), val);
+        glUniform1i(uniformLocs[name], val);
     }
     return true;
 }		// -----  end of method Shader::setUniform  -----
@@ -117,7 +105,7 @@ Shader::setUniform ( std::string name, GLfloat val )
 Shader::setUniform ( std::string name, glm::vec4& vec )
 {
     if ( shaderProgram_ ) {
-        glUniform4f(getUniformLocation(name), vec.x, vec.y, vec.z, vec.w);
+        glUniform4f(uniformLocs[name], vec.x, vec.y, vec.z, vec.w);
     }
     return true;
 }		// -----  end of method Shader::setUniform  -----

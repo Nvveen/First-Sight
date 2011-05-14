@@ -106,6 +106,13 @@ Context::setup ()
 
     // Add shaders to shaderlist
     Shader def = Shader("shaders/default.vs", "shaders/default.fs");
+    def.setUniformLocation("vProjection");
+    def.setUniformLocation("vCamera");
+    def.setUniformLocation("vTranslate");
+    def.setUniformLocation("vRotate");
+    def.setUniformLocation("vScale");
+    def.setUniformLocation("varyingColor");
+    def.setUniformLocation("gSampler");
     shaders["default"] = def;
 //    shaders["text"] = Shader("shaders/text.vs", "shaders/text.fs");
 }		// -----  end of method Context::setup  -----
