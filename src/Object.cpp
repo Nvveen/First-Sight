@@ -55,11 +55,7 @@ Object::Object ( std::string datName, Uint8 x, Uint8 y, Uint8 z,
     color_ = glm::vec4(1.0f);
 
     this->readDat(datName);
-    // Determine object max dimensions.
-    x_ = x;
-    y_ = y;
-    z_ = z;
-    translateGrid(x_, y_, z_);
+    translateGrid(x, y, z);
 }  // -----  end of method Object::Object  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -138,13 +134,29 @@ Object::init ()
     triangleCount_ = modelData_.size()/8;
 
     // Generate a buffer, and fill it with the data.
+    glGenVertexArrays(1, &vao_);
+    glBindVertexArray(vao_);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+
     glGenBuffers(1, &vbo_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*modelData_.size(), 
             &modelData_[0], GL_STATIC_DRAW);
-    
+    // Point the attribute pointers to the data in the array.
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, 0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float)*8, 
+            (const GLvoid*)12);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, 
+            (const GLvoid*)20);
+    glBindAttribLocation(shader_->getShaderProgram(), 0, "vVertex");
+    glBindAttribLocation(shader_->getShaderProgram(), 1, "TexCoord");
     // Clean up
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+    glBindVertexArray(0);
 }		// -----  end of method Object::init  -----
 
 //-----------------------------------------------------------------------------
@@ -158,35 +170,23 @@ Object::draw ()
     // Use the specified program
     shader_->bind();
     // Enable the arrays
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+    glBindVertexArray(vao_);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
-
-    // Point the attribute pointers to the data in the array.
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, 0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float)*8, 
-            (const GLvoid*)12);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, 
-            (const GLvoid*)20);
-    glBindAttribLocation(shader_->getShaderProgram(), 0, "vVertex");
-    glBindAttribLocation(shader_->getShaderProgram(), 1, "TexCoord");
-
     // Activate the texture
     texture_->bind();
     // Set the program's uniforms.
     setUniforms();
-
     // Use the vao to draw the vertices
     glDrawArrays(GL_TRIANGLES, 0, triangleCount_);
-
     // Unbind the texture
     texture_->unbind();
     // Disable the arrays
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+    glBindVertexArray(0);
     // Unbind the shader
     shader_->unbind();
 }		// -----  end of method Object::draw  -----

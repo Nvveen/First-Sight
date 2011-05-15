@@ -99,6 +99,7 @@ class Object
         size_t triangleCount_;
 
         GLuint vbo_;
+        GLuint vao_;
 
         Model *model_;
         
@@ -183,24 +184,21 @@ Object::setColor ( GLfloat r, GLfloat g, GLfloat b, GLfloat a )
     inline Object&
 Object::operator= ( Object const& r )
 {
-    texture_ = r.texture_;
-    shader_ = r.shader_;
     model_ = r.model_;
+    texture_ = r.texture_;
     modelData_ = r.modelData_;
+    projection_ = r.projection_;
+    camera_ = r.camera_;
     width_ = r.width_;
     height_ = r.height_;
     depth_ = r.depth_;
-    x_ = r.x_;
-    y_ = r.y_;
-    z_ = r.z_;
-    projection_ = r.projection_;
-    camera_ = r.camera_;
+    triangleCount_ = r.triangleCount_;
+    vbo_ = r.vbo_;
+    vao_ = r.vao_;
     translation_ = r.translation_;
     rotation_ = r.rotation_;
     scaling_ = r.scaling_;
     color_ = r.color_;
-    vbo_ = r.vbo_;
-    triangleCount_ = r.triangleCount_;
     return *this;
 }		// -----  end of method Object::operator=  -----
 

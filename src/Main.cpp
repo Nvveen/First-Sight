@@ -47,12 +47,14 @@ main ( int argc, char *argv[] )
     windowContext.setup();
 //    windowContext.setFramerateLimit(60);
 
-    Object objects[10000];
-    for ( int i = 0; i < 100; i += 1 ) {
-        for ( int j = 0; j < 100; j += 1 ) {
+    int xObjects = 50;
+    int yObjects = 50;
+    Object objects[xObjects*yObjects];
+    for ( int i = 0; i < xObjects; i += 1 ) {
+        for ( int j = 0; j < yObjects; j += 1 ) {
             Object cube("data/dirt.dat", i, 0, j);
             cube.bind(windowContext);
-            objects[i*100+j] = cube;
+            objects[i*xObjects+j] = cube;
         }
     }
 
@@ -74,7 +76,7 @@ main ( int argc, char *argv[] )
         event.pollEvents();
         windowContext.clear();
         frames += 1;
-        for ( unsigned int i = 0; i < 10000; i += 1 ) {
+        for ( unsigned int i = 0; i < xObjects*yObjects; i += 1 ) {
             objects[i].draw();
         }
         windowContext.render();
