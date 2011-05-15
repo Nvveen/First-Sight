@@ -47,8 +47,8 @@ class Object
 
         // ====================  LIFECYCLE     ================================
         Object ( Uint8 x=0, Uint8 y=0, Uint8 z=0,  Shader *shader=NULL );
-        Object ( std::string datName, Uint8 x=0, Uint8 y=0, Uint8 z=0,
-                 Shader *shader=NULL );
+        Object ( std::string datName, Context& context, 
+                 Uint8 x=0, Uint8 y=0, Uint8 z=0, Shader *shader=NULL );
         ~Object ();
         virtual void draw ();
         virtual void setUniforms ();

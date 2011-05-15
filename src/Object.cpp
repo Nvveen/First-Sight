@@ -42,8 +42,8 @@ std::map<std::string, Object> Object::objectCache;
 //      Method:  Object
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Object::Object ( std::string datName, Uint8 x, Uint8 y, Uint8 z, 
-                 Shader *shader ) :
+Object::Object ( std::string datName, Context& context, 
+                 Uint8 x, Uint8 y, Uint8 z, Shader *shader ) :
     shader_(shader)
 {
     if ( shader_ == NULL ) shader_ = &Context::shaders["default"];
@@ -54,7 +54,8 @@ Object::Object ( std::string datName, Uint8 x, Uint8 y, Uint8 z,
     texture_ = NULL;
     color_ = glm::vec4(1.0f);
 
-    this->readDat(datName);
+    readDat(datName);
+    bind(context, false);
     translateGrid(x, y, z);
 }  // -----  end of method Object::Object  (constructor)  -----
 
@@ -188,7 +189,7 @@ Object::draw ()
     glDisableVertexAttribArray(2);
     glBindVertexArray(0);
     // Unbind the shader
-    shader_->unbind();
+//    shader_->unbind();
 }		// -----  end of method Object::draw  -----
 
 //-----------------------------------------------------------------------------
