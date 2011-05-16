@@ -81,7 +81,13 @@ Context::setup ()
         std::cerr << "Couldn't initialize SDL.\n";
         exit(1);
     }
-    mainWindow_ = SDL_SetVideoMode(w_, h_, 32, SDL_OPENGL | SDL_RESIZABLE);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    mainWindow_ = SDL_SetVideoMode(w_, h_, 24, SDL_OPENGL | SDL_RESIZABLE);
     if ( mainWindow_ == NULL ) {
         std::cerr << "Error setting videomode.\n";
         exit(1);
@@ -97,8 +103,8 @@ Context::setup ()
     }
     // Set the different options for the objects.
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glFrontFace(GL_CCW);
-    glCullFace(GL_BACK);
+//    glFrontFace(GL_CCW);
+//    glCullFace(GL_BACK);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
