@@ -178,84 +178,47 @@ Object::initUniformBuffer ()
 {
     GLuint prog = shader_->getShaderProgram();
     glGenBuffers(1, &ubo_[0]);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo_[0]);
-    const GLchar *uniformNames[2] =
-    {
-        "vProjection",
-        "vCamera"
-    };
-    GLuint uniformIndices[2];
-    glGetUniformIndices(prog, 2, uniformNames, uniformIndices);
-
-    GLint uniformOffsets[2];
-    glGetActiveUniformsiv(prog, 2, uniformIndices, GL_UNIFORM_OFFSET, 
-                          uniformOffsets);
-    
     GLuint uniformBlockIndex = glGetUniformBlockIndex(prog, "Projection");
-
-    GLsizei uniformBlockSize(0);
-    glGetActiveUniformBlockiv(prog, uniformBlockIndex, 
+    GLint uniformBlockSize(0);
+    glGetActiveUniformBlockiv(prog, uniformBlockIndex,
                               GL_UNIFORM_BLOCK_DATA_SIZE, &uniformBlockSize);
-
-    const unsigned int uboSize(uniformBlockSize);
-    std::vector<unsigned char> buffer(uboSize);
-    int offset = uniformOffsets[0];
-    for ( unsigned int i = 0; i < 16; i += 1 ) {
-        GLfloat *matrix = glm::value_ptr(projection_->getProjection());
-        *(reinterpret_cast<float *> (&buffer[0] + offset)) =
-            matrix[i];
-        offset += sizeof(GLfloat);
-    }
-    offset = uniformOffsets[1];
-    for ( unsigned int i = 0; i < 16; i += 1 ) {
-        GLfloat *matrix = glm::value_ptr(camera_->getCamera());
-        *(reinterpret_cast <float *> (&buffer[0] + offset)) =
-            matrix[i];
-            offset += sizeof(GLfloat);
-    }
-    glBufferData(GL_UNIFORM_BUFFER, uboSize, &buffer[0], GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_[0]);
+    glBufferData(GL_UNIFORM_BUFFER, uniformBlockSize, NULL, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo_[0]);
     glUniformBlockBinding(prog, uniformBlockIndex, 0);
 
-    glGenBuffers(1, &ubo_[1]);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo_[1]);
-    const GLchar *uniformNames2[3] { "vTranslate", "vRotate", "vScale" };
-    GLuint uniformIndices2[3];
-    glGetUniformIndices(prog, 3, uniformNames2, uniformIndices2);
+    const GLchar *names[2] = { "vProjection", "vCamera" };
+    GLuint indices[2];
+    GLint offsets[2];
+    glGetUniformIndices(prog, 2, names, indices);
+    glGetActiveUniformsiv(prog, 2, indices, GL_UNIFORM_OFFSET, offsets);
 
-    GLint uniformOffsets2[3];
-    glGetActiveUniformsiv(prog, 3, uniformIndices2, GL_UNIFORM_OFFSET,
-                          uniformOffsets2);
-    GLuint uniformBlockIndex2 = glGetUniformBlockIndex(prog, "Model");
-    GLsizei uniformBlockSize2(0);
-    glGetActiveUniformBlockiv(prog, uniformBlockIndex2,
-                              GL_UNIFORM_BLOCK_DATA_SIZE, &uniformBlockSize2);
-    const unsigned int uboSize2(uniformBlockSize2);
-    std::vector<unsigned char> buffer2(uboSize2);
-    int offset2 = uniformOffsets2[0];
-    for ( unsigned int i = 0; i < 16; i += 1 ) {
-        GLfloat *matrix = glm::value_ptr(translation_);
-        *(reinterpret_cast <float *> (&buffer2[0] + offset2)) =
-            matrix[i];
-        offset2 += sizeof(GLfloat);
-    }
-    offset2 = uniformOffsets2[1];
-    for ( unsigned int i = 0; i < 16; i += 1 ) {
-        GLfloat *matrix = glm::value_ptr(rotation_);
-        *(reinterpret_cast <float *> (&buffer2[0] + offset2)) =
-            matrix[i];
-        offset2 += sizeof(GLfloat);
-    }
-    offset2 = uniformOffsets2[2];
-    for ( unsigned int i = 0; i < 16; i += 1 ) {
-        GLfloat *matrix = glm::value_ptr(scaling_);
-        *(reinterpret_cast <float *> (&buffer2[0] + offset2)) =
-            matrix[i];
-        offset2 += sizeof(GLfloat);
-    }
-    glBufferData(GL_UNIFORM_BUFFER, uboSize2, &buffer2[0], GL_DYNAMIC_DRAW);
+    glBufferSubData(GL_UNIFORM_BUFFER, offsets[0], sizeof(glm::mat4),
+                    glm::value_ptr(projection_->getProjection()));
+    glBufferSubData(GL_UNIFORM_BUFFER, offsets[1], sizeof(glm::mat4),
+                    glm::value_ptr(camera_->getCamera()));
+
+    glGenBuffers(1, &ubo_[1]);
+    uniformBlockIndex = glGetUniformBlockIndex(prog, "Model");
+    glGetActiveUniformBlockiv(prog, uniformBlockIndex,
+                              GL_UNIFORM_BLOCK_DATA_SIZE, &uniformBlockSize);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_[1]);
+    glBufferData(GL_UNIFORM_BUFFER, uniformBlockSize, NULL, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo_[1]);
-    glUniformBlockBinding(prog, uniformBlockIndex2, 1);
+    glUniformBlockBinding(prog, uniformBlockIndex, 1);
+
+    const GLchar *names2[3] = { "vTranslate", "vRotate", "vScale" };
+    GLuint indices2[3];
+    GLint offsets2[3];
+    glGetUniformIndices(prog, 3, names2, indices2);
+    glGetActiveUniformsiv(prog, 3, indices2, GL_UNIFORM_OFFSET, offsets2);
+
+    glBufferSubData(GL_UNIFORM_BUFFER, offsets2[0], sizeof(glm::mat4),
+                    glm::value_ptr(translation_));
+    glBufferSubData(GL_UNIFORM_BUFFER, offsets2[1], sizeof(glm::mat4),
+                    glm::value_ptr(rotation_));
+    glBufferSubData(GL_UNIFORM_BUFFER, offsets2[2], sizeof(glm::mat4),
+                    glm::value_ptr(scaling_));
 }		// -----  end of method Object::initUniformBuffer  -----
 
 //-----------------------------------------------------------------------------

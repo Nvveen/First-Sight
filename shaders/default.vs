@@ -19,11 +19,11 @@ attribute vec3 vVertex;
 attribute vec2 TexCoord;
 varying vec2 Tex;
 
-uniform Projection {
+layout (std140) uniform Projection {
     mat4 vProjection, vCamera;
 };
 
-uniform Model {
+layout (std140) uniform Model {
     mat4 vTranslate, vRotate, vScale;
 };
 
