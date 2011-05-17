@@ -176,53 +176,87 @@ Object::initVertexBuffer ()
     void
 Object::initUniformBuffer ()
 {
-    ubo_[0] = createUBO("Projection", 0);
-    
-    fillUniformBuffer(0, projection_->getProjection());
-    fillUniformBuffer(1, camera_->getCamera());
-}		// -----  end of method Object::initUniformBuffer  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Object
-//      Method:  createUBO
-// Description:  Creates a uniform buffer object by using the name provided and
-//               looking it up in the shader. Afterwards, it allocates the
-//               space in the buffer needed for the amount of uniforms
-//               specified.
-//-----------------------------------------------------------------------------
-    GLuint
-Object::createUBO ( std::string blockName, GLuint blockBind )
-{
-    GLuint ubo;
-    glGenBuffers(1, &ubo);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     GLuint prog = shader_->getShaderProgram();
-    GLuint uniformIndex = glGetUniformBlockIndex(prog, blockName.c_str());
-    glUniformBlockBinding(prog, uniformIndex, blockBind);
+    glGenBuffers(1, &ubo_[0]);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_[0]);
+    const GLchar *uniformNames[2] =
+    {
+        "vProjection",
+        "vCamera"
+    };
+    GLuint uniformIndices[2];
+    glGetUniformIndices(prog, 2, uniformNames, uniformIndices);
 
-    GLsizei uniSize;
-    glGetActiveUniformBlockiv(prog, blockBind, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS,
-                              &uniSize);
+    GLint uniformOffsets[2];
+    glGetActiveUniformsiv(prog, 2, uniformIndices, GL_UNIFORM_OFFSET, 
+                          uniformOffsets);
+    
+    GLuint uniformBlockIndex = glGetUniformBlockIndex(prog, "Projection");
 
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4)*uniSize, NULL, 
-                 GL_STREAM_DRAW);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, sizeof(glm::mat4)*uniSize);
+    GLsizei uniformBlockSize(0);
+    glGetActiveUniformBlockiv(prog, uniformBlockIndex, 
+                              GL_UNIFORM_BLOCK_DATA_SIZE, &uniformBlockSize);
 
-    return ubo;
-}		// -----  end of method Object::createUBO  -----
+    const unsigned int uboSize(uniformBlockSize);
+    std::vector<unsigned char> buffer(uboSize);
+    int offset = uniformOffsets[0];
+    for ( unsigned int i = 0; i < 16; i += 1 ) {
+        GLfloat *matrix = glm::value_ptr(projection_->getProjection());
+        *(reinterpret_cast<float *> (&buffer[0] + offset)) =
+            matrix[i];
+        offset += sizeof(GLfloat);
+    }
+    offset = uniformOffsets[1];
+    for ( unsigned int i = 0; i < 16; i += 1 ) {
+        GLfloat *matrix = glm::value_ptr(camera_->getCamera());
+        *(reinterpret_cast <float *> (&buffer[0] + offset)) =
+            matrix[i];
+            offset += sizeof(GLfloat);
+    }
+    glBufferData(GL_UNIFORM_BUFFER, uboSize, &buffer[0], GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo_[0]);
+    glUniformBlockBinding(prog, uniformBlockIndex, 0);
 
-//-----------------------------------------------------------------------------
-//       Class:  Object
-//      Method:  fillUniformBuffer
-// Description:  Stuffs data in the uniform buffer depending on the index.
-//-----------------------------------------------------------------------------
-    void
-Object::fillUniformBuffer ( GLint index, glm::mat4& matrix )
-{
-    glBufferSubData(GL_UNIFORM_BUFFER, index*sizeof(glm::mat4), 
-                    sizeof(glm::mat4), glm::value_ptr(matrix));
-}		// -----  end of method Object::fillUniformBuffer  -----
+    glGenBuffers(1, &ubo_[1]);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_[1]);
+    const GLchar *uniformNames2[3] { "vTranslate", "vRotate", "vScale" };
+    GLuint uniformIndices2[3];
+    glGetUniformIndices(prog, 3, uniformNames2, uniformIndices2);
+
+    GLint uniformOffsets2[3];
+    glGetActiveUniformsiv(prog, 3, uniformIndices2, GL_UNIFORM_OFFSET,
+                          uniformOffsets2);
+    GLuint uniformBlockIndex2 = glGetUniformBlockIndex(prog, "Model");
+    GLsizei uniformBlockSize2(0);
+    glGetActiveUniformBlockiv(prog, uniformBlockIndex2,
+                              GL_UNIFORM_BLOCK_DATA_SIZE, &uniformBlockSize2);
+    const unsigned int uboSize2(uniformBlockSize2);
+    std::vector<unsigned char> buffer2(uboSize2);
+    int offset2 = uniformOffsets2[0];
+    for ( unsigned int i = 0; i < 16; i += 1 ) {
+        GLfloat *matrix = glm::value_ptr(translation_);
+        *(reinterpret_cast <float *> (&buffer2[0] + offset2)) =
+            matrix[i];
+        offset2 += sizeof(GLfloat);
+    }
+    offset2 = uniformOffsets2[1];
+    for ( unsigned int i = 0; i < 16; i += 1 ) {
+        GLfloat *matrix = glm::value_ptr(rotation_);
+        *(reinterpret_cast <float *> (&buffer2[0] + offset2)) =
+            matrix[i];
+        offset2 += sizeof(GLfloat);
+    }
+    offset2 = uniformOffsets2[2];
+    for ( unsigned int i = 0; i < 16; i += 1 ) {
+        GLfloat *matrix = glm::value_ptr(scaling_);
+        *(reinterpret_cast <float *> (&buffer2[0] + offset2)) =
+            matrix[i];
+        offset2 += sizeof(GLfloat);
+    }
+    glBufferData(GL_UNIFORM_BUFFER, uboSize2, &buffer2[0], GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo_[1]);
+    glUniformBlockBinding(prog, uniformBlockIndex2, 1);
+}		// -----  end of method Object::initUniformBuffer  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Object
@@ -265,9 +299,9 @@ Object::draw ()
     void
 Object::setUniforms ()
 {
-    shader_->setUniform("vTranslate", translation_);
-    shader_->setUniform("vRotate", rotation_);
-    shader_->setUniform("vScale", scaling_);
+//    shader_->setUniform("vTranslate", translation_);
+//    shader_->setUniform("vRotate", rotation_);
+//    shader_->setUniform("vScale", scaling_);
     shader_->setUniform("varyingColor", color_);
     shader_->setUniform("gSampler", 0);
 }		// -----  end of method Object::setUniforms  -----

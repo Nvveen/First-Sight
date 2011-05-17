@@ -23,9 +23,9 @@ uniform Projection {
     mat4 vProjection, vCamera;
 };
 
-uniform mat4 vTranslate;
-uniform mat4 vRotate;
-uniform mat4 vScale;
+uniform Model {
+    mat4 vTranslate, vRotate, vScale;
+};
 
 void main(void) {
     gl_Position = vProjection * vCamera * vTranslate * vRotate * vScale * 

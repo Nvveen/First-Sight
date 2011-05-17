@@ -106,8 +106,6 @@ class Object
         Model *model_;
         
         bool              readDat ( std::string datName );
-        void    fillUniformBuffer ( GLint index, glm::mat4& matrix );
-        GLuint          createUBO ( std::string blockName, GLuint blockBind );
         static  GLfloat toRadians ( GLfloat angle );
         GLfloat           getSize ( int axis );
         void                 bind ( Projection *proj, Camera *cam );

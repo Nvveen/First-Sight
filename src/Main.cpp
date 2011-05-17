@@ -47,8 +47,8 @@ main ( int argc, char *argv[] )
     windowContext.setup();
 //    windowContext.setFramerateLimit(60);
 
-    int xObjects = 100;
-    int yObjects = 100;
+    int xObjects = 1;
+    int yObjects = 1;
     Object objects[xObjects*yObjects];
     for ( int i = 0; i < xObjects; i += 1 ) {
         for ( int j = 0; j < yObjects; j += 1 ) {
