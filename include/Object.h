@@ -91,7 +91,8 @@ class Object
         glm::mat4 scaling_;
         glm::vec4 color_;
 
-        virtual void init ();
+        virtual void initVertexBuffer ();
+        virtual void initUniformBuffer ();
 
     private:
         // ====================  DATA MEMBERS  ================================
@@ -100,13 +101,16 @@ class Object
 
         GLuint vbo_;
         GLuint vao_;
+        GLuint ubo_[2];
 
         Model *model_;
         
-        void readDat( std::string datName );
-        static GLfloat toRadians ( GLfloat angle );
-        GLfloat getSize ( int axis );
-        void bind ( Projection *proj, Camera *cam );
+        bool              readDat ( std::string datName );
+        void    fillUniformBuffer ( GLint index, glm::mat4& matrix );
+        GLuint          createUBO ( std::string blockName, GLuint blockBind );
+        static  GLfloat toRadians ( GLfloat angle );
+        GLfloat           getSize ( int axis );
+        void                 bind ( Projection *proj, Camera *cam );
 
 }; // -----  end of class Object  -----
 

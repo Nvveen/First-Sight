@@ -41,17 +41,17 @@ Text::Text ( std::string textString, int x, int y, Font& font ) :
     Object(), textString_(textString), x_(x), y_(y), font_(&font)
 {
     bgColor_ = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-    init();
+    initVertexBuffer();
     shader_ = &Context::shaders["text"];
 }  // -----  end of method Text::Text  (constructor)  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Text
-//      Method:  init
+//      Method:  initVertexBuffers
 // Description:  Initializes the Text object.
 //-----------------------------------------------------------------------------
     void
-Text::init ()
+Text::initVertexBuffer ()
 {
     // For every character in a string, we need to loop through its letters,
     // generate a quad, and set that quad next to the previous one.
@@ -69,8 +69,8 @@ Text::init ()
     // Set the texture that contains the bitmap font from the Font object.
     texture_ = font_->tex_;
     // Do normal object inits.
-    this->Object::init();
-}		// -----  end of method Text::init  -----
+    this->Object::initVertexBuffer();
+}		// -----  end of method Text::initVertexBuffer  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Text

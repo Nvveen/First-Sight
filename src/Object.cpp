@@ -31,6 +31,7 @@
 #include    <iostream>
 
 #include    <glm/gtc/matrix_transform.hpp>
+#include    <glm/gtc/type_ptr.hpp>
 #include    <GL/glew.h>
 #include    "Undat.h"
 #include    "Object.h"
@@ -54,8 +55,13 @@ Object::Object ( std::string datName, Context& context,
     texture_ = NULL;
     color_ = glm::vec4(1.0f);
 
-    readDat(datName);
+    if ( readDat(datName) ) {
+        initVertexBuffer();
+        objectCache[datName] = *this;
+    }
     bind(context, false);
+    initUniformBuffer();
+
     translateGrid(x, y, z);
 }  // -----  end of method Object::Object  (constructor)  -----
 
@@ -88,15 +94,17 @@ Object::~Object ()
 //       Class:  Object
 //      Method:  readDat
 // Description:  Reads the .dat file and attempts to pass the data contained
-//               to the appropiate members.
+//               to the appropiate members. Returns true if the object hasn't
+//               been cached yet.
 //-----------------------------------------------------------------------------
-    void
+    bool
 Object::readDat ( std::string datName )
 {
     std::map<std::string, Object>::iterator it;
     it = objectCache.find(datName);
     if ( it != objectCache.end() ) {
         *this = it->second;
+        return false;
     }
     else {
         ModelData mod(datName);
@@ -114,18 +122,17 @@ Object::readDat ( std::string datName )
             modelData_.push_back(model_->normals[i*3+1]);
             modelData_.push_back(model_->normals[i*3+2]);
         }
-        init ();
-        objectCache[datName] = *this;
+        return true;
     }
 }		// -----  end of method Object::readDat  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Objectmodel->vertices.size()
-//      Method:  init
-// Description:  Initializes all the buffers and binds them.
+//      Method:  initVertexBuffer
+// Description:  Initializes the vertex buffer.
 //-----------------------------------------------------------------------------
     void
-Object::init ()
+Object::initVertexBuffer ()
 {
     // Get the object dimensions
     width_ = getSize(0);
@@ -153,12 +160,69 @@ Object::init ()
             (const GLvoid*)20);
     glBindAttribLocation(shader_->getShaderProgram(), 0, "vVertex");
     glBindAttribLocation(shader_->getShaderProgram(), 1, "TexCoord");
+
     // Clean up
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(2);
     glBindVertexArray(0);
-}		// -----  end of method Object::init  -----
+}		// -----  end of method Object::initVertexBuffer  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  initUniformBuffer
+// Description:  Initializes the uniform buffer.
+//-----------------------------------------------------------------------------
+    void
+Object::initUniformBuffer ()
+{
+    ubo_[0] = createUBO("Projection", 0);
+    
+    fillUniformBuffer(0, projection_->getProjection());
+    fillUniformBuffer(1, camera_->getCamera());
+}		// -----  end of method Object::initUniformBuffer  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  createUBO
+// Description:  Creates a uniform buffer object by using the name provided and
+//               looking it up in the shader. Afterwards, it allocates the
+//               space in the buffer needed for the amount of uniforms
+//               specified.
+//-----------------------------------------------------------------------------
+    GLuint
+Object::createUBO ( std::string blockName, GLuint blockBind )
+{
+    GLuint ubo;
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    GLuint prog = shader_->getShaderProgram();
+    GLuint uniformIndex = glGetUniformBlockIndex(prog, blockName.c_str());
+    glUniformBlockBinding(prog, uniformIndex, blockBind);
+
+    GLsizei uniSize;
+    glGetActiveUniformBlockiv(prog, blockBind, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS,
+                              &uniSize);
+
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4)*uniSize, NULL, 
+                 GL_STREAM_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, sizeof(glm::mat4)*uniSize);
+
+    return ubo;
+}		// -----  end of method Object::createUBO  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  fillUniformBuffer
+// Description:  Stuffs data in the uniform buffer depending on the index.
+//-----------------------------------------------------------------------------
+    void
+Object::fillUniformBuffer ( GLint index, glm::mat4& matrix )
+{
+    glBufferSubData(GL_UNIFORM_BUFFER, index*sizeof(glm::mat4), 
+                    sizeof(glm::mat4), glm::value_ptr(matrix));
+}		// -----  end of method Object::fillUniformBuffer  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Object
@@ -170,6 +234,7 @@ Object::draw ()
 {
     // Use the specified program
     shader_->bind();
+
     // Enable the arrays
     glBindVertexArray(vao_);
     glEnableVertexAttribArray(0);
@@ -177,7 +242,7 @@ Object::draw ()
     glEnableVertexAttribArray(2);
     // Activate the texture
     texture_->bind();
-    // Set the program's uniforms.
+
     setUniforms();
     // Use the vao to draw the vertices
     glDrawArrays(GL_TRIANGLES, 0, triangleCount_);
@@ -189,7 +254,7 @@ Object::draw ()
     glDisableVertexAttribArray(2);
     glBindVertexArray(0);
     // Unbind the shader
-//    shader_->unbind();
+    shader_->unbind();
 }		// -----  end of method Object::draw  -----
 
 //-----------------------------------------------------------------------------
@@ -200,8 +265,6 @@ Object::draw ()
     void
 Object::setUniforms ()
 {
-    shader_->setUniform("vProjection", projection_->getProjection());
-    shader_->setUniform("vCamera", camera_->getCamera());
     shader_->setUniform("vTranslate", translation_);
     shader_->setUniform("vRotate", rotation_);
     shader_->setUniform("vScale", scaling_);

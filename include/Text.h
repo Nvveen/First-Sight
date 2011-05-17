@@ -69,7 +69,7 @@ class Text : public Object
         Font *font_;
         glm::vec4 bgColor_;
 
-        void init ();
+        void initVertexBuffer ();
         void createLetterQuad ( char c, float x, float y );
 }; // -----  end of class Text  -----
 
@@ -83,7 +83,7 @@ Text::setText ( std::string textString )
 {
     textString_ = textString;
     modelData_.clear();
-    init();
+    initVertexBuffer();
 }		// -----  end of method Text::setText  -----
 
 //-----------------------------------------------------------------------------

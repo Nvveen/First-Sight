@@ -13,17 +13,19 @@ more details.
 You should have received a copy of the GNU General Public License along with 
 First Sight. If not, see <http://www.gnu.org/licenses/>. */
 #version 120
+#extension GL_ARB_uniform_buffer_object : enable
 
 attribute vec3 vVertex;
 attribute vec2 TexCoord;
 varying vec2 Tex;
 
-uniform mat4 vProjection;
-uniform mat4 vCamera;
+uniform Projection {
+    mat4 vProjection, vCamera;
+};
+
 uniform mat4 vTranslate;
 uniform mat4 vRotate;
 uniform mat4 vScale;
-
 
 void main(void) {
     gl_Position = vProjection * vCamera * vTranslate * vRotate * vScale * 
