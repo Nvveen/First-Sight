@@ -210,3 +210,63 @@ Shader::createProgram ()
     }
     unbind();
 }		// -----  end of method Shader::createProgram  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  createUBO
+// Description:  Creates a uniform buffer object, and fills it with empty data.
+//               Afterwards, the buffer id can be returned.
+//-----------------------------------------------------------------------------
+    GLuint
+Shader::createUBO ( std::string blockName )
+{
+    GLuint ubo;
+    glGenBuffers(1, &ubo);
+    GLuint uniformBlockIndex = glGetUniformBlockIndex(shaderProgram_, 
+                                                      blockName.c_str());
+    uniformBlockIndices[blockName] = uniformBlockIndex;
+    GLint uniformBlockSize(0);
+    glGetActiveUniformBlockiv(shaderProgram_, uniformBlockIndex,
+                              GL_UNIFORM_BLOCK_DATA_SIZE, &uniformBlockSize);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, uniformBlockSize, NULL, GL_DYNAMIC_DRAW);
+    glUniformBlockBinding(shaderProgram_, uniformBlockIndex, uniformBlockIndex);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    return ubo;
+}		// -----  end of method Shader::createUBO  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  fillUniformBuffer
+// Description:  When a matrix is passed as a parameter, the size and offsets
+//               determined and set in the UBO.
+//-----------------------------------------------------------------------------
+    void
+Shader::fillUniformBuffer ( GLuint buffer, std::string uniformName,
+                            glm::mat4& matrix )
+{
+    glBindBuffer(GL_UNIFORM_BUFFER, buffer);
+    const GLchar *name = uniformName.c_str();
+    GLuint index;
+    GLint offset;
+    glGetUniformIndices(shaderProgram_, 1, &name, &index);
+    glGetActiveUniformsiv(shaderProgram_, 1, &index, GL_UNIFORM_OFFSET, 
+                          &offset);
+
+    glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(glm::mat4),
+                    glm::value_ptr(matrix));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}		// -----  end of method Shader::fillUniformBuffer  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  bindUBO
+// Description:  Binds a UBO to the current shader.
+//-----------------------------------------------------------------------------
+    void
+Shader::bindUBO ( GLuint ubo, std::string blockName )
+{
+    glBindBufferBase(GL_UNIFORM_BUFFER, uniformBlockIndices[blockName], ubo);
+}		// -----  end of method Shader::bindUBO  -----
+

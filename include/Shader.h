@@ -61,6 +61,11 @@ class Shader
         bool setUniform ( std::string name, glm::vec4& vec );
         void setUniformLocation ( std::string name );
 
+        GLuint createUBO ( std::string blockName );
+        void fillUniformBuffer ( GLuint buffer, std::string uniformName,
+                                 glm::mat4& matrix );
+        void bindUBO ( GLuint ubo, std::string blockName );
+
         // ====================  OPERATORS     ================================
 
     protected:
@@ -76,6 +81,7 @@ class Shader
         GLuint shaderProgram_;
 
         std::map<std::string, int> uniformLocs;
+        std::map<std::string, GLuint> uniformBlockIndices;
 
         std::string addCode ( std::string fileName );
         GLuint      compileShader ( std::string code, GLenum type );

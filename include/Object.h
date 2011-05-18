@@ -101,7 +101,8 @@ class Object
 
         GLuint vbo_;
         GLuint vao_;
-        GLuint ubo_[2];
+        GLuint projectionUBO_;
+        GLuint modelUBO_;
 
         Model *model_;
         
@@ -197,6 +198,8 @@ Object::operator= ( Object const& r )
     triangleCount_ = r.triangleCount_;
     vbo_ = r.vbo_;
     vao_ = r.vao_;
+    projectionUBO_ = r.projectionUBO_;
+    modelUBO_ = r.modelUBO_;
     translation_ = r.translation_;
     rotation_ = r.rotation_;
     scaling_ = r.scaling_;

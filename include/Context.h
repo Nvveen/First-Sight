@@ -89,6 +89,7 @@ class Context
 
         SDL_Surface *mainWindow_;
         bool windowOpened_;
+        GLuint projectionUBO_;
 
         struct {
             int frames;

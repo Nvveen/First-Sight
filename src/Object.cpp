@@ -176,49 +176,17 @@ Object::initVertexBuffer ()
     void
 Object::initUniformBuffer ()
 {
-    GLuint prog = shader_->getShaderProgram();
-    glGenBuffers(1, &ubo_[0]);
-    GLuint uniformBlockIndex = glGetUniformBlockIndex(prog, "Projection");
-    GLint uniformBlockSize(0);
-    glGetActiveUniformBlockiv(prog, uniformBlockIndex,
-                              GL_UNIFORM_BLOCK_DATA_SIZE, &uniformBlockSize);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo_[0]);
-    glBufferData(GL_UNIFORM_BUFFER, uniformBlockSize, NULL, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo_[0]);
-    glUniformBlockBinding(prog, uniformBlockIndex, 0);
+    projectionUBO_ = shader_->createUBO("Projection");
+    shader_->fillUniformBuffer(projectionUBO_, "vProjection", 
+                               projection_->getProjection());
+    shader_->fillUniformBuffer(projectionUBO_, "vCamera", camera_->getCamera());
 
-    const GLchar *names[2] = { "vProjection", "vCamera" };
-    GLuint indices[2];
-    GLint offsets[2];
-    glGetUniformIndices(prog, 2, names, indices);
-    glGetActiveUniformsiv(prog, 2, indices, GL_UNIFORM_OFFSET, offsets);
+    modelUBO_ = shader_->createUBO("Model");
+    shader_->fillUniformBuffer(modelUBO_, "vTranslate", translation_);
+    shader_->fillUniformBuffer(modelUBO_, "vRotate", rotation_);
+    shader_->fillUniformBuffer(modelUBO_, "vScale", scaling_);
 
-    glBufferSubData(GL_UNIFORM_BUFFER, offsets[0], sizeof(glm::mat4),
-                    glm::value_ptr(projection_->getProjection()));
-    glBufferSubData(GL_UNIFORM_BUFFER, offsets[1], sizeof(glm::mat4),
-                    glm::value_ptr(camera_->getCamera()));
-
-    glGenBuffers(1, &ubo_[1]);
-    uniformBlockIndex = glGetUniformBlockIndex(prog, "Model");
-    glGetActiveUniformBlockiv(prog, uniformBlockIndex,
-                              GL_UNIFORM_BLOCK_DATA_SIZE, &uniformBlockSize);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo_[1]);
-    glBufferData(GL_UNIFORM_BUFFER, uniformBlockSize, NULL, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo_[1]);
-    glUniformBlockBinding(prog, uniformBlockIndex, 1);
-
-    const GLchar *names2[3] = { "vTranslate", "vRotate", "vScale" };
-    GLuint indices2[3];
-    GLint offsets2[3];
-    glGetUniformIndices(prog, 3, names2, indices2);
-    glGetActiveUniformsiv(prog, 3, indices2, GL_UNIFORM_OFFSET, offsets2);
-
-    glBufferSubData(GL_UNIFORM_BUFFER, offsets2[0], sizeof(glm::mat4),
-                    glm::value_ptr(translation_));
-    glBufferSubData(GL_UNIFORM_BUFFER, offsets2[1], sizeof(glm::mat4),
-                    glm::value_ptr(rotation_));
-    glBufferSubData(GL_UNIFORM_BUFFER, offsets2[2], sizeof(glm::mat4),
-                    glm::value_ptr(scaling_));
+    shader_->bindUBO(projectionUBO_, "Projection");
 }		// -----  end of method Object::initUniformBuffer  -----
 
 //-----------------------------------------------------------------------------
@@ -237,6 +205,7 @@ Object::draw ()
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
+    
     // Activate the texture
     texture_->bind();
 
@@ -245,6 +214,7 @@ Object::draw ()
     glDrawArrays(GL_TRIANGLES, 0, triangleCount_);
     // Unbind the texture
     texture_->unbind();
+
     // Disable the arrays
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
@@ -262,9 +232,7 @@ Object::draw ()
     void
 Object::setUniforms ()
 {
-//    shader_->setUniform("vTranslate", translation_);
-//    shader_->setUniform("vRotate", rotation_);
-//    shader_->setUniform("vScale", scaling_);
+    shader_->bindUBO(modelUBO_, "Model");
     shader_->setUniform("varyingColor", color_);
     shader_->setUniform("gSampler", 0);
 }		// -----  end of method Object::setUniforms  -----
@@ -300,7 +268,6 @@ Object::getSize ( int axis )
 Object::translate ( GLfloat x, GLfloat y, GLfloat z )
 {
     translation_ = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
-    shader_->setUniform("vTranslate", translation_);
 }		// -----  end of method Object::translate  -----
 
 //-----------------------------------------------------------------------------
@@ -317,7 +284,7 @@ Object::translateGrid ( unsigned int x, unsigned int y, unsigned int z )
                                   glm::vec3(2.9 - width_ * x_, 
                                             height_ * y_, 
                                             -2.5 + depth_ * z_ ));
-    shader_->setUniform("vTranslate", translation_);
+    shader_->fillUniformBuffer(modelUBO_, "vTranslate", translation_);
 }		// -----  end of method Object::translateGrid  -----
 
 //-----------------------------------------------------------------------------
