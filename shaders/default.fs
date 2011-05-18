@@ -13,10 +13,13 @@ more details.
 You should have received a copy of the GNU General Public License along with 
 First Sight. If not, see <http://www.gnu.org/licenses/>. */
 #version 120
+#extension GL_ARB_uniform_buffer_object : enable
+
+layout (std140) uniform Texture {
+    vec4 varyingColor;
+};
 
 uniform sampler2D gSampler;
-uniform vec4 varyingColor;
-
 varying vec2 Tex;
 
 void main(void) {

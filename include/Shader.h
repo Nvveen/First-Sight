@@ -64,6 +64,10 @@ class Shader
         GLuint createUBO ( std::string blockName );
         void fillUniformBuffer ( GLuint buffer, std::string uniformName,
                                  glm::mat4& matrix );
+        void fillUniformBuffer ( GLuint buffer, std::string uniformName,
+                                 glm::vec4& vector );
+        void fillUniformBuffer ( GLuint buffer, std::string uniformName,
+                                 GLfloat val );
         void bindUBO ( GLuint ubo, std::string blockName );
 
         // ====================  OPERATORS     ================================

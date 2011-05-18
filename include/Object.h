@@ -103,6 +103,7 @@ class Object
         GLuint vao_;
         GLuint projectionUBO_;
         GLuint modelUBO_;
+        GLuint textureUBO_;
 
         Model *model_;
         
@@ -200,6 +201,7 @@ Object::operator= ( Object const& r )
     vao_ = r.vao_;
     projectionUBO_ = r.projectionUBO_;
     modelUBO_ = r.modelUBO_;
+    textureUBO_ = r.textureUBO_;
     translation_ = r.translation_;
     rotation_ = r.rotation_;
     scaling_ = r.scaling_;

@@ -186,6 +186,9 @@ Object::initUniformBuffer ()
     shader_->fillUniformBuffer(modelUBO_, "vRotate", rotation_);
     shader_->fillUniformBuffer(modelUBO_, "vScale", scaling_);
 
+    textureUBO_ = shader_->createUBO("Texture");
+    shader_->fillUniformBuffer(textureUBO_, "varyingColor", color_);
+
     shader_->bindUBO(projectionUBO_, "Projection");
 }		// -----  end of method Object::initUniformBuffer  -----
 
@@ -233,7 +236,7 @@ Object::draw ()
 Object::setUniforms ()
 {
     shader_->bindUBO(modelUBO_, "Model");
-    shader_->setUniform("varyingColor", color_);
+    shader_->bindUBO(textureUBO_, "Texture");
     shader_->setUniform("gSampler", 0);
 }		// -----  end of method Object::setUniforms  -----
 

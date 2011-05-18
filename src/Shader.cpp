@@ -240,7 +240,7 @@ Shader::createUBO ( std::string blockName )
 //       Class:  Shader
 //      Method:  fillUniformBuffer
 // Description:  When a matrix is passed as a parameter, the size and offsets
-//               determined and set in the UBO.
+//               are determined and set in the UBO.
 //-----------------------------------------------------------------------------
     void
 Shader::fillUniformBuffer ( GLuint buffer, std::string uniformName,
@@ -256,6 +256,49 @@ Shader::fillUniformBuffer ( GLuint buffer, std::string uniformName,
 
     glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(glm::mat4),
                     glm::value_ptr(matrix));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}		// -----  end of method Shader::fillUniformBuffer  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  fillUniformBuffer
+// Description:  When a vector is passed as a parameter, the size and offsets
+//               are determined and set in the UBO.
+//-----------------------------------------------------------------------------
+    void
+Shader::fillUniformBuffer ( GLuint buffer, std::string uniformName,
+                            glm::vec4& vector )
+{
+    glBindBuffer(GL_UNIFORM_BUFFER, buffer);
+    const GLchar *name = uniformName.c_str();
+    GLuint index;
+    GLint offset;
+    glGetUniformIndices(shaderProgram_, 1, &name, &index);
+    glGetActiveUniformsiv(shaderProgram_, 1, &index, GL_UNIFORM_OFFSET,
+                          &offset);
+    glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(glm::vec4),
+                    glm::value_ptr(vector));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}		// -----  end of method Shader::fillUniformBuffer  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  fillUniformBuffer
+// Description:  When a value is passed as a parameter, the size and offsets
+//               are determined and set in the UBO.
+//-----------------------------------------------------------------------------
+    void
+Shader::fillUniformBuffer ( GLuint buffer, std::string uniformName,
+                            GLfloat val )
+{
+    glBindBuffer(GL_UNIFORM_BUFFER, buffer);
+    const GLchar *name = uniformName.c_str();
+    GLuint index;
+    GLint offset;
+    glGetUniformIndices(shaderProgram_, 1, &name, &index);
+    glGetActiveUniformsiv(shaderProgram_, 1, &index, GL_UNIFORM_OFFSET,
+                          &offset);
+    glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(GLfloat), &val);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }		// -----  end of method Shader::fillUniformBuffer  -----
 
