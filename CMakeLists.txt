@@ -14,5 +14,6 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
 
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 include_directories(${PROJECT_SOURCE_DIR}/lib/glm/)
+include_directories(${PROJECT_SOURCE_DIR}/lib/png++/)
 include_directories(${PROJECT_SOURCE_DIR}/lib/snappy/)
 add_subdirectory(src)
