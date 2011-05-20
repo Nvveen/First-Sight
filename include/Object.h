@@ -107,10 +107,9 @@ class Object
 
         Model *model_;
         
-        bool              readDat ( std::string datName );
+        bool             initBase ( std::string datName );
         static  GLfloat toRadians ( GLfloat angle );
-        GLfloat           getSize ( int axis );
-        void                 bind ( Projection *proj, Camera *cam );
+        GLfloat           getSize ( Uint8 axis );
 
 }; // -----  end of class Object  -----
 
@@ -133,22 +132,16 @@ Object::toRadians ( GLfloat angle )
     inline void
 Object::bind ( Context& context, bool isOrtho )
 {
-    if ( !isOrtho )
-        bind(context.getPerspective(), context.getCamera());
-    else
-        bind(context.getOrtho(), context.getCamera());
-}		// -----  end of method Object::bind  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Object
-//      Method:  bind
-// Description:  Binds a projection to an object.
-//-----------------------------------------------------------------------------
-    inline void
-Object::bind ( Projection *proj, Camera *cam )
-{
-    projection_ = proj;
-    if ( cam != NULL ) camera_ = cam;
+    if ( !isOrtho ) {
+        if ( context.getPerspective() != NULL )
+            projection_ = context.getPerspective();
+    }
+    else {
+        if ( context.getOrtho() != NULL )
+            projection_ = context.getOrtho();
+    }
+    if ( context.getCamera() != NULL )
+        camera_ = context.getCamera();
 }		// -----  end of method Object::bind  -----
 
 //-----------------------------------------------------------------------------
@@ -188,24 +181,35 @@ Object::setColor ( GLfloat r, GLfloat g, GLfloat b, GLfloat a )
     inline Object&
 Object::operator= ( Object const& r )
 {
-    model_ = r.model_;
-    texture_ = r.texture_;
     modelData_ = r.modelData_;
-    projection_ = r.projection_;
-    camera_ = r.camera_;
+
     width_ = r.width_;
     height_ = r.height_;
     depth_ = r.depth_;
+    x_ = r.x_;
+    y_ = r.y_;
+    z_ = r.z_;
+    
+    texture_ = new Texture;
+    *texture_ = *(r.texture_);
+    projection_ = r.projection_;
+    camera_ = r.camera_;
+
+    translation_ = r.translation_;
+    rotation_ = r.rotation_;
+    scaling_ = r.scaling_;
+    color_ = r.color_;
+
     triangleCount_ = r.triangleCount_;
+
     vbo_ = r.vbo_;
     vao_ = r.vao_;
     projectionUBO_ = r.projectionUBO_;
     modelUBO_ = r.modelUBO_;
     textureUBO_ = r.textureUBO_;
-    translation_ = r.translation_;
-    rotation_ = r.rotation_;
-    scaling_ = r.scaling_;
-    color_ = r.color_;
+
+    model_ = new Model;
+    *model_ = *(r.model_);
     return *this;
 }		// -----  end of method Object::operator=  -----
 

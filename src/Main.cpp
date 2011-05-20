@@ -31,6 +31,7 @@
 #include    <iostream>
 #include    <sstream>
 #include    <GL/glew.h>
+#include    <sys/time.h>
 #include    "Context.h"
 #include    "EventHandler.h"
 #include    "Object.h"
@@ -47,13 +48,12 @@ main ( int argc, char *argv[] )
     windowContext.setup();
 //    windowContext.setFramerateLimit(60);
 
-    int xObjects = 100;
-    int yObjects = 100;
-    Object objects[xObjects*yObjects];
+    int xObjects = 10;
+    int yObjects = 10;
+    std::vector<Object> objects;
     for ( int i = 0; i < xObjects; i += 1 ) {
         for ( int j = 0; j < yObjects; j += 1 ) {
-            Object cube("data/dirt.dat", windowContext, i, 0, j);
-            objects[i*xObjects+j] = cube;
+            objects.push_back(Object("data/dirt.dat", windowContext, i, 0, j));
         }
     }
 
@@ -69,22 +69,18 @@ main ( int argc, char *argv[] )
                EventHandler::Keyset(Key::Lctrl, Key::Right));
     event.bind(&windowContext, &Context::close, Key::Escape);
 
-    int frames = 0;
-    int prevTime = SDL_GetTicks();
+    timeval t1, t2;
     while ( windowContext.isOpened() ) {
+        gettimeofday(&t1, NULL);
         event.pollEvents();
         windowContext.clear();
-        frames += 1;
         for ( int i = 0; i < xObjects*yObjects; i += 1 ) {
             objects[i].draw();
         }
         windowContext.render();
-        int currTime = SDL_GetTicks();
-        if ( currTime - prevTime >= 1000 ) {
-            prevTime = currTime;
-            std::cout << frames << "\n";
-            frames = 0;
-        }
+        gettimeofday(&t2, NULL);
+        double diff = t2.tv_usec - t1.tv_usec;
+        std::cout << diff / 1000 << "\n";
     }
     return 0;
 }				// ----------  end of function main  ----------

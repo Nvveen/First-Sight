@@ -80,6 +80,8 @@ class Shader
         std::string vertexShaderCode_;
         std::string fragmentShaderCode_;
 
+        static std::map<std::string, GLuint> codeNames_;
+
         GLuint vertexShaderObject_;
         GLuint fragmentShaderObject_;
         GLuint shaderProgram_;

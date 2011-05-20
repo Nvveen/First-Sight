@@ -47,7 +47,6 @@ Object::Object ( std::string datName, Context& context,
                  Uint8 x, Uint8 y, Uint8 z, Shader *shader ) :
     shader_(shader)
 {
-    if ( shader_ == NULL ) shader_ = &Context::shaders["default"];
 
     projection_ = NULL;
     camera_ = NULL;
@@ -55,14 +54,18 @@ Object::Object ( std::string datName, Context& context,
     texture_ = NULL;
     color_ = glm::vec4(1.0f);
 
-    if ( readDat(datName) ) {
+    bind(context, false);
+
+    bool unique = initBase(datName);
+    shader_->bind();
+    if ( unique ) {
         initVertexBuffer();
         objectCache[datName] = *this;
     }
-    bind(context, false);
     initUniformBuffer();
 
     translateGrid(x, y, z);
+    shader_->unbind();
 }  // -----  end of method Object::Object  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -92,17 +95,22 @@ Object::~Object ()
 
 //-----------------------------------------------------------------------------
 //       Class:  Object
-//      Method:  readDat
+//      Method:  initBase
 // Description:  Reads the .dat file and attempts to pass the data contained
 //               to the appropiate members. Returns true if the object hasn't
-//               been cached yet.
+//               been cached yet and uses the cached data.
 //-----------------------------------------------------------------------------
     bool
-Object::readDat ( std::string datName )
+Object::initBase ( std::string datName )
 {
+    // First, we need to bind the shader.
+    if ( shader_ == NULL ) shader_ = &Context::shaders["default"];
+    shader_->setUniformLocation("gSampler");
+
     std::map<std::string, Object>::iterator it;
     it = objectCache.find(datName);
     if ( it != objectCache.end() ) {
+        // Object vertex data already exists. Use that.
         *this = it->second;
         return false;
     }
@@ -124,7 +132,7 @@ Object::readDat ( std::string datName )
         }
         return true;
     }
-}		// -----  end of method Object::readDat  -----
+}		// -----  end of method Object::initBase  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Objectmodel->vertices.size()
@@ -148,6 +156,7 @@ Object::initVertexBuffer ()
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
+    // Generate vertex buffers.
     glGenBuffers(1, &vbo_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*modelData_.size(), 
@@ -176,20 +185,30 @@ Object::initVertexBuffer ()
     void
 Object::initUniformBuffer ()
 {
+    // Return a newly generated UBO name.
     projectionUBO_ = shader_->createUBO("Projection");
+    // Fill UBO with data.
     shader_->fillUniformBuffer(projectionUBO_, "vProjection", 
                                projection_->getProjection());
     shader_->fillUniformBuffer(projectionUBO_, "vCamera", camera_->getCamera());
+    // Bind the UBO to the shader.
+    shader_->bindUBO(projectionUBO_, "Projection");
 
+    // Return a newly generated UBO name.
     modelUBO_ = shader_->createUBO("Model");
+    // Fill UBO with data.
     shader_->fillUniformBuffer(modelUBO_, "vTranslate", translation_);
     shader_->fillUniformBuffer(modelUBO_, "vRotate", rotation_);
     shader_->fillUniformBuffer(modelUBO_, "vScale", scaling_);
+    // Bind the UBO to the shader.
+    shader_->bindUBO(modelUBO_, "Model");
 
+    // Return a newly generated UBO name.
     textureUBO_ = shader_->createUBO("Texture");
+    // Fill UBO with data.
     shader_->fillUniformBuffer(textureUBO_, "varyingColor", color_);
-
-    shader_->bindUBO(projectionUBO_, "Projection");
+    // Bind the UBO to the shader.
+    shader_->bindUBO(textureUBO_, "Texture");
 }		// -----  end of method Object::initUniformBuffer  -----
 
 //-----------------------------------------------------------------------------
@@ -211,7 +230,6 @@ Object::draw ()
     
     // Activate the texture
     texture_->bind();
-
     setUniforms();
     // Use the vao to draw the vertices
     glDrawArrays(GL_TRIANGLES, 0, triangleCount_);
@@ -235,18 +253,21 @@ Object::draw ()
     void
 Object::setUniforms ()
 {
+    // At every draw call, we need to rebind the UBO to the shader, if the
+    // data is different.
+    shader_->setUniform("gSampler", 0);
     shader_->bindUBO(modelUBO_, "Model");
     shader_->bindUBO(textureUBO_, "Texture");
-    shader_->setUniform("gSampler", 0);
 }		// -----  end of method Object::setUniforms  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Object
 //      Method:  getSize
-// Description:  Calculates an object's size on the axis specified by k.
+// Description:  Calculates an object's size on the axis specified in the
+//               parameter.
 //-----------------------------------------------------------------------------
     GLfloat
-Object::getSize ( int axis )
+Object::getSize ( Uint8 axis )
 {
     if ( axis != 0 && axis != 1 && axis != 2 ) {
         std::cerr << "An invalid axis is specified for the size calculation\n";
@@ -254,7 +275,8 @@ Object::getSize ( int axis )
     }
     GLfloat maxWidth = 0;
     GLfloat minWidth = 0;
-    for ( unsigned int i = axis; i < modelData_.size(); i += 8 ) {
+    for ( unsigned int i = (unsigned int)axis; i < modelData_.size(); 
+          i += 8 ) {
         if ( modelData_[i] > maxWidth ) maxWidth = modelData_[i];
         if ( modelData_[i] < minWidth ) minWidth = modelData_[i];
     }

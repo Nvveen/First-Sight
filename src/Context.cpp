@@ -56,7 +56,7 @@ Context::Context ( GLfloat w, GLfloat h, std::string windowName,
 
     mainWindow_ = NULL;
     windowOpened_ = true;
-    fpsLimit_ = {0, 0, 0, 0, false};
+    fpsLimit_ = {0.0f, 0.0f, 0.0f, false};
 }  // -----  end of method Context::Context  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -81,13 +81,14 @@ Context::setup ()
         std::cerr << "Couldn't initialize SDL.\n";
         exit(1);
     }
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-    mainWindow_ = SDL_SetVideoMode(w_, h_, 24, SDL_OPENGL | SDL_RESIZABLE);
+    SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+    mainWindow_ = SDL_SetVideoMode(w_, h_, 32, SDL_OPENGL | SDL_RESIZABLE);
     if ( mainWindow_ == NULL ) {
         std::cerr << "Error setting videomode.\n";
         exit(1);
@@ -110,7 +111,6 @@ Context::setup ()
 
     // Add shaders to shaderlist
     Shader def = Shader("shaders/default.vs", "shaders/default.fs");
-    def.setUniformLocation("varyingColor");
     def.setUniformLocation("gSampler");
     shaders["default"] = def;
 //    shaders["text"] = Shader("shaders/text.vs", "shaders/text.fs");
@@ -136,9 +136,8 @@ Context::clear ()
     void
 Context::render ()
 {
-    SDL_GL_SwapBuffers();
     // Get the amount of time that has passed since SDL_Init()
-    int currTime = SDL_GetTicks();
+    float currTime = SDL_GetTicks();
     // Calculate the time that has elapsed.
     fpsLimit_.timeElapsed = currTime - fpsLimit_.prevTime;
     // If a limit is set and the current frame rendered faster than it is
@@ -149,6 +148,8 @@ Context::render ()
         fpsLimit_.timeElapsed = currTime - fpsLimit_.prevTime;
     }
     fpsLimit_.prevTime = currTime;
+    SDL_Delay(0);
+    SDL_GL_SwapBuffers();
 }		// -----  end of method Context::render  -----
 
 //-----------------------------------------------------------------------------

@@ -35,6 +35,8 @@
 #include    <glm/gtc/type_ptr.hpp>
 #include    "Shader.h"
 
+std::map<std::string, GLuint> Shader::codeNames_;
+
 //-----------------------------------------------------------------------------
 //       Class:  Shader
 //      Method:  Shader
@@ -51,9 +53,27 @@ Shader::Shader ()
 //-----------------------------------------------------------------------------
 Shader::Shader ( std::string vertexShaderFile, std::string fragmentShaderFile )
 {
-    // Read in code
-    vertexShaderCode_ = addCode(vertexShaderFile);
-    fragmentShaderCode_ = addCode(fragmentShaderFile);
+    std::map<std::string, GLuint>::iterator it;
+    it = codeNames_.find(vertexShaderFile);
+    if ( it != codeNames_.end() ) {
+        vertexShaderObject_ = (*it).second;
+    }
+    else {
+        vertexShaderCode_ = addCode(vertexShaderFile);
+        vertexShaderObject_ = compileShader(vertexShaderCode_, 
+                                            GL_VERTEX_SHADER);
+        codeNames_[vertexShaderFile] = vertexShaderObject_;
+    }
+    it = codeNames_.find(fragmentShaderFile);
+    if ( it != codeNames_.end() ) {
+        fragmentShaderObject_ = (*it).second;
+    }
+    else {
+        fragmentShaderCode_ = addCode(fragmentShaderFile);
+        fragmentShaderObject_ = compileShader(fragmentShaderCode_, 
+                                             GL_FRAGMENT_SHADER);
+        codeNames_[fragmentShaderFile] = fragmentShaderObject_;
+    }
     // Create shader program
     createProgram();
 }  // -----  end of method Shader::Shader  (constructor)  -----
@@ -122,6 +142,10 @@ Shader::addCode ( std::string fileName )
     std::ifstream file;
     // Open the file
     file.open(fileName.c_str(), std::ios::in);
+    if ( !file.good() ) {
+        std::cerr << "Error opening " << fileName << "\n";
+        exit(1);
+    }
     // Get each character and append to string.
     while ( !file.eof() ) {
         shaderCode.push_back(file.get());
@@ -179,11 +203,6 @@ Shader::createProgram ()
 {
     // Create the shader program
     shaderProgram_ = glCreateProgram();
-    // Create the two shader objects
-    vertexShaderObject_ = compileShader(vertexShaderCode_, GL_VERTEX_SHADER);
-    fragmentShaderObject_ = compileShader(fragmentShaderCode_, 
-                                         GL_FRAGMENT_SHADER);
-
     // Attach them
     glAttachShader(shaderProgram_, vertexShaderObject_);
     glAttachShader(shaderProgram_, fragmentShaderObject_);
@@ -221,17 +240,25 @@ Shader::createProgram ()
 Shader::createUBO ( std::string blockName )
 {
     GLuint ubo;
+    // Generate buffer
     glGenBuffers(1, &ubo);
+    // Get the block index in the shader.
     GLuint uniformBlockIndex = glGetUniformBlockIndex(shaderProgram_, 
                                                       blockName.c_str());
+    // Add the index to the index cache.
     uniformBlockIndices[blockName] = uniformBlockIndex;
+    // Next, we need the size in bytes of the uniform.
     GLint uniformBlockSize(0);
     glGetActiveUniformBlockiv(shaderProgram_, uniformBlockIndex,
                               GL_UNIFORM_BLOCK_DATA_SIZE, &uniformBlockSize);
 
+    // Temporarily bind the UBO.
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    // Fill it with data.
     glBufferData(GL_UNIFORM_BUFFER, uniformBlockSize, NULL, GL_DYNAMIC_DRAW);
+    // Bind the UBO to the binding slot in the shader.
     glUniformBlockBinding(shaderProgram_, uniformBlockIndex, uniformBlockIndex);
+    // We don't need the shader anymore.
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     return ubo;
 }		// -----  end of method Shader::createUBO  -----
@@ -246,16 +273,22 @@ Shader::createUBO ( std::string blockName )
 Shader::fillUniformBuffer ( GLuint buffer, std::string uniformName,
                             glm::mat4& matrix )
 {
+    // Bind the buffer to be used.
     glBindBuffer(GL_UNIFORM_BUFFER, buffer);
     const GLchar *name = uniformName.c_str();
     GLuint index;
     GLint offset;
+    // We need the name of the data we're passing, plus its offset in the 
+    // buffer.
     glGetUniformIndices(shaderProgram_, 1, &name, &index);
     glGetActiveUniformsiv(shaderProgram_, 1, &index, GL_UNIFORM_OFFSET, 
                           &offset);
 
+    // Fill buffer with the data at the location specified by the same of the
+    // type we're using and the offset into the uniform.
     glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(glm::mat4),
                     glm::value_ptr(matrix));
+    // We don't need the buffer anymore.
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }		// -----  end of method Shader::fillUniformBuffer  -----
 
@@ -269,15 +302,21 @@ Shader::fillUniformBuffer ( GLuint buffer, std::string uniformName,
 Shader::fillUniformBuffer ( GLuint buffer, std::string uniformName,
                             glm::vec4& vector )
 {
+    // Bind the buffer to be used.
     glBindBuffer(GL_UNIFORM_BUFFER, buffer);
     const GLchar *name = uniformName.c_str();
     GLuint index;
     GLint offset;
+    // We need the name of the data we're passing, plus its offset in the 
+    // buffer.
     glGetUniformIndices(shaderProgram_, 1, &name, &index);
     glGetActiveUniformsiv(shaderProgram_, 1, &index, GL_UNIFORM_OFFSET,
                           &offset);
+    // Fill buffer with the data at the location specified by the same of the
+    // type we're using and the offset into the uniform.
     glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(glm::vec4),
                     glm::value_ptr(vector));
+    // We don't need the buffer anymore.
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }		// -----  end of method Shader::fillUniformBuffer  -----
 
@@ -291,14 +330,20 @@ Shader::fillUniformBuffer ( GLuint buffer, std::string uniformName,
 Shader::fillUniformBuffer ( GLuint buffer, std::string uniformName,
                             GLfloat val )
 {
+    // Bind the buffer to be used.
     glBindBuffer(GL_UNIFORM_BUFFER, buffer);
     const GLchar *name = uniformName.c_str();
     GLuint index;
     GLint offset;
+    // We need the name of the data we're passing, plus its offset in the 
+    // buffer.
     glGetUniformIndices(shaderProgram_, 1, &name, &index);
     glGetActiveUniformsiv(shaderProgram_, 1, &index, GL_UNIFORM_OFFSET,
                           &offset);
+    // Fill buffer with the data at the location specified by the same of the
+    // type we're using and the offset into the uniform.
     glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(GLfloat), &val);
+    // We don't need the buffer anymore.
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }		// -----  end of method Shader::fillUniformBuffer  -----
 

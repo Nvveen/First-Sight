@@ -92,10 +92,9 @@ class Context
         GLuint projectionUBO_;
 
         struct {
-            int frames;
-            int prevTime;
-            int timeElapsed;
-            int limit;
+            float prevTime;
+            float timeElapsed;
+            float limit;
             bool limitSet;
         } fpsLimit_;
 }; // -----  end of class Context  -----
