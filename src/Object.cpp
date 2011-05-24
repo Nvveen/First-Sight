@@ -33,7 +33,6 @@
 #include    <glm/gtc/matrix_transform.hpp>
 #include    <glm/gtc/type_ptr.hpp>
 #include    <GL/glew.h>
-#include    "Undat.h"
 #include    "Object.h"
 
 std::map<std::string, Object> Object::objectCache;
@@ -115,9 +114,8 @@ Object::initBase ( std::string datName )
         return false;
     }
     else {
-        ModelData mod(datName);
-        model_ = new Model(mod.getData(MD_OBJ), mod.getData(MD_MTL));
-        texture_ = new Texture(GL_TEXTURE_2D, mod.getImage());
+        model_ = new Model(datName);
+        texture_ = new Texture(GL_TEXTURE_2D, model_->textureFileName);
         
         // Load modeldata into an array so it can be loaded into a buffer
         for ( unsigned int i = 0; i < model_->vertices.size()/3; i += 1 ) {

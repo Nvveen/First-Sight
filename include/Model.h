@@ -34,7 +34,7 @@ class Model
 
         // ====================  LIFECYCLE     ================================
         Model ();
-        Model ( const std::string& obj, const std::string& mtl );
+        Model ( std::string fileName );
 
         // ====================  ACCESSORS     ================================
 
@@ -47,23 +47,10 @@ class Model
         // ====================  DATA MEMBERS  ================================
 
     private:
-        struct Material {
-            std::string m_Name; // Material name
-            std::string textureName; // File name
-            GLfloat ns;
-            std::vector<GLfloat> ambient;
-            std::vector<GLfloat> diffuse;
-            std::vector<GLfloat> specular;
-            GLfloat trans;
-            GLfloat illum;
-            GLfloat refrac;
-        };
-
         struct Face {
             std::vector<GLuint> vertexIndices;
             std::vector<GLuint> textureIndices;
             std::vector<GLuint> normalIndices;
-            Material* mtl;
         };
 
         struct {
@@ -71,26 +58,23 @@ class Model
             std::vector<std::vector<GLfloat> > textureCoords;
             std::vector<std::vector<GLfloat> > normals;
             std::vector<Face> faces;
-            std::map<std::string, Material> materials;
-        } m_Data;
+        } data_;
 
         // ====================  LIFECYCLE     ================================
-        void parse_obj ( const std::string& obj );
-        void parse_mtl ( const std::string& mtl );
-        void parse_face ( Face* face, std::string line );
-        void split_identifier ( std::string& id, std::string& line );
+        void init ();
+        void parseFace ( Face* face, std::string line );
+        void splitIdentifier ( std::string& id, std::string& line );
         template<class T>
-        std::vector<T> tokenize_line ( std::string line );
-        void construct_vertices ();
+        std::vector<T> tokenizeLine ( std::string line );
+        void constructVertices ();
 
         // ====================  DATA MEMBERS  ================================
         std::vector<GLfloat> vertices;
         std::vector<GLfloat> textureCoords;
         std::vector<GLfloat> normals;
 
-        std::string objectName;
-        Material* current_mtl;
-        Material* textureMtl; // Only material with a texture
+        std::string fileName_;
+        std::string textureFileName;
 
 
 }; // -----  end of class Model  -----

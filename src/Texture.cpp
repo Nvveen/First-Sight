@@ -30,6 +30,7 @@
 
 #include    <iostream>
 #include    <GL/glew.h>
+#include    <png++/png.hpp>
 #include    "Texture.h"
 
 //-----------------------------------------------------------------------------
@@ -46,14 +47,11 @@ Texture::Texture ()
 //      Method:  Texture
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Texture::Texture ( GLenum textureTarget, 
-                   const png::image<png::rgba_pixel>& png ) :
+Texture::Texture ( GLenum textureTarget, std::string fileName ) :
     textureTarget_(textureTarget)
 {
-    width_ = png.get_width();
-    height_ = png.get_height();
     load();
-    setFromPNG(png);
+    setFromPNG(fileName);
 }  // -----  end of method Texture::Texture  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -99,15 +97,18 @@ Texture::load ()
 // Description:  Sets the bytes in an array when passing a PNG object.
 //-----------------------------------------------------------------------------
     void
-Texture::setFromPNG ( const png::image<png::rgba_pixel>& png )
+Texture::setFromPNG ( std::string fileName )
 {
+    png::image<png::rgba_pixel> image(fileName.c_str());
+    width_ = image.get_width();
+    height_ = image.get_height();
     std::vector<unsigned char> bytes;
     for ( int i = 0; i < height_; i += 1 ) {
         for ( int j = 0; j < width_; j += 1 ) {
-            bytes.push_back(png[i][j].red);
-            bytes.push_back(png[i][j].green);
-            bytes.push_back(png[i][j].blue);
-            bytes.push_back(png[i][j].alpha);
+            bytes.push_back(image[i][j].red);
+            bytes.push_back(image[i][j].green);
+            bytes.push_back(image[i][j].blue);
+            bytes.push_back(image[i][j].alpha);
         }
     }
     glTexImage2D(textureTarget_, 0, GL_RGBA, width_, height_, 0, GL_RGBA,

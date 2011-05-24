@@ -31,8 +31,8 @@
 #ifndef  TEXTURE_H
 #define  TEXTURE_H
 
+#include    <string>
 #include    <GL/gl.h>
-#include    <png++/png.hpp>
 #include    <SDL/SDL.h>
 
 // ============================================================================
@@ -44,10 +44,8 @@ class Texture
 {
     public:
         Texture ();
-        Texture ( GLenum textureTarget, 
-                  const png::image<png::rgba_pixel>& png );
-        Texture ( GLenum textureTarget,
-                  SDL_Surface *surface );
+        Texture ( GLenum textureTarget, std::string fileName );
+        Texture ( GLenum textureTarget, SDL_Surface *surface );
         ~Texture ();
         void bind ();
         void unbind ();
@@ -58,7 +56,7 @@ class Texture
 
     private:
         void load ();
-        void setFromPNG ( const png::image<png::rgba_pixel>& png );
+        void setFromPNG ( std::string fileName );
         void setFromSDL_Surface ( SDL_Surface *surface );
 
         // ====================  DATA MEMBERS  ================================
