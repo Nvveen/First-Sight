@@ -44,7 +44,7 @@ main ( int argc, char *argv[] )
 {
     {
         Octree<int> test(8);
-        int q = 0;
+        int q = 1;
         for ( int i = 0; i < 8; i += 1 ) {
             for ( int j = 0; j < 8; j += 1 ) {
                 for ( int k = 0; k < 8; k += 1 ) {
@@ -53,15 +53,14 @@ main ( int argc, char *argv[] )
                 }
             }
         }
+        test.remove(0, 0, 0);
         test.print();
         std::cout << "\n";
-        test.remove(0,0,0);
+        std::cout << "\n";
+        test.insert(5, 0, 0, 0);
         test.print();
         std::cout << "\n";
-        test.insert(5,0,0,0);
-        test.print();
         std::cout << "\n";
-        std::cout << test(0,0,0) << "\n";
     }
     exit(1);
     int w = 1024, h = 768;
