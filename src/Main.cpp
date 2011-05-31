@@ -53,7 +53,6 @@ main ( int argc, char *argv[] )
                 }
             }
         }
-        test.remove(0, 0, 0);
         test.print();
     }
     exit(1);

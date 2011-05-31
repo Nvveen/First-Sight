@@ -15,17 +15,18 @@
 // 
 // ============================================================================
 
-// ============================================================================
-//        Class:  Octree
-//  Description:  An ADT containing an octree.
-// ============================================================================
-
 #ifndef  OCTREE_H
 #define  OCTREE_H
 
 #include    <cmath>
 #include    <queue>
+#include    <vector>
 
+
+// ============================================================================
+//        Class:  Octree
+//  Description:  An ADT containing an octree.
+// ============================================================================
 template <class T>
 class Octree
 {
@@ -34,10 +35,20 @@ class Octree
         typedef std::queue<Uint> IndexList;
 
         struct Node {
-            Uint depth;
+            Uint location[3];
             Node *children[8];
+            Node *neighbors[6];
             Node *parent;
             T value;
+        };
+
+        enum Sides {
+            CS_Front,
+            CS_Left,
+            CS_Bottom,
+            CS_Back,
+            CS_Right,
+            CS_Top
         };
         // ====================  LIFECYCLE     ================================
         Octree ( Uint size );                           // constructor
@@ -48,12 +59,15 @@ class Octree
         void destructNodes ( Node *node );
 
         // ====================  ACCESSORS     ================================
-        IndexList getNodeIndices ( Uint x, Uint y, Uint z );
+        IndexList getNodeIndices ( int x, int y, int z );
         bool isLeaf ( Node *node );
+        Node *getNode ( int x, int y, int z );
+        std::vector<T> getNeighbors ( Uint x, Uint y, Uint z );
 
         // ====================  MUTATORS      ================================
         void insert ( Uint x, Uint y, Uint z, T value );
         void remove ( Uint x, Uint y, Uint z );
+        void setNeighbors ( Node *node );
 
         // ====================  OPERATORS     ================================
         T operator() ( Uint x, Uint y, Uint z );
@@ -65,7 +79,6 @@ class Octree
         // ====================  DATA MEMBERS  ================================
         Node *rootNode_;
         Uint maxDepth_;
-
 }; // -----  end of template class Octree  -----
 
 //-----------------------------------------------------------------------------
@@ -106,11 +119,9 @@ typename Octree<T>::Node *Octree<T>::createNewNode ( Node *parent )
     Node *node = new Node;
     // Set parent
     node->parent = parent;
-    // The root node has no parent, so check for that, then set its depth.
-    if ( parent != NULL ) node->depth = parent->depth+1;
-    else node->depth = 0;
     // Set all children to NULL
     for ( int i = 0; i < 8; i += 1 ) node->children[i] = NULL;
+    for ( int i = 0; i < 6; i += 1 ) node->neighbors[i] = NULL;
     return node;
 }		// -----  end of method Octree<T>::createNewNode  -----
 
@@ -127,6 +138,10 @@ void Octree<T>::insert ( Uint x, Uint y, Uint z, T value )
 {
     // Get the location's index list.
     IndexList indices = getNodeIndices(x, y, z);
+    if ( indices.empty() ) {
+        std::cerr << "Invalid Octree-location specified.\n";
+        exit(1);
+    }
     // Begin at the root.
     Node *node = rootNode_;
     // We need a pointer to take care of the next iteration.
@@ -157,6 +172,10 @@ void Octree<T>::insert ( Uint x, Uint y, Uint z, T value )
     // We have arrived at the correct node (the index list is empty), so we can
     // set the value of the node.
     next->value = value;
+    next->location[0] = x;
+    next->location[1] = y;
+    next->location[2] = z;
+    setNeighbors(next);
 }		// -----  end of method Octree<T>::insert  -----
 
 //-----------------------------------------------------------------------------
@@ -169,36 +188,16 @@ void Octree<T>::insert ( Uint x, Uint y, Uint z, T value )
     template < class T >
 void Octree<T>::remove ( Uint x, Uint y, Uint z )
 {
-    // Get index list.
-    IndexList indices = getNodeIndices(x, y, z);
-    // We begin at the root.
-    Node *node = rootNode_;
-    Node *next = NULL;
-    // For simplicity, we'll remember the last index, so the size must be bigger
-    // than 1.
-    while ( indices.size() > 1 ) {
-        // Get the current index.
-        Uint index = indices.front();
-        // Get the next node defined by its index in the current pointer's
-        // children array.
-        next = node->children[index];
-        // If we haven't arrived at the destination yet but the pointer is
-        // already NULL, something went wrong with building the array, and we
-        // have to exit.
-        if ( next == NULL ) {
-            std::cerr << "Error removing node (" << x << "," << y << "," << z;
-            std::cerr << ")\n";
-            exit(1);
-        }
-        // Switch over to the next level.
-        node = next;
-        // Remove the current index from the list.
-        indices.pop();
+    Uint index = getNodeIndices(x, y, z).back();
+    Node *node = getNode(x, y, z);
+    if ( node != NULL ) {
+        Node *parent = node->parent;
+        for ( int i = 0; i < 6; i += 1 )
+            if ( node->neighbors[i] != NULL )
+                node->neighbors[i]->neighbors[5-i] = NULL;
+        delete parent->children[index];
+        parent->children[index] = NULL;
     }
-    // We have arrived at the correct node (the index list is empty), so we can
-    // remove the node and set its parent's child pointer to empty.
-    delete node->children[indices.front()];
-    node->children[indices.front()] = NULL;
 }		// -----  end of method Octree<T>::remove  -----
 
 //-----------------------------------------------------------------------------
@@ -209,11 +208,16 @@ void Octree<T>::remove ( Uint x, Uint y, Uint z )
 //               returns the correct index list.
 //-----------------------------------------------------------------------------
     template < class T >
-typename Octree<T>::IndexList Octree<T>::getNodeIndices ( Uint x, Uint y, 
-                                                          Uint z )
+typename Octree<T>::IndexList Octree<T>::getNodeIndices ( int x, int y, 
+                                                          int z )
 {
     // For every level, we need an index, so we use a list of indices.
     IndexList indices;
+    if ( !(x >= 0 && x < pow(2, maxDepth_)) ||
+         !(y >= 0 && y < pow(2, maxDepth_)) ||
+         !(z >= 0 && z < pow(2, maxDepth_)) ) {
+        return indices;
+    }
     // The size of the current cube begins at the size of the entire object,
     // otherwise defined as 2 to the power of the maximum depth.
     int cubeSize = pow(2, maxDepth_);
@@ -344,6 +348,9 @@ void Octree<T>::destructNodes ( Node *node )
                      node->parent->children[i] == node )
                     node->parent->children[i] = NULL;
             }
+            for ( int i = 0; i < 6; i += 1 )
+                if ( node->neighbors[i] != NULL )
+                    node->neighbors[i]->neighbors[5-i] = NULL;
             // Now nothing points to the current node, so we can delete it.
             node->parent = NULL;
             delete node;
@@ -361,25 +368,115 @@ void Octree<T>::destructNodes ( Node *node )
     template < class T >
 T Octree<T>::operator() ( Uint x, Uint y, Uint z )
 {
-    // Find the current node by its index list in the octree.
-    IndexList indices = getNodeIndices(x, y, z);
-    Node *node = rootNode_;
-    // Iterate through the octree.
-    while ( !indices.empty() ) {
-        Uint index = indices.front();
-        if ( node != NULL ) {
-            node = node->children[index];
-        }
-        else {
-            // The index list isn't empty, but we have arrived at an empty node,
-            // so the current location was invalid.
-            std::cerr << "Invalid Octree-location specified.\n";
-            exit(1);
-        }
-        indices.pop();
-    }
-    // We have found the node belonging to that location, so we can return its
-    // value.
+    Node *node = getNode(x, y, z);
     return node->value;
 }		// -----  end of method Octree<T>::operator()  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Octree
+//      Method:  getNode
+// Description:  Return the node based on its location.
+//-----------------------------------------------------------------------------
+    template < class T >
+typename Octree<T>::Node *Octree<T>::getNode ( int x, int y, int z )
+{
+    // Get the index list for the node.
+    IndexList indices = getNodeIndices(x, y, z);
+    // Start at the root
+    Node *node = rootNode_;
+    // If the index list is empty, no node is found, so return NULL.
+    if ( indices.empty() ) {
+        return NULL;
+    }
+    // Walk through the octree via the node's index list.
+    while ( !indices.empty() ) {
+        Uint index = indices.front();
+        // Return NULL on faulty index list/octree.
+        if ( node == NULL ) {
+            return NULL;
+        }
+        // Set next node.
+        node = node->children[index];
+        // Remove index from list.
+        indices.pop();
+    }
+    // Node has been found.
+    return node;
+}		// -----  end of method Octree<T>::getNode  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Octree
+//      Method:  setNeighbors
+// Description:  Set the neighbors for each node.
+//-----------------------------------------------------------------------------
+template < class T >
+void Octree<T>::setNeighbors ( Node *node )
+{
+    // Every leaf has its xyz position stored in a location array.
+    int x = node->location[0];
+    int y = node->location[1];
+    int z = node->location[2];
+    if ( node != NULL && isLeaf(node) ) {
+        // Find the neighboring nodes for the front, left, bottom, back, right
+        // and top respectively, set the pointer to those neighbors, and set
+        // neighbor pointer of that neighbor to the current node, where the
+        // node's position is mirrored.
+        Node *neighbor = getNode(x, y, z-1);
+        node->neighbors[CS_Front] = neighbor;
+        if ( neighbor != NULL )
+            neighbor->neighbors[CS_Back] = node;
+
+        neighbor = getNode(x-1, y, z);
+        node->neighbors[CS_Left] = neighbor;
+        if ( neighbor != NULL )
+            neighbor->neighbors[CS_Right] = node;
+
+        neighbor = getNode(x, y-1, z);
+        node->neighbors[CS_Bottom] = neighbor;
+        if ( neighbor != NULL )
+            neighbor->neighbors[CS_Top] = node;
+
+        neighbor = getNode(x, y, z+1);
+        node->neighbors[CS_Back] = neighbor;
+        if ( neighbor != NULL )
+            neighbor->neighbors[CS_Front] = node;
+
+        neighbor = getNode(x+1, y, z);
+        node->neighbors[CS_Right] = neighbor;
+        if ( neighbor != NULL )
+            neighbor->neighbors[CS_Left] = node;
+
+        neighbor = getNode(x, y+1, z);
+        node->neighbors[CS_Top] = neighbor;
+        if ( neighbor != NULL )
+            neighbor->neighbors[CS_Bottom] = node;
+    }
+}		// -----  end of method Octree<T>::setNeighbors  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Octree
+//      Method:  getNeighbors
+// Description:  Return a list of neighboring objects for a leaf specified by
+//               its location.
+//-----------------------------------------------------------------------------
+    template < class T >
+std::vector<T> Octree<T>::getNeighbors ( Uint x, Uint y, Uint z )
+{
+    // Get the current node.
+    Node *node = getNode(x, y, z);
+    // Set an array to store the neighboring objects.
+    std::vector<T> values;
+    if ( node != NULL ) {
+        // Iterate through the neighbors and add existing neighbors to the
+        // array.
+        for ( int i = 0; i < 6; i += 1 ) {
+            Node *neighbor = node->neighbors[i];
+            if ( neighbor != NULL )
+                values.push_back(neighbor->value);
+        }
+    }
+    // Return the array.
+    return values;
+}		// -----  end of method Octree<T>::getNeighbors  -----
+
 #endif   // ----- #ifndef OCTREE_H  -----
