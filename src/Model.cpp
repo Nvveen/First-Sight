@@ -2,8 +2,7 @@
 // 
 //       Filename:  Model.cpp
 // 
-//    Description:  A class that imports model data and loads them in a 
-//                  usable format.
+//    Description:  
 // 
 //        Version:  1.0
 //        Created:  04/11/2011 01:35:21 AM
@@ -15,10 +14,8 @@
 // 
 // ============================================================================
 
-#include    <cstdlib>
 #include    <iostream>
 #include    <fstream>
-#include    <sstream>
 #include    "Model.h"
 
 //-----------------------------------------------------------------------------
@@ -26,193 +23,212 @@
 //      Method:  Model
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Model::Model ()
-{
-}  // -----  end of method Model::Model  (constructor)  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  Model
-// Description:  constructor
-//-----------------------------------------------------------------------------
-Model::Model ( std::string fileName ) :
-    fileName_(fileName)
+Model::Model ( const std::string& fileName ) :
+    volData_(NULL), fileName_(fileName), size_(0)
 {
     init();
-    constructVertices();
 }  // -----  end of method Model::Model  (constructor)  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Model
 //      Method:  init
-// Description:  Initializes the model by reading in the data file.
+// Description:  Initializes the Model.
 //-----------------------------------------------------------------------------
     void
 Model::init ()
 {
-    // Open file
+    const std::vector<GLfloat> voxelData = read();
+    std::vector<Voxel> voxels = constructVoxels(voxelData);
+    fillOctree(voxels);
+}		// -----  end of method Model::init  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  read
+// Description:  Reads and parses a stream to obtain volumetric data from it.
+//-----------------------------------------------------------------------------
+    std::vector<GLfloat>
+Model::read ()
+{
+    // Create needed variables.
+    std::vector<GLfloat> voxels;
     std::ifstream file(fileName_);
-    std::string line;
-    // If file is opened, iterate through every line.
-    if ( file.is_open() ) {
-        std::string line, identifier;
-        while ( file.good() ) {
-            getline(file, line);
-            // We need to split each line from its identifier.
-            splitIdentifier(identifier, line);
+    std::string line, item;
+    // These masking variables are explained later.
+    unsigned long maskr(255 << 24), maskg(255 << 16), maskb(255 << 8), 
+                  maska(255);
+    unsigned long tempr(0), tempg(0), tempb(0), tempa(0);
 
-            if ( line.size() == 0 ) return;
+    // The first line contains the size in a x,y,z pattern. We need to find the
+    // biggest size possible to fit the whole Octree.
+    getline(file, line);
+    std::istringstream sizestream(line);
+    while ( sizestream.good() ) {
+        // Split the line at the commas.
+        getline(sizestream, item, ',');
+        std::istringstream iss(item);
+        // Put value into an integer.
+        int temp = 0;
+        iss >> temp;
+        // If the current value is bigger than size, update size.
+        if ( temp > size_ ) size_ = temp;
+    }
+    // We have a size, so we can build the Octree.
+    volData_ = new Octree<Voxel>(size_);
 
-            // For the vertex data, we need to tokenize the lines.
-            std::vector<GLfloat> tokens;
-            tokens = tokenizeLine<GLfloat>(line);
-            if ( identifier == "v" ) data_.vertices.push_back(tokens);
-            if ( identifier == "vt" ) data_.textureCoords.push_back(tokens);
-            if ( identifier == "vn" ) data_.normals.push_back(tokens);
-            // The next identifier specifies the location of the texture.
-            if ( identifier == "usemtl" ) textureFileName = line;
-            // Faces are composed of the vertices. Using faces, we can
-            // determine the triangles.
-            if ( identifier == "f" ) {
-                Face *newFace = new Face;
-                parseFace(newFace, line);
-                if ( newFace->vertexIndices.size() > 3 ||
-                     newFace->textureIndices.size() > 3 ||
-                     newFace->normalIndices.size() > 3 ) {
-                    std::cerr << "The imported model failed to render "
-                                 "properly, because one of its faces has more "
-                                 "than 3 vertices/texture coordinates/normals."
-                                 "\n";
-                    exit(1);
-                }
-                data_.faces.push_back(*newFace);
-                delete newFace;
+    // Read the rest of the file.
+    while ( file.good() ) {
+        // For every line, we split it at the commas again to get the color
+        // values for every voxel in a hexadecimal format starting with a #.
+        getline(file, line);
+        std::istringstream iss(line);
+        while ( iss.good() ) {
+            // Split with identifier.
+            getline(iss, item, ',');
+            // Remove the #
+            item.erase(0,1);
+            // Set the plain text hex format to a stream for conversion, and
+            // read in the stream in a hexidecimal format.
+            std::istringstream itemstream(item);
+            itemstream.setf(std::ios::hex, std::ios::basefield);
+            // Each converted value is now a decimal value containing the red,
+            // green, blue and alpha values of the voxel. To extract the
+            // seperate rgba values from this value, we mask it 4 times against
+            // its corresponding color, and bitshift the value to get a number
+            // from 0-255.
+            itemstream >> tempr;
+            tempg = tempb = tempa = tempr;
+            // Mask
+            tempr &= maskr; tempg &= maskg; tempb &= maskb; tempa &= maska;
+            // Bitshift
+            tempr = tempr >> 24; tempg = tempg >> 16; tempb = tempb >> 8;
+            // Shift range from 0..255 to 0.0..1.0 and add it to the voxel data.
+            voxels.push_back((GLfloat)tempr/255.0f);
+            voxels.push_back((GLfloat)tempg/255.0f);
+            voxels.push_back((GLfloat)tempb/255.0f);
+            voxels.push_back((GLfloat)tempa/255.0f);
+        }
+    }
+    return voxels;
+}		// -----  end of method Model::read  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  constructVoxels
+// Description:  Reads in an array of unformatted voxel data and turns it into
+//               an array of voxels.
+//-----------------------------------------------------------------------------
+    std::vector<Model::Voxel>
+Model::constructVoxels ( const std::vector<GLfloat>& voxelData )
+{
+    std::vector<Voxel> voxels;
+    for ( unsigned int i = 0; i < voxelData.size(); i += 4 ) {
+        // Read every 4 values into a vec4, make a voxel out of it and add it
+        // to the list.
+        glm::vec4 vec;
+        vec.r = voxelData[i]; vec.g = voxelData[i+1];
+        vec.b = voxelData[i+2]; vec.a = voxelData[i+3];
+        Voxel voxel(vec);
+        voxels.push_back(voxel);
+    }
+    return voxels;
+}		// -----  end of method Model::constructVoxels  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  fillOctree
+// Description:  Fill an Octree with voxels.
+//-----------------------------------------------------------------------------
+    void
+Model::fillOctree ( const std::vector<Voxel>& voxels )
+{
+    // Using an array of voxels, we can fill the Octree with it by inserting it
+    // value by value.
+    int q = 0;
+    for ( int i = 0; i < size_; i += 1 ) {
+        for ( int j = 0; j < size_; j += 1 ) {
+            for ( int k = 0; k < size_; k += 1 ) {
+                volData_->insert(k, j, i, voxels[q]);
+                q += 1;
             }
         }
     }
-}		// -----  end of method Model::parse_obj  -----
+}		// -----  end of method Model::fillOctree  -----
 
 //-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  parseFace
-// Description:  Parses the line for the face identifier.
+//       Class:  Voxel
+//      Method:  Voxel
+// Description:  constructor
 //-----------------------------------------------------------------------------
+Model::Voxel::Voxel ()
+{
+    rgba_ = glm::vec4(1.0f);
+    init ();
+}  // -----  end of method Voxel::Voxel  (constructor)  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Voxel
+//      Method:  Voxel
+// Description:  constructor
+//-----------------------------------------------------------------------------
+Model::Voxel::Voxel ( glm::vec4 rgba ) :
+    rgba_(rgba)
+{
+    init ();
+}  // -----  end of method Voxel::Voxel  (constructor)  -----
+
     void
-Model::parseFace ( Face* face, std::string line )
+Model::Voxel::init ()
 {
-    // Each face should have three numbers, for vertex, texture and normal
-    // data.
-    std::vector<GLuint> v,t,n;
-    std::vector<std::string> words;
+    GLfloat vertices[252] = {
+         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Front
+         1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
 
-    // We need to iterate through a line, so specify it as a stream, so we can
-    // easily use delimiters to tokenize the line.
-    std::stringstream linestream(line);
-    std::string word;
-    // Each group of VTN numbers is seperated by a space, so get these groups.
-    while ( getline(linestream, word, ' ') ) {
-        // Next, we do the same for each group of VTN numbers, called a word.
-        std::stringstream wordStream(word);
-        std::string numberString;
-        int i = 0;
-        // Each number in a word is delimited by a slash, so tokenize from that.
-        while ( getline(wordStream, numberString, '/') ) {
-            std::stringstream numberStream(numberString);
-            // Convert each numberstring to a number.
-            GLuint number;
-            numberStream >> number;
-            // Insert new numbers into the face data.
-            if ( i == 0 ) v.push_back(number);
-            else if ( i == 1 ) t.push_back(number);
-            else if ( i == 2 ) n.push_back(number);
-            i += 1;
-        }
-    }
-    face->vertexIndices = v;
-    face->textureIndices = t;
-    face->normalIndices = n;
-}		// -----  end of method Model::parseFace  -----
+         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Front
+        -1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
 
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  splitIdentifier
-// Description:  Splits any line from its identifier. We do this by finding the
-//               location of the first space. Anything before that is the
-//               identifier. After that location is found, the delimiter and
-//               restlines are set.
-//-----------------------------------------------------------------------------
-    void
-Model::splitIdentifier ( std::string& id, std::string& line )
-{
-    std::stringstream lineStream(line);
-    std::string temp;
-    size_t found;
-    found = line.find_first_of(' ');
-    id = line.substr(0, found);
-    temp = line.substr(found+1, line.size()-found);
-    line = temp;
-}		// -----  end of method Model::splitIdentifier  -----
+        -1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Left
+        -1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
 
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  tokenizeLine
-// Description:  Splits a line into seperate floating point components.
-//----------------------------------------------------------------------------- 
-template<class T> std::vector<T>
-Model::tokenizeLine ( std::string line )
-{
-    // Generate a list to hold the numbers.
-    std::vector<T> list;
+        -1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Left
+         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
 
-    std::stringstream wordStream(line);
-    std::string numberString;
-    while ( getline(wordStream, numberString, ' ') ) {
-        std::stringstream numberStream(numberString);
-        T number;
-        numberStream >> number;
-        list.push_back(number);
-    }
-    return list;
-}		// -----  end of method Model::tokenizeLine  -----
+         1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Bottom
+         1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
 
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  constructVertices
-// Description:  Takes all the info gathered from the files, and construct the
-//               4 arrays, vertices, colors, texture coordinates and normals,
-//               without using an index buffer (for ease of use).
-//-----------------------------------------------------------------------------
-    void
-Model::constructVertices ()
-{
-    for ( unsigned int i = 0; i < data_.faces.size(); i += 1 ) {
-        for ( unsigned int j = 0; j < 3; j += 1 ) {
-            GLfloat index;
-            if ( !data_.vertices.empty() ) {
-                index = data_.faces[i].vertexIndices[j]-1;
-                for ( unsigned int k = 0; k < data_.vertices[index].size(); 
-                        k += 1 )
-                    vertices.push_back(data_.vertices[index][k]);
-            }
-            if ( !data_.textureCoords.empty() ) {
-                index = data_.faces[i].textureIndices[j]-1;
-                for ( unsigned int k = 0; 
-                        k < data_.textureCoords[index].size(); k += 1 )
-                    textureCoords.push_back(data_.textureCoords[index][k]);
-            }
-            if ( !data_.normals.empty() ) {
-                index = data_.faces[i].normalIndices[j]-1;
-                for ( unsigned int k = 0; k < data_.normals[index].size(); 
-                        k += 1 )
-                    normals.push_back(data_.normals[index][k]);
-            }
-            else {
-                index = data_.faces[i].vertexIndices[j]-1;
-                for ( unsigned int k = 0; k < data_.vertices[index].size(); 
-                        k += 1 )
-                    normals.push_back(1.0f);
-            }
-        }
-    }
-}		// -----  end of method Model::constructVertices  -----
+         1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Bottom
+        -1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+
+         1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Back
+         1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+
+         1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Back
+        -1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+
+         1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Right
+         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+
+         1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Right
+         1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+
+         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Top
+        -1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+
+         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Top
+        -1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+    };
+    vertices_ = std::vector<GLfloat>(vertices, vertices+252);
+}		// -----  end of method Voxel::init  -----
 

@@ -7,7 +7,6 @@ set(firstsight_SRCS
     Model.cpp
     Object.cpp
     Shader.cpp
-    Text.cpp
     Texture.cpp)
 
 add_executable(firstsight ${firstsight_SRCS})

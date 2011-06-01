@@ -1,3 +1,17 @@
+// This file is part of First Sight.
+// 
+// First Sight is free software: you can redistribute it and/or modify it under 
+// the terms of the GNU General Public License as published by the 
+// Free Software Foundation, either version 3 of the License, or 
+// (at your option) any later version.
+// 
+// First Sight is distributed in the hope that it will be useful, but WITHOUT 
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+// more details.
+// 
+// You should have received a copy of the GNU General Public License along with 
+// First Sight. If not, see <http://www.gnu.org/licenses/>.
 // ============================================================================
 // 
 //       Filename:  Octree.h
@@ -32,6 +46,26 @@ class Octree
 {
     public:
         typedef unsigned int Uint;
+        // ====================  LIFECYCLE     ================================
+        Octree ();                           // constructor
+        Octree ( Uint size );                           // constructor
+        ~Octree ();
+        void print ();
+
+        // ====================  ACCESSORS     ================================
+        std::vector<T> getNeighbors ( Uint x, Uint y, Uint z );
+
+        // ====================  MUTATORS      ================================
+        void insert ( Uint x, Uint y, Uint z, T value );
+        void remove ( Uint x, Uint y, Uint z );
+
+        // ====================  OPERATORS     ================================
+        T& operator() ( Uint x, Uint y, Uint z );
+
+    protected:
+        // ====================  DATA MEMBERS  ================================
+
+    private:
         typedef std::queue<Uint> IndexList;
 
         struct Node {
@@ -51,31 +85,15 @@ class Octree
             CS_Top
         };
         // ====================  LIFECYCLE     ================================
-        Octree ( Uint size );                           // constructor
-        ~Octree ();
-        Node *createNewNode ( Node *parent );
         void print ( Node *node );
-        void print ();
+        Node *createNewNode ( Node *parent );
         void destructNodes ( Node *node );
-
         // ====================  ACCESSORS     ================================
         IndexList getNodeIndices ( int x, int y, int z );
         bool isLeaf ( Node *node );
         Node *getNode ( int x, int y, int z );
-        std::vector<T> getNeighbors ( Uint x, Uint y, Uint z );
-
         // ====================  MUTATORS      ================================
-        void insert ( Uint x, Uint y, Uint z, T value );
-        void remove ( Uint x, Uint y, Uint z );
         void setNeighbors ( Node *node );
-
-        // ====================  OPERATORS     ================================
-        T operator() ( Uint x, Uint y, Uint z );
-
-    protected:
-        // ====================  DATA MEMBERS  ================================
-
-    private:
         // ====================  DATA MEMBERS  ================================
         Node *rootNode_;
         Uint maxDepth_;
@@ -92,6 +110,18 @@ Octree<T>::Octree ( Uint size ) :
 {
     // Create the root node
     rootNode_ = createNewNode(NULL);
+}  // -----  end of constructor of template class Octree  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Octree
+//      Method:  Octree
+// Description:  constructor
+//-----------------------------------------------------------------------------
+    template < class T >
+Octree <T>:: Octree ()
+{
+    maxDepth_ = 0;
+    rootNode_ = NULL;
 }  // -----  end of constructor of template class Octree  -----
 
 //-----------------------------------------------------------------------------
@@ -366,7 +396,7 @@ void Octree<T>::destructNodes ( Node *node )
 // Description:  Return the value of the node specified by its location.
 //-----------------------------------------------------------------------------
     template < class T >
-T Octree<T>::operator() ( Uint x, Uint y, Uint z )
+T& Octree<T>::operator() ( Uint x, Uint y, Uint z )
 {
     Node *node = getNode(x, y, z);
     return node->value;

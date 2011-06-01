@@ -29,48 +29,26 @@
 // ============================================================================
 
 #include    <iostream>
-#include    <sstream>
 #include    <GL/glew.h>
 #include    <sys/time.h>
 #include    "Context.h"
 #include    "EventHandler.h"
+
 #include    "Object.h"
-#include    "Font.h"
-#include    "Text.h"
-#include    "Octree.h"
 
     int
 main ( int argc, char *argv[] )
 {
     {
-        Octree<int> test(2);
-        int q = 1;
-        for ( int i = 0; i < 4; i += 1 ) {
-            for ( int j = 0; j < 4; j += 1 ) {
-                for ( int k = 0; k < 4; k += 1 ) {
-                    test.insert(k, j, i, q);
-                    q += 1;
-                }
-            }
-        }
-        test.print();
+        Object test("data/test.dat");
+        exit(1);
     }
-    exit(1);
     int w = 1024, h = 768;
     std::string windowName = "Tech demo";
 
     Context windowContext(w, h, windowName);
     windowContext.setup();
 //    windowContext.setFramerateLimit(60);
-
-    int xObjects = 10;
-    int yObjects = 10;
-    std::vector<Object> objects;
-    for ( int i = 0; i < xObjects; i += 1 ) {
-        for ( int j = 0; j < yObjects; j += 1 ) {
-            objects.push_back(Object("data/dirt.dat", windowContext, i, 0, j));
-        }
-    }
 
     EventHandler event(windowContext);
     Camera *cam = windowContext.getCamera();
@@ -89,9 +67,6 @@ main ( int argc, char *argv[] )
         gettimeofday(&t1, NULL);
         event.pollEvents();
         windowContext.clear();
-        for ( int i = 0; i < xObjects*yObjects; i += 1 ) {
-            objects[i].draw();
-        }
         windowContext.render();
         gettimeofday(&t2, NULL);
         double diff = t2.tv_usec - t1.tv_usec;

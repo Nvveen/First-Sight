@@ -18,23 +18,21 @@
 #ifndef  MODEL_H
 #define  MODEL_H
 
-#include    <string>
 #include    <vector>
-#include    <map>
+#include    <sstream>
 #include    <GL/gl.h>
+#include    <glm/glm.hpp>
+#include    "Octree.h"
 
 // ============================================================================
 //        Class:  Model
-//  Description:  Model class for importing model information like vertices,
-//                normals, textures and the like.
+//  Description:  
 // ============================================================================
 class Model
 {
     public:
-
         // ====================  LIFECYCLE     ================================
-        Model ();
-        Model ( std::string fileName );
+        Model ( const std::string& fileName );
 
         // ====================  ACCESSORS     ================================
 
@@ -42,41 +40,53 @@ class Model
 
         // ====================  OPERATORS     ================================
 
-        friend class Object;
     protected:
         // ====================  DATA MEMBERS  ================================
 
     private:
-        struct Face {
-            std::vector<GLuint> vertexIndices;
-            std::vector<GLuint> textureIndices;
-            std::vector<GLuint> normalIndices;
-        };
-
-        struct {
-            std::vector<std::vector<GLfloat> > vertices;
-            std::vector<std::vector<GLfloat> > textureCoords;
-            std::vector<std::vector<GLfloat> > normals;
-            std::vector<Face> faces;
-        } data_;
-
+        class Voxel;
         // ====================  LIFECYCLE     ================================
         void init ();
-        void parseFace ( Face* face, std::string line );
-        void splitIdentifier ( std::string& id, std::string& line );
-        template<class T>
-        std::vector<T> tokenizeLine ( std::string line );
-        void constructVertices ();
-
+        std::vector<GLfloat> read ();
+        std::vector<Voxel> constructVoxels 
+            ( const std::vector<GLfloat>& voxelData );
+        void fillOctree ( const std::vector<Voxel>& voxels );
         // ====================  DATA MEMBERS  ================================
-        std::vector<GLfloat> vertices;
-        std::vector<GLfloat> textureCoords;
-        std::vector<GLfloat> normals;
-
+        int size_;
         std::string fileName_;
-        std::string textureFileName;
-
+        Octree<Voxel> *volData_;
 
 }; // -----  end of class Model  -----
+
+// ============================================================================
+//        Class:  Voxel
+//  Description:  
+// ============================================================================
+class Model::Voxel
+{
+    public:
+        typedef unsigned char Uint8;
+        // ====================  LIFECYCLE     ================================
+        Voxel ();                             // constructor
+        Voxel ( glm::vec4 rgba );
+
+        // ====================  ACCESSORS     ================================
+
+        // ====================  MUTATORS      ================================
+
+        // ====================  OPERATORS     ================================
+
+        friend class Model;
+    protected:
+        // ====================  DATA MEMBERS  ================================
+
+    private:
+        // ====================  LIFECYCLE     ================================
+        void init ();
+        // ====================  DATA MEMBERS  ================================
+        glm::vec4 rgba_;
+        std::vector<GLfloat> vertices_;
+
+}; // -----  end of class Voxel  -----
 
 #endif   // ----- #ifndef MODEL_H  -----
