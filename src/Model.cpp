@@ -74,7 +74,7 @@ Model::read ()
         if ( temp > size_ ) size_ = temp;
     }
     // We have a size, so we can build the Octree.
-    volData_ = new Octree<Voxel>(size_);
+    volData_ = new Octree<Voxel>(log(size_)/log(2));
 
     // Read the rest of the file.
     while ( file.good() ) {
@@ -148,7 +148,8 @@ Model::fillOctree ( const std::vector<Voxel>& voxels )
     for ( int i = 0; i < size_; i += 1 ) {
         for ( int j = 0; j < size_; j += 1 ) {
             for ( int k = 0; k < size_; k += 1 ) {
-                volData_->insert(k, j, i, voxels[q]);
+                Voxel voxel(voxels[q].rgba_, k, j, i);
+                volData_->insert(k, j, i, voxel);
                 q += 1;
             }
         }
@@ -156,23 +157,45 @@ Model::fillOctree ( const std::vector<Voxel>& voxels )
 }		// -----  end of method Model::fillOctree  -----
 
 //-----------------------------------------------------------------------------
-//       Class:  Voxel
-//      Method:  Voxel
-// Description:  constructor
+//       Class:  Model
+//      Method:  getVertexData
+// Description:  Runs through the Octree of Voxels and for every Voxel decides
+//               which vertices to show by checking to see if they are exposed.
 //-----------------------------------------------------------------------------
-Model::Voxel::Voxel ()
+    std::vector<GLfloat>
+Model::getVertexData ()
 {
-    rgba_ = glm::vec4(1.0f);
-    init ();
-}  // -----  end of method Voxel::Voxel  (constructor)  -----
+    std::vector<GLfloat> vertexData;
+    int edge(0), numFaces(0);
+    Voxel *voxel2 = (*volData_)(0,0,0);
+    for ( int i = 0; i < size_; i += 1 ) {
+        for ( int j = 0; j < size_; j += 1 ) {
+            for ( int k = 0; k < size_; k += 1 ) {
+                Voxel *voxel = (*volData_)(k, j, i);
+                for ( int p = 0; p < 6; p += 1 ) {
+                    if ( !volData_->hasNeighbor(k, j, i, 
+                                                (CubeSides::Sides)p) ) {
+                        vertexData.insert(vertexData.begin()+edge, 
+                                          voxel->vertices_.begin()+p*42,
+                                          voxel->vertices_.begin()+p*42+42);
+                        edge += 42;
+                        numFaces += 1;
+                    }
+                }
+            }
+        }
+    }
+    return vertexData;
+}		// -----  end of method Model::getVertexData  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Voxel
 //      Method:  Voxel
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Model::Voxel::Voxel ( glm::vec4 rgba ) :
-    rgba_(rgba)
+Model::Voxel::Voxel ( glm::vec4 rgba, unsigned int x, unsigned int y, 
+                      unsigned int z ) :
+    x_(x), y_(y), z_(z), rgba_(rgba)
 {
     init ();
 }  // -----  end of method Voxel::Voxel  (constructor)  -----
@@ -181,53 +204,54 @@ Model::Voxel::Voxel ( glm::vec4 rgba ) :
 Model::Voxel::init ()
 {
     GLfloat vertices[252] = {
-         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Front
-         1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-
-         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Front
-        -1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-
-        -1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Left
-        -1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-
-        -1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Left
-         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-
-         1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Bottom
-         1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-
-         1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Bottom
-        -1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-
-         1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Back
-         1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-
-         1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Back
-        -1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-
-         1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Right
-         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-
-         1.0f, -1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Right
-         1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         1.0f, -1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-
-         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Top
-        -1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-
-         1.0f,  1.0f, -1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a, // Top
-        -1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         1.0f,  1.0f,  1.0f, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Front
+         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Front
+         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Left
+        -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Left
+        -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Bottom
+         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Bottom
+         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Back
+         0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Back
+         0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Right
+         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Right
+         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Top
+         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Top
+         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
     };
     vertices_ = std::vector<GLfloat>(vertices, vertices+252);
 }		// -----  end of method Voxel::init  -----

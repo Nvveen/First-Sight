@@ -36,7 +36,16 @@
 #include    <queue>
 #include    <vector>
 
-
+namespace CubeSides {
+        enum Sides {
+            Front = 0,
+            Left = 1,
+            Bottom = 2,
+            Back = 3,
+            Right = 4,
+            Top = 5
+        };
+}
 // ============================================================================
 //        Class:  Octree
 //  Description:  An ADT containing an octree.
@@ -54,13 +63,15 @@ class Octree
 
         // ====================  ACCESSORS     ================================
         std::vector<T> getNeighbors ( Uint x, Uint y, Uint z );
+        bool hasNeighbor ( Uint x, Uint y, Uint z, CubeSides::Sides side );
+        Uint size ();
 
         // ====================  MUTATORS      ================================
         void insert ( Uint x, Uint y, Uint z, T value );
         void remove ( Uint x, Uint y, Uint z );
 
         // ====================  OPERATORS     ================================
-        T& operator() ( Uint x, Uint y, Uint z );
+        T* operator() ( Uint x, Uint y, Uint z );
 
     protected:
         // ====================  DATA MEMBERS  ================================
@@ -75,15 +86,6 @@ class Octree
             Node *parent;
             T value;
         };
-
-        enum Sides {
-            CS_Front,
-            CS_Left,
-            CS_Bottom,
-            CS_Back,
-            CS_Right,
-            CS_Top
-        };
         // ====================  LIFECYCLE     ================================
         void print ( Node *node );
         Node *createNewNode ( Node *parent );
@@ -97,6 +99,7 @@ class Octree
         // ====================  DATA MEMBERS  ================================
         Node *rootNode_;
         Uint maxDepth_;
+        Uint numElements_;
 }; // -----  end of template class Octree  -----
 
 //-----------------------------------------------------------------------------
@@ -106,7 +109,7 @@ class Octree
 //-----------------------------------------------------------------------------
     template < class T >
 Octree<T>::Octree ( Uint size ) :
-    maxDepth_(size)
+    maxDepth_(size), numElements_(0)
 {
     // Create the root node
     rootNode_ = createNewNode(NULL);
@@ -118,10 +121,9 @@ Octree<T>::Octree ( Uint size ) :
 // Description:  constructor
 //-----------------------------------------------------------------------------
     template < class T >
-Octree <T>:: Octree ()
+Octree <T>:: Octree () :
+    rootNode_(NULL), maxDepth_(0), numElements_(0)
 {
-    maxDepth_ = 0;
-    rootNode_ = NULL;
 }  // -----  end of constructor of template class Octree  -----
 
 //-----------------------------------------------------------------------------
@@ -206,6 +208,7 @@ void Octree<T>::insert ( Uint x, Uint y, Uint z, T value )
     next->location[1] = y;
     next->location[2] = z;
     setNeighbors(next);
+    numElements_ += 1;
 }		// -----  end of method Octree<T>::insert  -----
 
 //-----------------------------------------------------------------------------
@@ -396,10 +399,10 @@ void Octree<T>::destructNodes ( Node *node )
 // Description:  Return the value of the node specified by its location.
 //-----------------------------------------------------------------------------
     template < class T >
-T& Octree<T>::operator() ( Uint x, Uint y, Uint z )
+T* Octree<T>::operator() ( Uint x, Uint y, Uint z )
 {
     Node *node = getNode(x, y, z);
-    return node->value;
+    return &(node->value);
 }		// -----  end of method Octree<T>::operator()  -----
 
 //-----------------------------------------------------------------------------
@@ -452,34 +455,34 @@ void Octree<T>::setNeighbors ( Node *node )
         // neighbor pointer of that neighbor to the current node, where the
         // node's position is mirrored.
         Node *neighbor = getNode(x, y, z-1);
-        node->neighbors[CS_Front] = neighbor;
+        node->neighbors[CubeSides::Front] = neighbor;
         if ( neighbor != NULL )
-            neighbor->neighbors[CS_Back] = node;
+            neighbor->neighbors[CubeSides::Back] = node;
 
         neighbor = getNode(x-1, y, z);
-        node->neighbors[CS_Left] = neighbor;
+        node->neighbors[CubeSides::Left] = neighbor;
         if ( neighbor != NULL )
-            neighbor->neighbors[CS_Right] = node;
+            neighbor->neighbors[CubeSides::Right] = node;
 
         neighbor = getNode(x, y-1, z);
-        node->neighbors[CS_Bottom] = neighbor;
+        node->neighbors[CubeSides::Bottom] = neighbor;
         if ( neighbor != NULL )
-            neighbor->neighbors[CS_Top] = node;
+            neighbor->neighbors[CubeSides::Top] = node;
 
         neighbor = getNode(x, y, z+1);
-        node->neighbors[CS_Back] = neighbor;
+        node->neighbors[CubeSides::Back] = neighbor;
         if ( neighbor != NULL )
-            neighbor->neighbors[CS_Front] = node;
+            neighbor->neighbors[CubeSides::Front] = node;
 
         neighbor = getNode(x+1, y, z);
-        node->neighbors[CS_Right] = neighbor;
+        node->neighbors[CubeSides::Right] = neighbor;
         if ( neighbor != NULL )
-            neighbor->neighbors[CS_Left] = node;
+            neighbor->neighbors[CubeSides::Left] = node;
 
         neighbor = getNode(x, y+1, z);
-        node->neighbors[CS_Top] = neighbor;
+        node->neighbors[CubeSides::Top] = neighbor;
         if ( neighbor != NULL )
-            neighbor->neighbors[CS_Bottom] = node;
+            neighbor->neighbors[CubeSides::Bottom] = node;
     }
 }		// -----  end of method Octree<T>::setNeighbors  -----
 
@@ -508,5 +511,33 @@ std::vector<T> Octree<T>::getNeighbors ( Uint x, Uint y, Uint z )
     // Return the array.
     return values;
 }		// -----  end of method Octree<T>::getNeighbors  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Octree
+//      Method:  hasNeighbor
+// Description:  Returns true if the current node has neighbor at the specified
+//               side.
+//-----------------------------------------------------------------------------
+    template < class T >
+bool Octree<T>::hasNeighbor ( Uint x, Uint y, Uint z, CubeSides::Sides side )
+{
+    Node *node = getNode(x, y, z);
+    if ( node != NULL ) {
+        if ( node->neighbors[side] != NULL ) return true;
+        else return false;
+    }
+    return false;
+}		// -----  end of method Octree::hasNeighbor  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Octree
+//      Method:  size
+// Description:  Returns the number of elements in the octree.
+//-----------------------------------------------------------------------------
+    template < class T >
+typename Octree<T>::Uint Octree<T>::size ()
+{
+    return numElements_;
+}		// -----  end of method Octree<T>::size  -----
 
 #endif   // ----- #ifndef OCTREE_H  -----

@@ -35,6 +35,7 @@ class Model
         Model ( const std::string& fileName );
 
         // ====================  ACCESSORS     ================================
+        std::vector<GLfloat> getVertexData ();
 
         // ====================  MUTATORS      ================================
 
@@ -67,8 +68,8 @@ class Model::Voxel
     public:
         typedef unsigned char Uint8;
         // ====================  LIFECYCLE     ================================
-        Voxel ();                             // constructor
-        Voxel ( glm::vec4 rgba );
+        Voxel ( glm::vec4 rgba=glm::vec4(1.0f), unsigned int x=0, 
+                unsigned int y=0, unsigned int z=0 );
 
         // ====================  ACCESSORS     ================================
 
@@ -84,6 +85,9 @@ class Model::Voxel
         // ====================  LIFECYCLE     ================================
         void init ();
         // ====================  DATA MEMBERS  ================================
+        unsigned int x_;
+        unsigned int y_;
+        unsigned int z_;
         glm::vec4 rgba_;
         std::vector<GLfloat> vertices_;
 

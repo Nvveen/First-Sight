@@ -59,6 +59,7 @@ class Object
     private:
         // ====================  LIFECYCLE     ================================
         void init ();
+        void initVertexBuffers ();
         // ====================  DATA MEMBERS  ================================
         std::string fileName_;
         Model *model_;

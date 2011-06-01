@@ -60,5 +60,16 @@ Object::~Object ()
 Object::init ()
 {
     model_ = new Model(fileName_);
+    std::vector<GLfloat> test = model_->getVertexData();
 }		// -----  end of method Object::init  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  initVertexBuffers
+// Description:  
+//-----------------------------------------------------------------------------
+    void
+Object::initVertexBuffers ()
+{
+}		// -----  end of method Object::initVertexBuffers  -----
 
