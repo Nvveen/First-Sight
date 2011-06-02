@@ -15,13 +15,8 @@ First Sight. If not, see <http://www.gnu.org/licenses/>. */
 #version 120
 #extension GL_ARB_uniform_buffer_object : enable
 
-layout (std140) uniform Texture {
-    vec4 varyingColor;
-};
-
-uniform sampler2D gSampler;
-varying vec2 Tex;
+varying vec4 color;
 
 void main(void) {
-    gl_FragColor = texture2D(gSampler, Tex) * varyingColor;
+    gl_FragColor = color;
 }

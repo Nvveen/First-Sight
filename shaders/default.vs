@@ -16,8 +16,8 @@ First Sight. If not, see <http://www.gnu.org/licenses/>. */
 #extension GL_ARB_uniform_buffer_object : enable
 
 attribute vec3 vVertex;
-attribute vec2 TexCoord;
-varying vec2 Tex;
+attribute vec4 vColor;
+varying vec4 color;
 
 layout (std140) uniform Projection {
     mat4 vProjection, vCamera;
@@ -30,5 +30,5 @@ layout (std140) uniform Model {
 void main(void) {
     gl_Position = vProjection * vCamera * vTranslate * vRotate * vScale * 
                   vec4(vVertex, 1.0);
-    Tex = vec2(TexCoord);
+    color = vColor;
 }

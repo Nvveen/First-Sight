@@ -33,6 +33,10 @@
 
 #include    <string>
 #include    "Model.h"
+#include    "Projection.h"
+#include    "Camera.h"
+#include    "Shader.h"
+#include    "Context.h"
 
 // ============================================================================
 //        Class:  Object
@@ -43,12 +47,17 @@ class Object
     public:
 
         // ====================  LIFECYCLE     ================================
-        Object ( std::string fileName );
+        Object ( std::string fileName, float x, float y, float z,
+                 Context *context=NULL, Shader *shader=NULL );
         ~Object ();
+        void draw ();
 
         // ====================  ACCESSORS     ================================
 
         // ====================  MUTATORS      ================================
+        void bind ( Camera *camera );
+        void bind ( Projection *projection );
+        void setUniforms ();
 
         // ====================  OPERATORS     ================================
 
@@ -60,10 +69,51 @@ class Object
         // ====================  LIFECYCLE     ================================
         void init ();
         void initVertexBuffers ();
+        void initUniformBuffers ();
         // ====================  DATA MEMBERS  ================================
         std::string fileName_;
         Model *model_;
+        float x_;
+        float y_;
+        float z_;
+
+        GLuint itemCount_;
+
+        GLuint vbo_;
+        GLuint vao_;
+        GLuint projectionUBO_;
+        GLuint modelUBO_;
+
+        Shader *shader_;
+
+        Camera *camera_;
+        Projection *projection_;
+        glm::mat4 translation_;
+        glm::mat4 rotation_;
+        glm::mat4 scaling_;
 
 }; // -----  end of class Object  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  bind
+// Description:  (Re)binds the camera to the object.
+//-----------------------------------------------------------------------------
+    inline void
+Object::bind ( Camera *camera )
+{
+    camera_ = camera;
+}		// -----  end of method Object::bind  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  bind
+// Description:  (Re)binds the projection to the object.
+//-----------------------------------------------------------------------------
+    inline void
+Object::bind ( Projection *projection )
+{
+    projection_ = projection;
+}		// -----  end of method Object::bind  -----
 
 #endif   // ----- #ifndef OBJECT_H  -----

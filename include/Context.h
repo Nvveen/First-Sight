@@ -73,10 +73,6 @@ class Context
         // ====================  DATA MEMBERS  ================================
         static std::map<std::string, Shader> shaders;
 
-        static Uint8 gridWidth;
-        static Uint8 gridHeight;
-        static Uint8 gridDepth;
-
     private:
         // ====================  DATA MEMBERS  ================================
         GLfloat w_;

@@ -39,10 +39,6 @@
     int
 main ( int argc, char *argv[] )
 {
-    {
-        Object test("data/test.dat");
-        exit(1);
-    }
     int w = 1024, h = 768;
     std::string windowName = "Tech demo";
 
@@ -62,11 +58,14 @@ main ( int argc, char *argv[] )
                EventHandler::Keyset(Key::Lctrl, Key::Right));
     event.bind(&windowContext, &Context::close, Key::Escape);
 
+    Object test("data/test.dat", 0, 0, 0, &windowContext);
+
     timeval t1, t2;
     while ( windowContext.isOpened() ) {
         gettimeofday(&t1, NULL);
         event.pollEvents();
         windowContext.clear();
+        test.draw();
         windowContext.render();
         gettimeofday(&t2, NULL);
         double diff = t2.tv_usec - t1.tv_usec;

@@ -82,7 +82,7 @@ Model::read ()
         // values for every voxel in a hexadecimal format starting with a #.
         getline(file, line);
         std::istringstream iss(line);
-        while ( iss.good() ) {
+        while ( iss.good() && line.size() > 0 ) {
             // Split with identifier.
             getline(iss, item, ',');
             // Remove the #
@@ -149,7 +149,8 @@ Model::fillOctree ( const std::vector<Voxel>& voxels )
         for ( int j = 0; j < size_; j += 1 ) {
             for ( int k = 0; k < size_; k += 1 ) {
                 Voxel voxel(voxels[q].rgba_, k, j, i);
-                volData_->insert(k, j, i, voxel);
+                if ( voxel.rgba_ != glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) )
+                    volData_->insert(k, j, i, voxel);
                 q += 1;
             }
         }
@@ -172,14 +173,16 @@ Model::getVertexData ()
         for ( int j = 0; j < size_; j += 1 ) {
             for ( int k = 0; k < size_; k += 1 ) {
                 Voxel *voxel = (*volData_)(k, j, i);
-                for ( int p = 0; p < 6; p += 1 ) {
-                    if ( !volData_->hasNeighbor(k, j, i, 
-                                                (CubeSides::Sides)p) ) {
-                        vertexData.insert(vertexData.begin()+edge, 
-                                          voxel->vertices_.begin()+p*42,
-                                          voxel->vertices_.begin()+p*42+42);
-                        edge += 42;
-                        numFaces += 1;
+                if ( voxel != NULL ) {
+                    for ( int p = 0; p < 6; p += 1 ) {
+                        if ( !volData_->hasNeighbor(k, j, i, 
+                                                    (CubeSides::Sides)p) ) {
+                            vertexData.insert(vertexData.begin()+edge, 
+                                              voxel->vertices_.begin()+p*42,
+                                              voxel->vertices_.begin()+p*42+42);
+                            edge += 42;
+                            numFaces += 1;
+                        }
                     }
                 }
             }

@@ -34,9 +34,6 @@
 #include    "Context.h"
 
 std::map<std::string, Shader> Context::shaders;
-Uint8 Context::gridWidth = 100;
-Uint8 Context::gridHeight = 100;
-Uint8 Context::gridDepth = 100;
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
@@ -111,7 +108,6 @@ Context::setup ()
 
     // Add shaders to shaderlist
     Shader def = Shader("shaders/default.vs", "shaders/default.fs");
-    def.setUniformLocation("gSampler");
     shaders["default"] = def;
 //    shaders["text"] = Shader("shaders/text.vs", "shaders/text.fs");
 }		// -----  end of method Context::setup  -----

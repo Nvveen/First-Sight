@@ -402,7 +402,10 @@ void Octree<T>::destructNodes ( Node *node )
 T* Octree<T>::operator() ( Uint x, Uint y, Uint z )
 {
     Node *node = getNode(x, y, z);
-    return &(node->value);
+    if ( node != NULL )
+        return &(node->value);
+    else
+        return NULL;
 }		// -----  end of method Octree<T>::operator()  -----
 
 //-----------------------------------------------------------------------------
