@@ -148,9 +148,10 @@ Model::fillOctree ( const std::vector<Voxel>& voxels )
     for ( int i = 0; i < size_; i += 1 ) {
         for ( int j = 0; j < size_; j += 1 ) {
             for ( int k = 0; k < size_; k += 1 ) {
-                Voxel voxel(voxels[q].rgba_, k, j, i);
+                Voxel voxel(voxels[q].rgba_, i, j, k);
+                // Don't add an invisible voxel.
                 if ( voxel.rgba_ != glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) )
-                    volData_->insert(k, j, i, voxel);
+                    volData_->insert(i, j, k, voxel);
                 q += 1;
             }
         }
@@ -167,21 +168,27 @@ Model::fillOctree ( const std::vector<Voxel>& voxels )
 Model::getVertexData ()
 {
     std::vector<GLfloat> vertexData;
-    int edge(0), numFaces(0);
-    Voxel *voxel2 = (*volData_)(0,0,0);
+    int edge(0);
     for ( int i = 0; i < size_; i += 1 ) {
         for ( int j = 0; j < size_; j += 1 ) {
             for ( int k = 0; k < size_; k += 1 ) {
-                Voxel *voxel = (*volData_)(k, j, i);
+                // For every voxel in the octree, check its neighbors.
+                Voxel *voxel = (*volData_)(i, j, k);
                 if ( voxel != NULL ) {
+                    // If no neighbors on any of the six faces, we can expose
+                    // that surface.
                     for ( int p = 0; p < 6; p += 1 ) {
-                        if ( !volData_->hasNeighbor(k, j, i, 
+                        if ( !volData_->hasNeighbor(i, j, k, 
                                                     (CubeSides::Sides)p) ) {
+                            // We select the surface from the array of vertices
+                            // that are ordered per face.
+                            // We then add that face's vertices to the array,
+                            // after which we skip the iterator past the new
+                            // face.
                             vertexData.insert(vertexData.begin()+edge, 
                                               voxel->vertices_.begin()+p*42,
                                               voxel->vertices_.begin()+p*42+42);
                             edge += 42;
-                            numFaces += 1;
                         }
                     }
                 }

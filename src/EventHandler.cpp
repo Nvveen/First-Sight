@@ -58,7 +58,7 @@ EventHandler::pollEvents ()
         }
         if ( event_.type == SDL_KEYDOWN ) {
             SDL_keysym sym = event_.key.keysym;
-            Keyset keyset((Key::Mod)sym.mod, (Key::Code)sym.sym);
+            Keyset keyset((Key::Mod)(sym.mod % 4096), (Key::Code)sym.sym);
             std::map<Keyset, Functionoid>::iterator it;
             for ( it = keyMap_.begin(); it != keyMap_.end(); it ++ ) {
                 if ( it->first == keyset ) (it->second)();

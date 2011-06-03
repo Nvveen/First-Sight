@@ -81,24 +81,32 @@ Object::init ()
     void
 Object::initVertexBuffers ()
 {
+    // Get the proper data.
     std::vector<GLfloat> vertexData = model_->getVertexData();
+    // Get the amount of vertices.
     itemCount_ = vertexData.size()/7;
 
+    // Create a vertex array.
     glGenVertexArrays(1, &vao_);
     glBindVertexArray(vao_);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
+    // Create a vertex buffer object.
     glGenBuffers(1, &vbo_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+    // Fill vbo with data.
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*vertexData.size(),
                  &vertexData[0], GL_STATIC_DRAW);
+    // Set data alignment in memory.
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*7, 0);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*7, 
                           (const GLvoid *)(sizeof(GLfloat)*3));
+    // Bind vertex and color attributes to the shader.
     glBindAttribLocation(shader_->getShaderProgram(), 0, "vVertex");
     glBindAttribLocation(shader_->getShaderProgram(), 1, "vColor");
 
+    // Clean up
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     glBindVertexArray(0);
@@ -112,9 +120,10 @@ Object::initVertexBuffers ()
     void
 Object::initUniformBuffers ()
 {
+    // Create two uniform buffers and fill it with data.
     projectionUBO_ = shader_->createUBO("Projection");
     shader_->fillUniformBuffer(projectionUBO_, "vProjection", 
-                               projection_->getProjection());
+                               projection_->getMatrix());
     shader_->fillUniformBuffer(projectionUBO_, "vCamera", camera_->getCamera());
     shader_->bindUBO(projectionUBO_, "Projection");
 
@@ -133,12 +142,18 @@ Object::initUniformBuffers ()
     void
 Object::draw ()
 {
+    // Bind array.
     shader_->bind();
+    // Bind vertex array and its attributes.
     glBindVertexArray(vao_);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+
     setUniforms();
+    // Draw the vertices.
     glDrawArrays(GL_TRIANGLES, 0, itemCount_);
+
+    // Clean up
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     glBindVertexArray(0);
@@ -153,7 +168,14 @@ Object::draw ()
     void
 Object::setUniforms ()
 {
+    // Fill all the uniforms in the buffer.
     shader_->bindUBO(modelUBO_, "Model");
+    shader_->fillUniformBuffer(modelUBO_, "vTranslate", translation_);
+    shader_->fillUniformBuffer(modelUBO_, "vRotate", rotation_);
+    shader_->fillUniformBuffer(modelUBO_, "vScale", scaling_);
     shader_->bindUBO(projectionUBO_, "Projection");
+    shader_->fillUniformBuffer(projectionUBO_, "vProjection", 
+                               projection_->getMatrix());
+    shader_->fillUniformBuffer(projectionUBO_, "vCamera", camera_->getCamera());
 }		// -----  end of method Object::setUniforms  -----
 

@@ -33,8 +33,8 @@
 #define  CONTEXT_H
 
 #include    <string>
-#include    <vector>
 #include    <map>
+#include    <GL/glew.h>
 #include    <SDL/SDL.h>
 #include    "Projection.h"
 #include    "Camera.h"
@@ -59,8 +59,8 @@ class Context
 
         // ====================  ACCESSORS     ================================
         bool isOpened ();
-        Projection* getPerspective ();
-        Projection* getOrtho ();
+        Perspective* getPerspective ();
+        Ortho* getOrtho ();
         Camera* getCamera ();
 
         // ====================  MUTATORS      ================================
@@ -79,8 +79,8 @@ class Context
         GLfloat h_;
         std::string windowName_;
 
-        Projection *pers_;
-        Projection *ortho_;
+        Perspective *pers_;
+        Ortho *ortho_;
         Camera *cam_;
 
         SDL_Surface *mainWindow_;
@@ -134,28 +134,6 @@ Context::setFramerateLimit ( int limit )
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
-//      Method:  getPerspective
-// Description:  Returns the perspective matrix.
-//-----------------------------------------------------------------------------
-    inline Projection*
-Context::getPerspective ()
-{
-    return pers_;
-}		// -----  end of method Context::getPerspective  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Context
-//      Method:  getOrtho
-// Description:  Returns the orthographic matrix.
-//-----------------------------------------------------------------------------
-    inline Projection*
-Context::getOrtho ()
-{
-    return ortho_;
-}		// -----  end of method Context::getOrtho  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Context
 //      Method:  getCamera
 // Description:  Returns the camera object.
 //-----------------------------------------------------------------------------
@@ -164,5 +142,27 @@ Context::getCamera ()
 {
     return cam_;
 }		// -----  end of method Context::getCamera  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Context
+//      Method:  getPerspective
+// Description:  Returns the perspective object.
+//-----------------------------------------------------------------------------
+    inline Perspective*
+Context::getPerspective ()
+{
+    return pers_;
+}		// -----  end of method Context::getPerspective  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Context
+//      Method:  getOrtho
+// Description:  Returns the orthographic object.
+//-----------------------------------------------------------------------------
+    inline Ortho*
+Context::getOrtho ()
+{
+    return ortho_;
+}		// -----  end of method Context::getOrtho  -----
 
 #endif   // ----- #ifndef CONTEXT_H  -----

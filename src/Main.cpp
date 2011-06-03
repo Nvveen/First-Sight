@@ -30,7 +30,6 @@
 
 #include    <iostream>
 #include    <GL/glew.h>
-#include    <sys/time.h>
 #include    "Context.h"
 #include    "EventHandler.h"
 
@@ -48,28 +47,23 @@ main ( int argc, char *argv[] )
 
     EventHandler event(windowContext);
     Camera *cam = windowContext.getCamera();
-    event.bind(cam, &Camera::move, 0.3f, 0.0f, 0.0f, Key::Left);
-    event.bind(cam, &Camera::move, -0.3f, 0.0f, 0.0f, Key::Right);
-    event.bind(cam, &Camera::move, 0.0f, 0.0f, 0.3f, Key::Up);
-    event.bind(cam, &Camera::move, 0.0f, 0.0f, -0.3f, Key::Down);
+    event.bind(cam, &Camera::move, 10.0f, 0.0f, 0.0f, Key::Left);
+    event.bind(cam, &Camera::move, -10.0f, 0.0f, 0.0f, Key::Right);
+    event.bind(cam, &Camera::move, 0.0f, 0.0f, 10.0f, Key::Up);
+    event.bind(cam, &Camera::move, 0.0f, 0.0f, -10.0f, Key::Down);
     event.bind(cam, &Camera::rotate, 45.0f, 0.0f, 1.0f, 0.0f, 
                EventHandler::Keyset(Key::Lctrl, Key::Left));
     event.bind(cam, &Camera::rotate, -45.0f, 0.0f, 1.0f, 0.0f,
                EventHandler::Keyset(Key::Lctrl, Key::Right));
     event.bind(&windowContext, &Context::close, Key::Escape);
 
-    Object test("data/test.dat", 0, 0, 0, &windowContext);
+    Object test("data/dwarf.dat", 0, 0, 0, &windowContext);
 
-    timeval t1, t2;
     while ( windowContext.isOpened() ) {
-        gettimeofday(&t1, NULL);
         event.pollEvents();
         windowContext.clear();
         test.draw();
         windowContext.render();
-        gettimeofday(&t2, NULL);
-        double diff = t2.tv_usec - t1.tv_usec;
-        std::cout << diff / 1000 << "\n";
     }
     return 0;
 }				// ----------  end of function main  ----------

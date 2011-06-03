@@ -39,7 +39,7 @@
 Camera::Camera ()
 {
     // Define a standard set of positions, but adjust for a topdown view.
-    cameraVectors_.pos = glm::vec3(0.0f, 5.0f, -5.0f);
+    cameraVectors_.pos = glm::vec3(0.0f, 100.0f, -100.0f);
     cameraVectors_.target = glm::vec3(0.0f, 0.0f, 0.0f);
     cameraVectors_.up = glm::vec3(0.0f, 1.0f, 0.0f);
 

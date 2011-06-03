@@ -31,7 +31,6 @@
 #include    <SDL/SDL.h>
 #include    <boost/function.hpp>
 #include    <boost/bind.hpp>
-#include    <set>
 #include    <map>
 #include    "Context.h"
 
@@ -70,13 +69,13 @@ namespace Key{
         Down = SDLK_DOWN,
     };
     enum Mod {
-        None = 0,
-        Lctrl = KMOD_LCTRL,
-        Lalt = KMOD_LALT,
         Lshift = KMOD_LSHIFT,
-        Rctrl = KMOD_RCTRL,
-        Ralt = KMOD_RALT,
         Rshift = KMOD_RSHIFT,
+        Lctrl = KMOD_LCTRL,
+        Rctrl = KMOD_RCTRL,
+        Lalt = KMOD_LALT,
+        Ralt = KMOD_RALT,
+        None = KMOD_NONE,
     };
 }
 

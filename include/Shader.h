@@ -33,7 +33,7 @@
 
 #include    <string>
 #include    <map>
-#include    <GL/gl.h>
+#include    <GL/glew.h>
 #include    <glm/glm.hpp>
 
 // ============================================================================

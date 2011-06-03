@@ -30,7 +30,6 @@
 // ============================================================================
 
 #include    <iostream>
-#include    <GL/glew.h>
 #include    "Context.h"
 
 std::map<std::string, Shader> Context::shaders;
@@ -44,12 +43,11 @@ Context::Context ( GLfloat w, GLfloat h, std::string windowName,
                    Projection* pers, Camera* cam ) :
     w_(w), h_(h), windowName_(windowName)
 {
-    if ( pers == NULL ) pers = new Projection(w_/h_);
-    pers_ = pers;
-    if ( cam == NULL ) cam = new Camera;
-    cam_ = cam;
-    ortho_ = new Projection;
-    *ortho_ = Projection::ortho(w_, h_);
+    if ( pers == NULL ) {
+        pers_ = new Perspective(w_, h_);
+        ortho_ = new Ortho(w_, h_);
+    }
+    if ( cam == NULL ) cam_ = new Camera;
 
     mainWindow_ = NULL;
     windowOpened_ = true;
@@ -161,6 +159,6 @@ Context::resize ( int w, int h )
     h_ = (GLfloat)h;
     // Set this function to resize with values it already has.
     pers_->setAspectRatio(w_, h_);
-    ortho_->setOrtho(w_, h_);
+    ortho_->setAspectRatio(w_, h_);
 }		// -----  end of method Context::resize  -----
 

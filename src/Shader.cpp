@@ -31,7 +31,6 @@
 #include    <fstream>
 #include    <iostream>
 #include    <cstdlib>
-#include    <GL/glew.h>
 #include    <glm/gtc/type_ptr.hpp>
 #include    "Shader.h"
 
