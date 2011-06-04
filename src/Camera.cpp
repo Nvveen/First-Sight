@@ -70,24 +70,21 @@ Camera::Camera ( GLfloat pos[3], GLfloat target[3], GLfloat up[3] )
 // Description:  Rotates the camera.
 //-----------------------------------------------------------------------------
     void
-Camera::rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z )
+Camera::rotate ( GLfloat angle )
 {
-    // With rotation, all 3 vectors get adjusted.
-    glm::vec4 pos(cameraVectors_.pos, 1.0f),
-              target(cameraVectors_.target, 1.0f),
-              up(cameraVectors_.up, 1.0f);
-    pos    = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(x, y, z)) * pos;
-    target = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(x, y, z)) * target;
-    up     = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(x, y, z)) * up;
-
-    // Set the new values in the matrix vectors.
-    cameraVectors_.pos    = glm::vec3(pos.x, pos.y, pos.z);
-    cameraVectors_.target = glm::vec3(target.x, target.y, target.z);
-    cameraVectors_.up     = glm::vec3(up.x, up.y, up.z);
-
-    // Make the matrix
-    cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target,
-                                 cameraVectors_.up);
+    // Translate the camera back to the origin to rotate it around the y-axis.
+    glm::vec3 trans = cameraVectors_.pos - cameraVectors_.target;
+    glm::vec4 pos = glm::vec4(trans, 1.0f);
+    // Rotate.
+    pos = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f)) *
+          pos;
+    // Move the camera back.
+    pos += glm::vec4(cameraVectors_.target, 1.0f);
+    // Reset the proper vector.
+    cameraVectors_.pos = glm::vec3(pos[0], pos[1], pos[2]);
+    // Reset the camera.
+    cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target, 
+                                cameraVectors_.up);
 }		// -----  end of method Camera::rotate  -----
 
 //-----------------------------------------------------------------------------
@@ -114,4 +111,24 @@ Camera::move ( GLfloat x, GLfloat y, GLfloat z )
     cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target, 
                                 cameraVectors_.up);
 }		// -----  end of method Camera::move  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Camera
+//      Method:  zoom
+// Description:  Zooms the camera in and out.
+//-----------------------------------------------------------------------------
+    void
+Camera::zoom ( GLfloat amount )
+{
+    // Get the vector from the position pointing in the same direction as the
+    // target as a normalized vector.
+    glm::vec3 norm = glm::normalize(cameraVectors_.target - cameraVectors_.pos);
+    // Multiply the normalized vector by the zoom amount.
+    norm *= amount;
+    // Reset the camera position.
+    cameraVectors_.pos += norm;
+    // Reset the matrix.
+    cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target, 
+                                cameraVectors_.up);
+}		// -----  end of method Camera::zoom  -----
 

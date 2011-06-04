@@ -47,8 +47,9 @@ class Camera
         Camera ();
         Camera ( GLfloat pos[3], GLfloat target[3], GLfloat up[3] ); 
 
-        void rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
+        void rotate ( GLfloat angle );
         void move ( GLfloat x, GLfloat y, GLfloat z );
+        void zoom ( GLfloat amount );
 
         glm::mat4& getCamera ();
 

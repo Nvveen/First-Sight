@@ -223,13 +223,13 @@ Model::Voxel::init ()
         -0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
         -0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
         // Left
+        -0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
         -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
         // Left
+        -0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
         -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
         // Bottom
          0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
          0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
@@ -247,13 +247,13 @@ Model::Voxel::init ()
         -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
         -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
         // Right
-         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Right
-         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
          0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
          0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+        // Right
+         0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
+         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
         // Top
          0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
         -0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,

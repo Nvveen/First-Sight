@@ -51,10 +51,14 @@ main ( int argc, char *argv[] )
     event.bind(cam, &Camera::move, -10.0f, 0.0f, 0.0f, Key::Right);
     event.bind(cam, &Camera::move, 0.0f, 0.0f, 10.0f, Key::Up);
     event.bind(cam, &Camera::move, 0.0f, 0.0f, -10.0f, Key::Down);
-    event.bind(cam, &Camera::rotate, 45.0f, 0.0f, 1.0f, 0.0f, 
+    event.bind(cam, &Camera::rotate, 30.0f, 
                EventHandler::Keyset(Key::Lctrl, Key::Left));
-    event.bind(cam, &Camera::rotate, -45.0f, 0.0f, 1.0f, 0.0f,
+    event.bind(cam, &Camera::rotate, -30.0f, 
                EventHandler::Keyset(Key::Lctrl, Key::Right));
+    event.bind(cam, &Camera::zoom,  10.0f, 
+               EventHandler::Keyset(Key::Lctrl, Key::Up));
+    event.bind(cam, &Camera::zoom, -10.0f, 
+               EventHandler::Keyset(Key::Lctrl, Key::Down));
     event.bind(&windowContext, &Context::close, Key::Escape);
 
     Object test("data/dwarf.dat", 0, 0, 0, &windowContext);
