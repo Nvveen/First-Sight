@@ -48,14 +48,11 @@ class Model
         class Voxel;
         // ====================  LIFECYCLE     ================================
         void init ();
-        std::vector<GLfloat> read ();
-        std::vector<Voxel> constructVoxels 
-            ( const std::vector<GLfloat>& voxelData );
-        void fillOctree ( const std::vector<Voxel>& voxels );
         // ====================  DATA MEMBERS  ================================
         int size_;
         std::string fileName_;
         Octree<Voxel> *volData_;
+        std::vector<Voxel *> voxelList_;
 
 }; // -----  end of class Model  -----
 
@@ -66,7 +63,6 @@ class Model
 class Model::Voxel
 {
     public:
-        typedef unsigned char Uint8;
         // ====================  LIFECYCLE     ================================
         Voxel ( glm::vec4 rgba=glm::vec4(1.0f), unsigned int x=0, 
                 unsigned int y=0, unsigned int z=0 );
@@ -83,13 +79,11 @@ class Model::Voxel
 
     private:
         // ====================  LIFECYCLE     ================================
-        void init ();
         // ====================  DATA MEMBERS  ================================
         unsigned int x_;
         unsigned int y_;
         unsigned int z_;
         glm::vec4 rgba_;
-        std::vector<GLfloat> vertices_;
 
 }; // -----  end of class Voxel  -----
 

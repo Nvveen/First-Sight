@@ -37,21 +37,7 @@ Model::Model ( const std::string& fileName ) :
     void
 Model::init ()
 {
-    const std::vector<GLfloat> voxelData = read();
-    std::vector<Voxel> voxels = constructVoxels(voxelData);
-    fillOctree(voxels);
-}		// -----  end of method Model::init  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  read
-// Description:  Reads and parses a stream to obtain volumetric data from it.
-//-----------------------------------------------------------------------------
-    std::vector<GLfloat>
-Model::read ()
-{
     // Create needed variables.
-    std::vector<GLfloat> voxels;
     std::ifstream file(fileName_);
     std::string line, item;
     // These masking variables are explained later.
@@ -73,9 +59,10 @@ Model::read ()
         // If the current value is bigger than size, update size.
         if ( temp > size_ ) size_ = temp;
     }
+
     // We have a size, so we can build the Octree.
     volData_ = new Octree<Voxel>(log(size_)/log(2));
-
+    int i(0), j(0), k(0);
     // Read the rest of the file.
     while ( file.good() ) {
         // For every line, we split it at the commas again to get the color
@@ -103,60 +90,28 @@ Model::read ()
             // Bitshift
             tempr = tempr >> 24; tempg = tempg >> 16; tempb = tempb >> 8;
             // Shift range from 0..255 to 0.0..1.0 and add it to the voxel data.
-            voxels.push_back((GLfloat)tempr/255.0f);
-            voxels.push_back((GLfloat)tempg/255.0f);
-            voxels.push_back((GLfloat)tempb/255.0f);
-            voxels.push_back((GLfloat)tempa/255.0f);
-        }
-    }
-    return voxels;
-}		// -----  end of method Model::read  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  constructVoxels
-// Description:  Reads in an array of unformatted voxel data and turns it into
-//               an array of voxels.
-//-----------------------------------------------------------------------------
-    std::vector<Model::Voxel>
-Model::constructVoxels ( const std::vector<GLfloat>& voxelData )
-{
-    std::vector<Voxel> voxels;
-    for ( unsigned int i = 0; i < voxelData.size(); i += 4 ) {
-        // Read every 4 values into a vec4, make a voxel out of it and add it
-        // to the list.
-        glm::vec4 vec;
-        vec.r = voxelData[i]; vec.g = voxelData[i+1];
-        vec.b = voxelData[i+2]; vec.a = voxelData[i+3];
-        Voxel voxel(vec);
-        voxels.push_back(voxel);
-    }
-    return voxels;
-}		// -----  end of method Model::constructVoxels  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  fillOctree
-// Description:  Fill an Octree with voxels.
-//-----------------------------------------------------------------------------
-    void
-Model::fillOctree ( const std::vector<Voxel>& voxels )
-{
-    // Using an array of voxels, we can fill the Octree with it by inserting it
-    // value by value.
-    int q = 0;
-    for ( int i = 0; i < size_; i += 1 ) {
-        for ( int j = 0; j < size_; j += 1 ) {
-            for ( int k = 0; k < size_; k += 1 ) {
-                Voxel voxel(voxels[q].rgba_, i, j, k);
-                // Don't add an invisible voxel.
-                if ( voxel.rgba_ != glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) )
-                    volData_->insert(i, j, k, voxel);
-                q += 1;
+            GLfloat r = (GLfloat)tempr/255.0f;
+            GLfloat g = (GLfloat)tempg/255.0f;
+            GLfloat b = (GLfloat)tempb/255.0f;
+            GLfloat a = (GLfloat)tempa/255.0f;
+            glm::vec4 rgba(r, g, b, a);
+            if ( a > 0.0f ) {
+                Voxel *voxel = new Voxel(rgba, i, j, k);
+                volData_->insert(i, j, k, voxel);
+                voxelList_.push_back(voxel);
+            }
+            k += 1;
+            if ( k >= size_ ) {
+                j += 1;
+                k = 0;
+            }
+            if ( j >= size_ ) {
+                i += 1;
+                j = 0;
             }
         }
     }
-}		// -----  end of method Model::fillOctree  -----
+}		// -----  end of method Model::init  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Model
@@ -168,33 +123,95 @@ Model::fillOctree ( const std::vector<Voxel>& voxels )
 Model::getVertexData ()
 {
     std::vector<GLfloat> vertexData;
-    int edge(0);
-    for ( int i = 0; i < size_; i += 1 ) {
-        for ( int j = 0; j < size_; j += 1 ) {
-            for ( int k = 0; k < size_; k += 1 ) {
-                // For every voxel in the octree, check its neighbors.
-                Voxel *voxel = (*volData_)(i, j, k);
-                if ( voxel != NULL ) {
-                    // If no neighbors on any of the six faces, we can expose
-                    // that surface.
-                    for ( int p = 0; p < 6; p += 1 ) {
-                        if ( !volData_->hasNeighbor(i, j, k, 
-                                                    (CubeSides::Sides)p) ) {
-                            // We select the surface from the array of vertices
-                            // that are ordered per face.
-                            // We then add that face's vertices to the array,
-                            // after which we skip the iterator past the new
-                            // face.
-                            vertexData.insert(vertexData.begin()+edge, 
-                                              voxel->vertices_.begin()+p*42,
-                                              voxel->vertices_.begin()+p*42+42);
-                            edge += 42;
-                        }
+    vertexData.reserve(252*size_*size_*size_);
+    GLfloat vert[252] = {
+        // Front
+         0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        // Front
+         0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        // Left
+        -0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        // Left
+        -0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        // Bottom
+         0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        // Bottom
+         0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        // Back
+         0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        // Back
+         0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        // Right
+         0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        // Right
+         0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+         0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        // Top
+         0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        // Top
+         0.5f,  0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
+    };
+    int edge = 0;
+    for ( unsigned int i = 0; i < voxelList_.size(); i += 1 ) {
+        if ( voxelList_[i] != NULL ) {
+            for ( int p = 0; p < 6; p += 1 ) {
+                if ( !volData_->hasNeighbor(voxelList_[i]->x_,
+                                            voxelList_[i]->y_,
+                                            voxelList_[i]->z_,
+                                            (CubeSides::Sides)p) ) {
+                    int offset = p*42;
+                    for ( int q = 0; q < 6; q += 1 ) {
+                        GLfloat x = vert[q*7+offset] + 
+                                    (GLfloat)voxelList_[i]->x_;
+                        GLfloat y = vert[q*7+offset+1] + 
+                                    (GLfloat)voxelList_[i]->y_;
+                        GLfloat z = vert[q*7+offset+2] + 
+                                    (GLfloat)voxelList_[i]->z_;
+                        GLfloat r = vert[q*7+offset+3] + 
+                                    voxelList_[i]->rgba_[0];
+                        GLfloat g = vert[q*7+offset+4] + 
+                                    voxelList_[i]->rgba_[1];
+                        GLfloat b = vert[q*7+offset+5] + 
+                                    voxelList_[i]->rgba_[2];
+                        GLfloat a = vert[q*7+offset+6] + 
+                                    voxelList_[i]->rgba_[3];
+                        vertexData.push_back(x);
+                        vertexData.push_back(y);
+                        vertexData.push_back(z);
+                        vertexData.push_back(r);
+                        vertexData.push_back(g);
+                        vertexData.push_back(b);
+                        vertexData.push_back(a);
                     }
+                    edge += 42;
                 }
             }
         }
     }
+    vertexData.resize(edge);
     return vertexData;
 }		// -----  end of method Model::getVertexData  -----
 
@@ -207,62 +224,5 @@ Model::Voxel::Voxel ( glm::vec4 rgba, unsigned int x, unsigned int y,
                       unsigned int z ) :
     x_(x), y_(y), z_(z), rgba_(rgba)
 {
-    init ();
 }  // -----  end of method Voxel::Voxel  (constructor)  -----
-
-    void
-Model::Voxel::init ()
-{
-    GLfloat vertices[252] = {
-        // Front
-         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Front
-         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Left
-        -0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Left
-        -0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Bottom
-         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Bottom
-         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Back
-         0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Back
-         0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Right
-         0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_, -0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Right
-         0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_, -0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Top
-         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        // Top
-         0.5f+x_,  0.5f+y_, -0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-        -0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-         0.5f+x_,  0.5f+y_,  0.5f+z_, rgba_.r, rgba_.g, rgba_.b, rgba_.a,
-    };
-    vertices_ = std::vector<GLfloat>(vertices, vertices+252);
-}		// -----  end of method Voxel::init  -----
 

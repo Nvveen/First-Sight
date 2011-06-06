@@ -67,7 +67,7 @@ class Octree
         Uint size ();
 
         // ====================  MUTATORS      ================================
-        void insert ( Uint x, Uint y, Uint z, T value );
+        void insert ( Uint x, Uint y, Uint z, T* value );
         void remove ( Uint x, Uint y, Uint z );
 
         // ====================  OPERATORS     ================================
@@ -80,11 +80,11 @@ class Octree
         typedef std::queue<Uint> IndexList;
 
         struct Node {
-            Uint location[3];
+            unsigned int location[3];
             Node *children[8];
             Node *neighbors[6];
             Node *parent;
-            T value;
+            T* value;
         };
         // ====================  LIFECYCLE     ================================
         void print ( Node *node );
@@ -98,6 +98,7 @@ class Octree
         void setNeighbors ( Node *node );
         // ====================  DATA MEMBERS  ================================
         Node *rootNode_;
+        std::vector<std::vector<std::vector<Node *> > > nodeMap_;
         Uint maxDepth_;
         Uint numElements_;
 }; // -----  end of template class Octree  -----
@@ -113,6 +114,9 @@ Octree<T>::Octree ( Uint size ) :
 {
     // Create the root node
     rootNode_ = createNewNode(NULL);
+    nodeMap_ = std::vector<std::vector<std::vector<Node *> > >(pow(2, size),
+                std::vector<std::vector<Node *> >(pow(2, size),
+                    std::vector<Node *>(pow(2, size))));
 }  // -----  end of constructor of template class Octree  -----
 
 //-----------------------------------------------------------------------------
@@ -166,7 +170,7 @@ typename Octree<T>::Node *Octree<T>::createNewNode ( Node *parent )
 //               that child on the last index from the index list is created.
 //-----------------------------------------------------------------------------
     template < class T >
-void Octree<T>::insert ( Uint x, Uint y, Uint z, T value )
+void Octree<T>::insert ( Uint x, Uint y, Uint z, T* value )
 {
     // Get the location's index list.
     IndexList indices = getNodeIndices(x, y, z);
@@ -207,6 +211,7 @@ void Octree<T>::insert ( Uint x, Uint y, Uint z, T value )
     next->location[0] = x;
     next->location[1] = y;
     next->location[2] = z;
+    nodeMap_[x][y][z] = next;
     setNeighbors(next);
     numElements_ += 1;
 }		// -----  end of method Octree<T>::insert  -----
@@ -228,6 +233,7 @@ void Octree<T>::remove ( Uint x, Uint y, Uint z )
         for ( int i = 0; i < 6; i += 1 )
             if ( node->neighbors[i] != NULL )
                 node->neighbors[i]->neighbors[5-i] = NULL;
+        if ( node->value != NULL ) delete node->value;
         delete parent->children[index];
         parent->children[index] = NULL;
     }
@@ -299,41 +305,6 @@ typename Octree<T>::IndexList Octree<T>::getNodeIndices ( int x, int y,
 
 //-----------------------------------------------------------------------------
 //       Class:  Octree
-//      Method:  print
-// Description:  A debugging method to print all the values in the current
-//               octree by recursively going through the nodes and printing the
-//               values if the current node is a leaf.
-//-----------------------------------------------------------------------------
-    template < class T >
-void Octree<T>::print ( Node *node )
-{
-    Node *helper = node;
-    if ( helper != NULL ) {
-        if ( !isLeaf(helper) )
-            for ( int i = 0; i < 8; i += 1 )
-                print(helper->children[i]);
-        else {
-            std::cout << helper->value << " ";
-            if ( helper == helper->parent->children[7] )
-                std::cout << "\n";
-        }
-    }
-}		// -----  end of method Octree<T>::print  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Octree
-//      Method:  print
-// Description:  This method is a wrapper method for the main print method were
-//               the beginning default value is the root node.
-//-----------------------------------------------------------------------------
-    template < class T >
-void Octree<T>::print ()
-{
-    print(rootNode_);
-}		// -----  end of method Octree<T>::print  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Octree
 //      Method:  isLeaf
 // Description:  A leaf is defined as a node which has no children pointers.
 //               This method iterates through the children, and if even one is a
@@ -386,6 +357,7 @@ void Octree<T>::destructNodes ( Node *node )
                     node->neighbors[i]->neighbors[5-i] = NULL;
             // Now nothing points to the current node, so we can delete it.
             node->parent = NULL;
+            if ( node->value != NULL ) delete node->value;
             delete node;
             // For good measure, we reset the current node too.
             node = NULL;
@@ -403,7 +375,7 @@ T* Octree<T>::operator() ( Uint x, Uint y, Uint z )
 {
     Node *node = getNode(x, y, z);
     if ( node != NULL )
-        return &(node->value);
+        return node->value;
     else
         return NULL;
 }		// -----  end of method Octree<T>::operator()  -----
@@ -457,35 +429,42 @@ void Octree<T>::setNeighbors ( Node *node )
         // and top respectively, set the pointer to those neighbors, and set
         // neighbor pointer of that neighbor to the current node, where the
         // node's position is mirrored.
-        Node *neighbor = getNode(x, y, z-1);
-        node->neighbors[CubeSides::Front] = neighbor;
-        if ( neighbor != NULL )
-            neighbor->neighbors[CubeSides::Back] = node;
-
-        neighbor = getNode(x-1, y, z);
-        node->neighbors[CubeSides::Left] = neighbor;
-        if ( neighbor != NULL )
-            neighbor->neighbors[CubeSides::Right] = node;
-
-        neighbor = getNode(x, y-1, z);
-        node->neighbors[CubeSides::Bottom] = neighbor;
-        if ( neighbor != NULL )
-            neighbor->neighbors[CubeSides::Top] = node;
-
-        neighbor = getNode(x, y, z+1);
-        node->neighbors[CubeSides::Back] = neighbor;
-        if ( neighbor != NULL )
-            neighbor->neighbors[CubeSides::Front] = node;
-
-        neighbor = getNode(x+1, y, z);
-        node->neighbors[CubeSides::Right] = neighbor;
-        if ( neighbor != NULL )
-            neighbor->neighbors[CubeSides::Left] = node;
-
-        neighbor = getNode(x, y+1, z);
-        node->neighbors[CubeSides::Top] = neighbor;
-        if ( neighbor != NULL )
-            neighbor->neighbors[CubeSides::Bottom] = node;
+        if ( x >= 0 && x < pow(2, maxDepth_) ) {
+            if ( x-1 >= 0 ) {
+                node->neighbors[CubeSides::Left] = nodeMap_[x-1][y][z];
+                if ( nodeMap_[x-1][y][z] != NULL )
+                    nodeMap_[x-1][y][z]->neighbors[CubeSides::Right] = node;
+            }
+            if ( x+1 < pow(2, maxDepth_) ) {
+                node->neighbors[CubeSides::Right] = nodeMap_[x+1][y][z];
+                if ( nodeMap_[x+1][y][z] != NULL )
+                    nodeMap_[x+1][y][z]->neighbors[CubeSides::Left] = node;
+            }
+        }
+        if ( y >= 0 && y < pow(2, maxDepth_) ) {
+            if ( y-1 >= 0 ) {
+                node->neighbors[CubeSides::Bottom] = nodeMap_[x][y-1][z];
+                if ( nodeMap_[x][y-1][z] != NULL )
+                    nodeMap_[x][y-1][z]->neighbors[CubeSides::Top] = node;
+            }
+            if ( y+1 < pow(2, maxDepth_) ) {
+                node->neighbors[CubeSides::Top] = nodeMap_[x][y+1][z];
+                if ( nodeMap_[x][y+1][z] != NULL )
+                    nodeMap_[x][y-1][z]->neighbors[CubeSides::Bottom] = node;
+            }
+        }
+        if ( z >= 0 && z < pow(2, maxDepth_) ) {
+            if ( z-1 >= 0 ) {
+                node->neighbors[CubeSides::Front] = nodeMap_[x][y][z-1];
+                if ( nodeMap_[x][y][z-1] != NULL )
+                    nodeMap_[x][y][z-1]->neighbors[CubeSides::Back] = node;
+            }
+            if ( z+1 < pow(2, maxDepth_) ) {
+                node->neighbors[CubeSides::Back] = nodeMap_[x][y][z+1];
+                if ( nodeMap_[x][y][z+1] != NULL )
+                    nodeMap_[x][y][z+1]->neighbors[CubeSides::Front] = node;
+            }
+        }
     }
 }		// -----  end of method Octree<T>::setNeighbors  -----
 
@@ -501,7 +480,7 @@ std::vector<T> Octree<T>::getNeighbors ( Uint x, Uint y, Uint z )
     // Get the current node.
     Node *node = getNode(x, y, z);
     // Set an array to store the neighboring objects.
-    std::vector<T> values;
+    std::vector<T*> values;
     if ( node != NULL ) {
         // Iterate through the neighbors and add existing neighbors to the
         // array.
