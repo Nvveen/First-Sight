@@ -45,6 +45,8 @@ main ( int argc, char *argv[] )
     windowContext.setup();
 //    windowContext.setFramerateLimit(60);
 
+    Object test("data/dwarf.dat", 0, 0, 0, &windowContext);
+
     EventHandler event(windowContext);
     Camera *cam = windowContext.getCamera();
     event.bind(cam, &Camera::move, 10.0f, 0.0f, 0.0f, Key::Left);
@@ -60,8 +62,6 @@ main ( int argc, char *argv[] )
     event.bind(cam, &Camera::zoom, -10.0f, 
                EventHandler::Keyset(Key::Lctrl, Key::Down));
     event.bind(&windowContext, &Context::close, Key::Escape);
-
-    Object test("data/dwarf.dat", 0, 0, 0, &windowContext);
 
     while ( windowContext.isOpened() ) {
         event.pollEvents();

@@ -41,14 +41,14 @@ int main ( int argc, char *argv[] ) {
     std::istringstream iss(line);
     int size;
     iss >> size;
-    out << size << "\n";
+    out << size << " ";
     unsigned long tempr(0), tempg(0), tempb(0), tempa(0);
     unsigned long maskr(255 << 24), maskg(255 << 16), maskb(255 << 8), 
                   maska(255);
     while ( file.good() ) {
         getline(file, line);
         std::istringstream iss2(line);
-        while ( iss2.good() ) {
+        while ( iss2.good() && line.size() > 0 ) {
             getline(iss2, line, ',');
             line.erase(0, 1);
             std::istringstream hex(line);
@@ -58,10 +58,10 @@ int main ( int argc, char *argv[] ) {
             tempr &= maskr; tempg &= maskg; tempb &= maskb;
             tempa &= maska;
             tempr = tempr >> 24; tempg = tempg >> 16; tempb = tempb >> 8;
-            out << (float)tempr/255.0f;
-            out << (float)tempg/255.0f;
-            out << (float)tempb/255.0f;
-            out << (float)tempa/255.0f;
+            out << (unsigned char)tempr << " ";
+            out << (unsigned char)tempg << " ";
+            out << (unsigned char)tempb << " ";
+            out << (unsigned char)tempa << " ";
         }
     }
     file.close();

@@ -100,6 +100,7 @@ class Octree
         Node *rootNode_;
         std::vector<std::vector<std::vector<Node *> > > nodeMap_;
         Uint maxDepth_;
+        Uint cubeSize_;
         Uint numElements_;
 }; // -----  end of template class Octree  -----
 
@@ -112,11 +113,12 @@ class Octree
 Octree<T>::Octree ( Uint size ) :
     maxDepth_(size), numElements_(0)
 {
+    cubeSize_ = pow(2, maxDepth_);
     // Create the root node
     rootNode_ = createNewNode(NULL);
-    nodeMap_ = std::vector<std::vector<std::vector<Node *> > >(pow(2, size),
-                std::vector<std::vector<Node *> >(pow(2, size),
-                    std::vector<Node *>(pow(2, size))));
+    nodeMap_ = std::vector<std::vector<std::vector<Node *> > >(cubeSize_,
+                std::vector<std::vector<Node *> >(cubeSize_,
+                    std::vector<Node *>(cubeSize_)));
 }  // -----  end of constructor of template class Octree  -----
 
 //-----------------------------------------------------------------------------
@@ -227,7 +229,7 @@ void Octree<T>::insert ( Uint x, Uint y, Uint z, T* value )
 void Octree<T>::remove ( Uint x, Uint y, Uint z )
 {
     Uint index = getNodeIndices(x, y, z).back();
-    Node *node = getNode(x, y, z);
+    Node *node = nodeMap_[x][y][z];
     if ( node != NULL ) {
         Node *parent = node->parent;
         for ( int i = 0; i < 6; i += 1 )
@@ -252,14 +254,14 @@ typename Octree<T>::IndexList Octree<T>::getNodeIndices ( int x, int y,
 {
     // For every level, we need an index, so we use a list of indices.
     IndexList indices;
-    if ( !(x >= 0 && x < pow(2, maxDepth_)) ||
-         !(y >= 0 && y < pow(2, maxDepth_)) ||
-         !(z >= 0 && z < pow(2, maxDepth_)) ) {
+    if ( !(x >= 0 && x < cubeSize_) ||
+         !(y >= 0 && y < cubeSize_) ||
+         !(z >= 0 && z < cubeSize_) ) {
         return indices;
     }
     // The size of the current cube begins at the size of the entire object,
     // otherwise defined as 2 to the power of the maximum depth.
-    int cubeSize = pow(2, maxDepth_);
+    int cubeSize = cubeSize_;
     // The split axis are all half of the current cube size.
     int split = cubeSize/2;
     // We're going to iterate through "levels" of cube sizes, that are getting
@@ -373,7 +375,7 @@ void Octree<T>::destructNodes ( Node *node )
     template < class T >
 T* Octree<T>::operator() ( Uint x, Uint y, Uint z )
 {
-    Node *node = getNode(x, y, z);
+    Node *node = nodeMap_[x][y][z];
     if ( node != NULL )
         return node->value;
     else
@@ -429,37 +431,37 @@ void Octree<T>::setNeighbors ( Node *node )
         // and top respectively, set the pointer to those neighbors, and set
         // neighbor pointer of that neighbor to the current node, where the
         // node's position is mirrored.
-        if ( x >= 0 && x < pow(2, maxDepth_) ) {
+        if ( x >= 0 && x < cubeSize_ ) {
             if ( x-1 >= 0 ) {
                 node->neighbors[CubeSides::Left] = nodeMap_[x-1][y][z];
                 if ( nodeMap_[x-1][y][z] != NULL )
                     nodeMap_[x-1][y][z]->neighbors[CubeSides::Right] = node;
             }
-            if ( x+1 < pow(2, maxDepth_) ) {
+            if ( x+1 < cubeSize_ ) {
                 node->neighbors[CubeSides::Right] = nodeMap_[x+1][y][z];
                 if ( nodeMap_[x+1][y][z] != NULL )
                     nodeMap_[x+1][y][z]->neighbors[CubeSides::Left] = node;
             }
         }
-        if ( y >= 0 && y < pow(2, maxDepth_) ) {
+        if ( y >= 0 && y < cubeSize_ ) {
             if ( y-1 >= 0 ) {
                 node->neighbors[CubeSides::Bottom] = nodeMap_[x][y-1][z];
                 if ( nodeMap_[x][y-1][z] != NULL )
                     nodeMap_[x][y-1][z]->neighbors[CubeSides::Top] = node;
             }
-            if ( y+1 < pow(2, maxDepth_) ) {
+            if ( y+1 < cubeSize_ ) {
                 node->neighbors[CubeSides::Top] = nodeMap_[x][y+1][z];
                 if ( nodeMap_[x][y+1][z] != NULL )
                     nodeMap_[x][y-1][z]->neighbors[CubeSides::Bottom] = node;
             }
         }
-        if ( z >= 0 && z < pow(2, maxDepth_) ) {
+        if ( z >= 0 && z < cubeSize_ ) {
             if ( z-1 >= 0 ) {
                 node->neighbors[CubeSides::Front] = nodeMap_[x][y][z-1];
                 if ( nodeMap_[x][y][z-1] != NULL )
                     nodeMap_[x][y][z-1]->neighbors[CubeSides::Back] = node;
             }
-            if ( z+1 < pow(2, maxDepth_) ) {
+            if ( z+1 < cubeSize_ ) {
                 node->neighbors[CubeSides::Back] = nodeMap_[x][y][z+1];
                 if ( nodeMap_[x][y][z+1] != NULL )
                     nodeMap_[x][y][z+1]->neighbors[CubeSides::Front] = node;
@@ -478,7 +480,7 @@ void Octree<T>::setNeighbors ( Node *node )
 std::vector<T> Octree<T>::getNeighbors ( Uint x, Uint y, Uint z )
 {
     // Get the current node.
-    Node *node = getNode(x, y, z);
+    Node *node = nodeMap_[x][y][z];
     // Set an array to store the neighboring objects.
     std::vector<T*> values;
     if ( node != NULL ) {
@@ -503,7 +505,7 @@ std::vector<T> Octree<T>::getNeighbors ( Uint x, Uint y, Uint z )
     template < class T >
 bool Octree<T>::hasNeighbor ( Uint x, Uint y, Uint z, CubeSides::Sides side )
 {
-    Node *node = getNode(x, y, z);
+    Node *node = nodeMap_[x][y][z];
     if ( node != NULL ) {
         if ( node->neighbors[side] != NULL ) return true;
         else return false;
