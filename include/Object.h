@@ -32,6 +32,7 @@
 #define  OBJECT_H
 
 #include    <string>
+#include <sys/time.h>
 #include    "Model.h"
 #include    "Projection.h"
 #include    "Camera.h"
@@ -59,6 +60,8 @@ class Object
         void bind ( Projection *projection );
         void setUniforms ();
 
+        void translate ( GLfloat x, GLfloat y, GLfloat z );
+
         // ====================  OPERATORS     ================================
 
         // ====================  DATA MEMBERS  ================================
@@ -78,7 +81,9 @@ class Object
         float z_;
 
         GLuint itemCount_;
+        std::vector<unsigned int> indices_;
 
+        GLuint ibo_;
         GLuint vbo_;
         GLuint vao_;
         GLuint projectionUBO_;

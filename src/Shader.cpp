@@ -50,10 +50,13 @@ Shader::Shader ()
 //      Method:  Shader
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Shader::Shader ( std::string vertexShaderFile, std::string fragmentShaderFile )
+Shader::Shader ( std::string vertexShaderFile, std::string fragmentShaderFile,
+                 std::string geoShaderFile )
 {
+    // Check if the object has already been compiled for the shaders.
     std::map<std::string, GLuint>::iterator it;
     it = codeNames_.find(vertexShaderFile);
+    // Vertex shader
     if ( it != codeNames_.end() ) {
         vertexShaderObject_ = (*it).second;
     }
@@ -64,6 +67,7 @@ Shader::Shader ( std::string vertexShaderFile, std::string fragmentShaderFile )
         codeNames_[vertexShaderFile] = vertexShaderObject_;
     }
     it = codeNames_.find(fragmentShaderFile);
+    // Fragment shader
     if ( it != codeNames_.end() ) {
         fragmentShaderObject_ = (*it).second;
     }
@@ -73,8 +77,33 @@ Shader::Shader ( std::string vertexShaderFile, std::string fragmentShaderFile )
                                              GL_FRAGMENT_SHADER);
         codeNames_[fragmentShaderFile] = fragmentShaderObject_;
     }
+    // Optional geometry shader
+    if ( geoShaderFile.size() > 0 ) {
+        it = codeNames_.find(geoShaderFile);
+        if ( it != codeNames_.end() ) {
+            geoShaderObject_ = (*it).second;
+        }
+        else {
+            geoShaderCode_ = addCode(geoShaderFile);
+            geoShaderObject_ = compileShader(geoShaderCode_, 
+                                             GL_GEOMETRY_SHADER);
+            codeNames_[geoShaderFile] = geoShaderObject_;
+        }
+    }
     // Create shader program
     createProgram();
+    if ( geoShaderFile.size() > 0 ) {
+        // We also need to define the types of input and output the geometry
+        // shader has to handle.
+        glProgramParameteriARB(shaderProgram_, GL_GEOMETRY_INPUT_TYPE_ARB, 
+                               GL_POINTS);
+        glProgramParameteriARB(shaderProgram_, GL_GEOMETRY_OUTPUT_TYPE_ARB, 
+                               GL_TRIANGLE_STRIP);
+        GLint temp;
+        glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB, &temp);
+        glProgramParameteriARB(shaderProgram_, GL_GEOMETRY_VERTICES_OUT_ARB, 
+                               temp);
+    }
 }  // -----  end of method Shader::Shader  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -205,6 +234,9 @@ Shader::createProgram ()
     // Attach them
     glAttachShader(shaderProgram_, vertexShaderObject_);
     glAttachShader(shaderProgram_, fragmentShaderObject_);
+    if ( geoShaderCode_.size() > 0 ) {
+        glAttachShader(shaderProgram_, geoShaderObject_);
+    }
     GLint success;
     // Link them
     glLinkProgram(shaderProgram_);

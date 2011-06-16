@@ -19,7 +19,9 @@
 #define  MODEL_H
 
 #include    <vector>
+#include    <list>
 #include    <sstream>
+#include    <fstream>
 #include    <GL/gl.h>
 #include    <glm/glm.hpp>
 #include    "Octree.h"
@@ -35,7 +37,11 @@ class Model
         Model ( const std::string& fileName );
 
         // ====================  ACCESSORS     ================================
-        std::vector<GLfloat> getVertexData ();
+        void createVertexData ( std::vector<GLfloat>& data,
+                                std::vector<unsigned int>& indices );
+        int size ();
+        GLuint getTextureID ();
+        int getVoxelSize ();
 
         // ====================  MUTATORS      ================================
 
@@ -48,11 +54,14 @@ class Model
         class Voxel;
         // ====================  LIFECYCLE     ================================
         void init ();
+        void genVoxelField ();
         // ====================  DATA MEMBERS  ================================
         int size_;
         std::string fileName_;
         Octree<Voxel> *volData_;
-        std::vector<Voxel *> voxelList_;
+        std::list<Voxel *> voxelList_;
+
+        GLuint texID_;
 
 }; // -----  end of class Model  -----
 
@@ -86,5 +95,38 @@ class Model::Voxel
         glm::vec4 rgba_;
 
 }; // -----  end of class Voxel  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  size
+// Description:  Return the size of the model.
+//-----------------------------------------------------------------------------
+    inline int
+Model::size ()
+{
+    return size_;
+}		// -----  end of method Model::size  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  getTextureID
+// Description:  Returns the ID of the voxel data map.
+//-----------------------------------------------------------------------------
+    inline GLuint
+Model::getTextureID ()
+{
+    return texID_;
+}		// -----  end of method Model::getTextureID  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  getVoxelSize
+// Description:  Return the actual list size of the active voxels.
+//-----------------------------------------------------------------------------
+    inline int
+Model::getVoxelSize ()
+{
+    return voxelList_.size();
+}		// -----  end of method Model::getVoxelSize  -----
 
 #endif   // ----- #ifndef MODEL_H  -----

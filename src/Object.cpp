@@ -50,6 +50,7 @@ Object::Object ( std::string fileName, float x, float y, float z,
     init();
     initVertexBuffers();
     initUniformBuffers();
+    translate(x, y, z);
 }  // -----  end of method Object::Object  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -81,34 +82,30 @@ Object::init ()
     void
 Object::initVertexBuffers ()
 {
-    // Get the proper data.
-    std::vector<GLfloat> vertexData = model_->getVertexData();
-    // Get the amount of vertices.
-    itemCount_ = vertexData.size()/7;
+    std::vector<GLfloat> vertexData;
+    model_->createVertexData(vertexData, indices_);
+    itemCount_ = vertexData.size()/3;
 
-    // Create a vertex array.
     glGenVertexArrays(1, &vao_);
     glBindVertexArray(vao_);
     glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
 
-    // Create a vertex buffer object.
     glGenBuffers(1, &vbo_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    // Fill vbo with data.
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*vertexData.size(),
                  &vertexData[0], GL_STATIC_DRAW);
-    // Set data alignment in memory.
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*7, 0);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*7, 
-                          (const GLvoid *)(sizeof(GLfloat)*3));
-    // Bind vertex and color attributes to the shader.
+
+    glGenBuffers(1, &ibo_);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*indices_.size(),
+                 &indices_[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*3, 0);
     glBindAttribLocation(shader_->getShaderProgram(), 0, "vVertex");
-    glBindAttribLocation(shader_->getShaderProgram(), 1, "vColor");
+    glBindFragDataLocation(shader_->getShaderProgram(), 0, "fragColor");
 
     // Clean up
     glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
     glBindVertexArray(0);
 }		// -----  end of method Object::initVertexBuffers  -----
 
@@ -147,15 +144,17 @@ Object::draw ()
     // Bind vertex array and its attributes.
     glBindVertexArray(vao_);
     glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
+
+    glBindTexture(GL_TEXTURE_2D, model_->getTextureID());
 
     setUniforms();
     // Draw the vertices.
-    glDrawArrays(GL_TRIANGLES, 0, itemCount_);
+//    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, itemCount_, model_->getVoxelSize());
+    glDrawElementsInstanced(GL_TRIANGLE_STRIP, indices_.size(), GL_UNSIGNED_INT, 
+                            0, model_->getVoxelSize());
 
     // Clean up
     glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
     glBindVertexArray(0);
     shader_->unbind();
 }		// -----  end of method Object::draw  -----
@@ -177,5 +176,19 @@ Object::setUniforms ()
     shader_->fillUniformBuffer(projectionUBO_, "vProjection", 
                                projection_->getMatrix());
     shader_->fillUniformBuffer(projectionUBO_, "vCamera", camera_->getCamera());
+    shader_->setUniform("gSampler", 0);
 }		// -----  end of method Object::setUniforms  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Object
+//      Method:  translate
+// Description:  Move the object by (x,y,z).
+//-----------------------------------------------------------------------------
+    void
+Object::translate ( GLfloat x, GLfloat y, GLfloat z )
+{
+    translation_ = glm::translate(glm::mat4(1.0f), glm::vec3(x*32, y*32, z*32));
+    shader_->bindUBO(modelUBO_, "Model");
+    shader_->fillUniformBuffer(modelUBO_, "vTranslate", translation_);
+}		// -----  end of method Object::translate  -----
 

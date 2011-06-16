@@ -12,11 +12,11 @@ more details.
  
 You should have received a copy of the GNU General Public License along with 
 First Sight. If not, see <http://www.gnu.org/licenses/>. */
-#version 120
-#extension GL_ARB_uniform_buffer_object : enable
+#version 150
 
-varying vec4 color;
+in vec4 fColor;
+out vec4 fragColor;
 
 void main(void) {
-    gl_FragColor = color;
+    fragColor = fColor;
 }

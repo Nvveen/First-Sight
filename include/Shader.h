@@ -46,7 +46,8 @@ class Shader
 
         // ====================  LIFECYCLE     ================================
         Shader ();
-        Shader ( std::string vertexShaderFile, std::string fragmentShaderFile );
+        Shader ( std::string vertexShaderFile, std::string fragmentShaderFile,
+                 std::string geoShaderFile="" );
         virtual ~Shader ();
 
         void bind ();
@@ -79,11 +80,13 @@ class Shader
         // ====================  DATA MEMBERS  ================================
         std::string vertexShaderCode_;
         std::string fragmentShaderCode_;
+        std::string geoShaderCode_;
 
         static std::map<std::string, GLuint> codeNames_;
 
         GLuint vertexShaderObject_;
         GLuint fragmentShaderObject_;
+        GLuint geoShaderObject_;
         GLuint shaderProgram_;
 
         std::map<std::string, int> uniformLocs;
