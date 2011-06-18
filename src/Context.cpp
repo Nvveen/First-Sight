@@ -98,15 +98,22 @@ Context::setup ()
         exit(1);
     }
     // Set the different options for the objects.
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glDepthMask(GL_TRUE);
     glEnable(GL_BLEND);
-    glEnable(GL_TEXTURE_1D);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_3D);
 
     // Add shaders to shaderlist
     Shader def = Shader("shaders/default.vs", "shaders/default.fs");
+    def.setUniformLocation("vProjection");
+    def.setUniformLocation("vCamera");
+    def.setUniformLocation("vTranslate");
+    def.setUniformLocation("vRotate");
+    def.setUniformLocation("vScale");
     shaders["default"] = def;
 //    shaders["text"] = Shader("shaders/text.vs", "shaders/text.fs");
 }		// -----  end of method Context::setup  -----

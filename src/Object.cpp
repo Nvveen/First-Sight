@@ -82,30 +82,35 @@ Object::init ()
     void
 Object::initVertexBuffers ()
 {
-    std::vector<GLfloat> vertexData;
-    model_->createVertexData(vertexData, indices_);
-    itemCount_ = vertexData.size()/3;
+    std::vector<GLfloat> vertexData = model_->createSliceField();
+    itemCount_ = vertexData.size()/6;
 
+    // Create the vertex array.
     glGenVertexArrays(1, &vao_);
     glBindVertexArray(vao_);
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 
+    // Create the vertex buffer.
     glGenBuffers(1, &vbo_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+    // Fill the buffer data.
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*vertexData.size(),
                  &vertexData[0], GL_STATIC_DRAW);
 
-    glGenBuffers(1, &ibo_);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*indices_.size(),
-                 &indices_[0], GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*3, 0);
+    // Set the data alignment in the buffer.
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*6,
+                          (const GLvoid *)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*6, 
+                          (const GLvoid *)12);
+    // Bind the attributes to their locations in the shader.
     glBindAttribLocation(shader_->getShaderProgram(), 0, "vVertex");
+    glBindAttribLocation(shader_->getShaderProgram(), 1, "TexCoord");
     glBindFragDataLocation(shader_->getShaderProgram(), 0, "fragColor");
 
     // Clean up
     glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
     glBindVertexArray(0);
 }		// -----  end of method Object::initVertexBuffers  -----
 
@@ -117,18 +122,7 @@ Object::initVertexBuffers ()
     void
 Object::initUniformBuffers ()
 {
-    // Create two uniform buffers and fill it with data.
-    projectionUBO_ = shader_->createUBO("Projection");
-    shader_->fillUniformBuffer(projectionUBO_, "vProjection", 
-                               projection_->getMatrix());
-    shader_->fillUniformBuffer(projectionUBO_, "vCamera", camera_->getCamera());
-    shader_->bindUBO(projectionUBO_, "Projection");
-
-    modelUBO_ = shader_->createUBO("Model");
-    shader_->fillUniformBuffer(modelUBO_, "vTranslate", translation_);
-    shader_->fillUniformBuffer(modelUBO_, "vRotate", rotation_);
-    shader_->fillUniformBuffer(modelUBO_, "vScale", scaling_);
-    shader_->bindUBO(modelUBO_, "Model");
+    setUniforms();
 }		// -----  end of method Object::initUniformBuffers  -----
 
 //-----------------------------------------------------------------------------
@@ -144,16 +138,14 @@ Object::draw ()
     // Bind vertex array and its attributes.
     glBindVertexArray(vao_);
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 
-    glBindTexture(GL_TEXTURE_2D, model_->getTextureID());
-
+    glBindTexture(GL_TEXTURE_3D, model_->getTextureID());
     setUniforms();
-    // Draw the vertices.
-//    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, itemCount_, model_->getVoxelSize());
-    glDrawElementsInstanced(GL_TRIANGLE_STRIP, indices_.size(), GL_UNSIGNED_INT, 
-                            0, model_->getVoxelSize());
+    glDrawArrays(GL_TRIANGLES, 0, itemCount_);
 
     // Clean up
+    glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
     glBindVertexArray(0);
     shader_->unbind();
@@ -168,14 +160,11 @@ Object::draw ()
 Object::setUniforms ()
 {
     // Fill all the uniforms in the buffer.
-    shader_->bindUBO(modelUBO_, "Model");
-    shader_->fillUniformBuffer(modelUBO_, "vTranslate", translation_);
-    shader_->fillUniformBuffer(modelUBO_, "vRotate", rotation_);
-    shader_->fillUniformBuffer(modelUBO_, "vScale", scaling_);
-    shader_->bindUBO(projectionUBO_, "Projection");
-    shader_->fillUniformBuffer(projectionUBO_, "vProjection", 
-                               projection_->getMatrix());
-    shader_->fillUniformBuffer(projectionUBO_, "vCamera", camera_->getCamera());
+    shader_->setUniform("vProjection", projection_->getMatrix());
+    shader_->setUniform("vCamera", camera_->getCamera());
+    shader_->setUniform("vTranslate", translation_);
+    shader_->setUniform("vRotate", rotation_);
+    shader_->setUniform("vScale", scaling_);
     shader_->setUniform("gSampler", 0);
 }		// -----  end of method Object::setUniforms  -----
 
@@ -188,7 +177,6 @@ Object::setUniforms ()
 Object::translate ( GLfloat x, GLfloat y, GLfloat z )
 {
     translation_ = glm::translate(glm::mat4(1.0f), glm::vec3(x*32, y*32, z*32));
-    shader_->bindUBO(modelUBO_, "Model");
-    shader_->fillUniformBuffer(modelUBO_, "vTranslate", translation_);
+    shader_->setUniform("vTranslate", translation_);
 }		// -----  end of method Object::translate  -----
 

@@ -56,14 +56,14 @@ main ( int argc, char *argv[] )
     gettimeofday(&t2, NULL);
     double diff = t2.tv_usec - t1.tv_usec;
     std::cout << "Object creation: " << diff << "\n";
-    Object *array[100];
-    int q = 0;
-    for ( int i = 0; i < 10; i += 1 ) {
-        for ( int j = 0; j < 10; j += 1 ) {
-            array[q] = new Object("data/dwarf.dat", i, 0, j, &windowContext);
-            q += 1;
-        }
-    }
+//    Object *array[100];
+//    int q = 0;
+//    for ( int i = 0; i < 10; i += 1 ) {
+//        for ( int j = 0; j < 10; j += 1 ) {
+//            array[q] = new Object("data/dwarf.dat", i, 0, j, &windowContext);
+//            q += 1;
+//        }
+//    }
 
     EventHandler event(windowContext);
     Camera *cam = windowContext.getCamera();
@@ -84,14 +84,14 @@ main ( int argc, char *argv[] )
     while ( windowContext.isOpened() ) {
         event.pollEvents();
         windowContext.clear();
-//        test.draw();
+        test.draw();
 //        test2.draw();
 //        test3.draw();
 //        test4.draw();
 //        test5.draw();
-        for ( int i = 0; i < 100; i += 1 ) {
-            array[i]->draw();
-        }
+//        for ( int i = 0; i < 100; i += 1 ) {
+//            array[i]->draw();
+//        }
         windowContext.render();
     }
     return 0;

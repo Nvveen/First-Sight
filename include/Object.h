@@ -83,11 +83,8 @@ class Object
         GLuint itemCount_;
         std::vector<unsigned int> indices_;
 
-        GLuint ibo_;
         GLuint vbo_;
         GLuint vao_;
-        GLuint projectionUBO_;
-        GLuint modelUBO_;
 
         Shader *shader_;
 

@@ -70,7 +70,7 @@ class Perspective : public Projection
 
         // ====================  LIFECYCLE     ================================
         Perspective ( GLfloat w, GLfloat h, GLfloat FOV=45.0f, 
-                      GLfloat zNear=0.1f, GLfloat zFar=1000.0f ) :
+                      GLfloat zNear=1.0f, GLfloat zFar=1000.0f ) :
                     Projection(w,h), FOV_(FOV), zNear_(zNear), zFar_(zFar)
         {
             init ();

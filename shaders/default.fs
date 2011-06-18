@@ -14,9 +14,17 @@ You should have received a copy of the GNU General Public License along with
 First Sight. If not, see <http://www.gnu.org/licenses/>. */
 #version 150
 
-in vec4 fColor;
+in vec3 TexCoord0;
 out vec4 fragColor;
+uniform sampler3D gSampler;
 
 void main(void) {
-    fragColor = fColor;
+    vec4 color = texture(gSampler, TexCoord0);
+    if ( color.a < 1.0 ) {
+        gl_FragDepth = 1.0;
+    }
+    else {
+        fragColor = color;
+        gl_FragDepth = gl_FragCoord.z;
+    }
 }

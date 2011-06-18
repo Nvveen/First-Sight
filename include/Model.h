@@ -35,13 +35,11 @@ class Model
     public:
         // ====================  LIFECYCLE     ================================
         Model ( const std::string& fileName );
+        std::vector<GLfloat> createSliceField ();
 
         // ====================  ACCESSORS     ================================
-        void createVertexData ( std::vector<GLfloat>& data,
-                                std::vector<unsigned int>& indices );
         int size ();
         GLuint getTextureID ();
-        int getVoxelSize ();
 
         // ====================  MUTATORS      ================================
 
@@ -54,14 +52,17 @@ class Model
         class Voxel;
         // ====================  LIFECYCLE     ================================
         void init ();
-        void genVoxelField ();
+        GLuint createVoxelImage ( std::list<Voxel *>& voxelList );
         // ====================  DATA MEMBERS  ================================
         int size_;
         std::string fileName_;
         Octree<Voxel> *volData_;
+        std::vector<Octree<Voxel> *> animationOctrees_;
         std::list<Voxel *> voxelList_;
+        std::vector<std::list<Voxel *> > animationVoxels_;
 
         GLuint texID_;
+        std::vector<GLuint> animationTexIDs_;
 
 }; // -----  end of class Model  -----
 
@@ -74,7 +75,8 @@ class Model::Voxel
     public:
         // ====================  LIFECYCLE     ================================
         Voxel ( glm::vec4 rgba=glm::vec4(1.0f), unsigned int x=0, 
-                unsigned int y=0, unsigned int z=0 );
+                unsigned int y=0, unsigned int z=0 ) : x_(x), y_(y), z_(z),
+                                                       rgba_(rgba) {}
 
         // ====================  ACCESSORS     ================================
 
@@ -117,16 +119,5 @@ Model::getTextureID ()
 {
     return texID_;
 }		// -----  end of method Model::getTextureID  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  getVoxelSize
-// Description:  Return the actual list size of the active voxels.
-//-----------------------------------------------------------------------------
-    inline int
-Model::getVoxelSize ()
-{
-    return voxelList_.size();
-}		// -----  end of method Model::getVoxelSize  -----
 
 #endif   // ----- #ifndef MODEL_H  -----
