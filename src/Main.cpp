@@ -56,10 +56,10 @@ main ( int argc, char *argv[] )
     gettimeofday(&t2, NULL);
     double diff = t2.tv_usec - t1.tv_usec;
     std::cout << "Object creation: " << diff << "\n";
-//    Object *array[100];
+//    Object *array[900];
 //    int q = 0;
-//    for ( int i = 0; i < 10; i += 1 ) {
-//        for ( int j = 0; j < 10; j += 1 ) {
+//    for ( int i = 0; i < 30; i += 1 ) {
+//        for ( int j = 0; j < 30; j += 1 ) {
 //            array[q] = new Object("data/dwarf.dat", i, 0, j, &windowContext);
 //            q += 1;
 //        }
@@ -89,7 +89,7 @@ main ( int argc, char *argv[] )
 //        test3.draw();
 //        test4.draw();
 //        test5.draw();
-//        for ( int i = 0; i < 100; i += 1 ) {
+//        for ( int i = 0; i < 900; i += 1 ) {
 //            array[i]->draw();
 //        }
         windowContext.render();

@@ -140,7 +140,15 @@ Object::draw ()
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    glBindTexture(GL_TEXTURE_3D, model_->getTextureID());
+    timeval t1;
+    gettimeofday(&t1, NULL);
+    int ms = t1.tv_usec/1000;
+    if ( ms < 500 ) {
+        glBindTexture(GL_TEXTURE_3D, model_->getTextureID(1));
+    }
+    else {
+        glBindTexture(GL_TEXTURE_3D, model_->getTextureID());
+    }
     setUniforms();
     glDrawArrays(GL_TRIANGLES, 0, itemCount_);
 

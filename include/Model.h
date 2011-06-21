@@ -24,6 +24,7 @@
 #include    <fstream>
 #include    <GL/gl.h>
 #include    <glm/glm.hpp>
+#include    <glm/gtc/matrix_transform.hpp>
 #include    "Octree.h"
 
 // ============================================================================
@@ -39,7 +40,7 @@ class Model
 
         // ====================  ACCESSORS     ================================
         int size ();
-        GLuint getTextureID ();
+        GLuint getTextureID ( int i=0 );
 
         // ====================  MUTATORS      ================================
 
@@ -53,15 +54,16 @@ class Model
         // ====================  LIFECYCLE     ================================
         void init ();
         GLuint createVoxelImage ( std::list<Voxel *>& voxelList );
+        GLuint createVoxelAnimation ( std::list<Voxel *>& animList );
         // ====================  DATA MEMBERS  ================================
         int size_;
         std::string fileName_;
         Octree<Voxel> *volData_;
-        std::vector<Octree<Voxel> *> animationOctrees_;
         std::list<Voxel *> voxelList_;
         std::vector<std::list<Voxel *> > animationVoxels_;
 
         GLuint texID_;
+        std::vector<glm::vec4> texMap_;
         std::vector<GLuint> animationTexIDs_;
 
 }; // -----  end of class Model  -----
@@ -115,9 +117,12 @@ Model::size ()
 // Description:  Returns the ID of the voxel data map.
 //-----------------------------------------------------------------------------
     inline GLuint
-Model::getTextureID ()
+Model::getTextureID ( int i )
 {
-    return texID_;
+    if ( i == 0 )
+        return texID_;
+    else
+        return animationTexIDs_[i-1];
 }		// -----  end of method Model::getTextureID  -----
 
 #endif   // ----- #ifndef MODEL_H  -----

@@ -37,41 +37,58 @@ Model::Model ( const std::string& fileName ) :
     void
 Model::init ()
 {
-    std::ifstream file(fileName_.c_str());
+    std::ifstream file(fileName_.c_str(), std::ios::binary);
     if ( !file.is_open() ) {
         std::cerr << "Error reading file " << fileName_ << "\n";
         exit(1);
     }
     // Get the size first.
-    file >> size_;
-    glm::vec4 rgba;
-    unsigned char r, g, b, a;
+    unsigned char blockSize;
+    unsigned int numAnim;
+    file.read(reinterpret_cast<char *>(&blockSize), sizeof(unsigned char));
+    size_ = (unsigned int)blockSize;
+    file.read(reinterpret_cast<char *>(&numAnim), sizeof(unsigned int));
     // Initialize the octree.
     volData_ = new Octree<Voxel>(log(size_)/log(2));
-    for ( int i = 0; i < size_; i += 1 ) {
-        for ( int j = 0; j < size_; j += 1 ) {
-            for ( int k = 0; k < size_; k += 1 ) {
-                // For every line in the file, get the position and insert that
-                // voxel into the octree.
-                if ( file.good() ) {
-                    unsigned int x, y, z;
-                    unsigned char r, g, b, a;
-                    file >> x; file >> y; file >> z;
-                    file >> r; file >> g; file >> b; file >> a;
-                    rgba[0] = (float)r/255.0f;
-                    rgba[1] = (float)g/255.0f;
-                    rgba[2] = (float)b/255.0f;
-                    rgba[3] = (float)a/255.0f;
-                    if ( rgba[3] != 0.0f ) {
-                        Voxel *voxel = new Voxel(rgba, x, y, z);
-                        volData_->insert(x, y, z, voxel);
-                        voxelList_.push_back(voxel);
-                    }
-                }
+
+    std::list<Voxel *>* currentList = &voxelList_;
+    int q = 0; // Variable to keep track of which list we're modifying.
+    while ( file.good() && q <= numAnim ) {
+        unsigned int size;
+        file.read(reinterpret_cast<char *>(&size), sizeof(unsigned int));
+        for ( unsigned int i = 0; i < size; i += 1 ) {
+            if ( !file.good() ) {
+                std::cerr << "Error reading model " << fileName_ << "\n";
+                exit(1);
+            }
+            unsigned char x, y, z, r, g, b, a;
+            file.read(reinterpret_cast<char *>(&x), sizeof(unsigned char));
+            file.read(reinterpret_cast<char *>(&y), sizeof(unsigned char));
+            file.read(reinterpret_cast<char *>(&z), sizeof(unsigned char));
+            file.read(reinterpret_cast<char *>(&r), sizeof(unsigned char));
+            file.read(reinterpret_cast<char *>(&g), sizeof(unsigned char));
+            file.read(reinterpret_cast<char *>(&b), sizeof(unsigned char));
+            file.read(reinterpret_cast<char *>(&a), sizeof(unsigned char));
+            glm::vec4 rgba = glm::vec4((float)r/255.0f, (float)g/255.0f,
+                                       (float)b/255.0f, (float)a/255.0f);
+            Voxel *vox = new Voxel(rgba, (unsigned int)x, (unsigned int)y,
+                                         (unsigned int)z);
+            currentList->push_back(vox);
+            if ( currentList == &voxelList_ ) {
+                volData_->insert((unsigned int)x, (unsigned int)y,
+                                 (unsigned int)z, vox);
             }
         }
+        animationVoxels_.resize(animationVoxels_.size()+1);
+        currentList = &animationVoxels_[q];
+        q += 1;
     }
+    animationVoxels_.pop_back(); // Code adds one too many lists, so remove.
     texID_ = createVoxelImage(voxelList_);
+    for ( std::list<Voxel *>& list : animationVoxels_ ) {
+        GLuint animID = createVoxelAnimation(list);
+        animationTexIDs_.push_back(animID);
+    }
     file.close();
 }		// -----  end of method Model::init  -----
 
@@ -84,9 +101,9 @@ Model::init ()
 Model::createVoxelImage ( std::list<Voxel *>& voxelList )
 {
     GLuint texID;
-    // First we create a data-array representing the voxel model from the
+    // First we create the data-array representing the voxel model from the
     // initial data we already have.
-    std::vector<glm::vec4> texMap(size_*size_*size_, glm::vec4(0.0f));
+    texMap_ = std::vector<glm::vec4>(size_*size_*size_, glm::vec4(0.0f));
     // For every voxel that exists, we adjust that value in the empty array.
     for ( std::list<Voxel *>::iterator it = voxelList.begin(); 
           it != voxelList.end(); it++  ) {
@@ -95,7 +112,7 @@ Model::createVoxelImage ( std::list<Voxel *>& voxelList )
         j = (*it)->y_;
         k = (*it)->z_;
         int index = i*size_*size_ + j*size_ + k;
-        texMap[index] = (*it)->rgba_;
+        texMap_[index] = (*it)->rgba_;
     }
     // Now we have the 3D array, we can make an OpenGL 3D texture.
     glGenTextures(1, &texID);
@@ -105,9 +122,27 @@ Model::createVoxelImage ( std::list<Voxel *>& voxelList )
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     // Fill the texture with data.
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, size_, size_, size_, 0, GL_RGBA,
-                 GL_FLOAT, &texMap[0]);
+                 GL_FLOAT, &texMap_[0]);
     return texID;
 }		// -----  end of method Model::createVoxelImage  -----
+
+    GLuint
+Model::createVoxelAnimation ( std::list<Voxel *>& animList )
+{
+    GLuint texID;
+    std::vector<glm::vec4> animMap = texMap_;
+    for ( Voxel* v : animList ) {
+        unsigned int index = v->x_*size_*size_ + v->y_*size_ + v->z_;
+        animMap[index] = v->rgba_;
+    }
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_3D, texID);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, size_, size_, size_, 0, GL_RGBA,
+                 GL_FLOAT, &animMap[0]);
+    return texID;
+}		// -----  end of method Model::createVoxelAnimation  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Model
