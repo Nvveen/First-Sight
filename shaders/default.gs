@@ -14,119 +14,24 @@ You should have received a copy of the GNU General Public License along with
 First Sight. If not, see <http://www.gnu.org/licenses/>. */
 #version 150
 
-layout(points) in;
-layout(triangle_strip, max_vertices=24) out;
+layout(triangles, invocations=3) in;
+layout(triangle_strip, max_vertices=3) out;
 
-in vec4 fColor[1];
-out vec4 color;
-in mat4 vTransform[1];
+out vec3 pos[3];
+out vec4 color[3];
 
 void main(void) {
-    /* Front */
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 0.0, 0.0, 0.0));
+    gl_Position = gl_in[0].gl_Position;
+    pos[0] = gl_Position.xyz;
+    color[0] = vec4(1, 0, 0, 1);
     EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 1.0, 0.0, 0.0));
+    gl_Position = gl_in[1].gl_Position;
+    pos[1] = gl_Position.xyz;
+    color[1] = vec4(1, 0, 0, 1);
     EmitVertex();
-    
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 0.0, 0.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 1.0, 0.0, 0.0));
-    EmitVertex();
-    EndPrimitive();
-
-    /* Left */
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 0.0, 1.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 1.0, 1.0, 0.0));
-    EmitVertex();
-    
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 0.0, 0.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 1.0, 0.0, 0.0));
-    EmitVertex();
-    EndPrimitive();
-
-    /* Bottom */
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 0.0, 1.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 0.0, 0.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 0.0, 1.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 0.0, 0.0, 0.0));
-    EmitVertex();
-    EndPrimitive();
-    
-    /* Back */
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 0.0, 1.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 1.0, 1.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 0.0, 1.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 1.0, 1.0, 0.0));
-    EmitVertex();
-    EndPrimitive();
-
-    /* Right */
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 0.0, 0.0, 0.0));
-    EmitVertex();
-    
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 1.0, 0.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 0.0, 1.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 1.0, 1.0, 0.0));
-    EmitVertex();
-    EndPrimitive();
-    
-    /* Top */
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 1.0, 0.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(0.0, 1.0, 1.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 1.0, 0.0, 0.0));
-    EmitVertex();
-
-    color = fColor[0];
-    gl_Position = vTransform[0] * (gl_in[0].gl_Position + vec4(1.0, 1.0, 1.0, 0.0));
+    gl_Position = gl_in[2].gl_Position;
+    pos[2] = gl_Position.xyz;
+    color[2] = vec4(1, 0, 0, 1);
     EmitVertex();
     EndPrimitive();
 }

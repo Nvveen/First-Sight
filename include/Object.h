@@ -32,7 +32,6 @@
 #define  OBJECT_H
 
 #include    <string>
-#include <sys/time.h>
 #include    "Model.h"
 #include    "Projection.h"
 #include    "Camera.h"
@@ -58,7 +57,7 @@ class Object
         // ====================  MUTATORS      ================================
         void bind ( Camera *camera );
         void bind ( Projection *projection );
-        void setUniforms ();
+        void setMVP( bool force=false );
 
         void translate ( GLfloat x, GLfloat y, GLfloat z );
 
@@ -71,20 +70,12 @@ class Object
     private:
         // ====================  LIFECYCLE     ================================
         void init ();
-        void initVertexBuffers ();
-        void initUniformBuffers ();
         // ====================  DATA MEMBERS  ================================
         std::string fileName_;
         Model *model_;
         float x_;
         float y_;
         float z_;
-
-        GLuint itemCount_;
-        std::vector<unsigned int> indices_;
-
-        GLuint vbo_;
-        GLuint vao_;
 
         Shader *shader_;
 
@@ -93,6 +84,7 @@ class Object
         glm::mat4 translation_;
         glm::mat4 rotation_;
         glm::mat4 scaling_;
+        glm::mat4 mvp_;
 
 }; // -----  end of class Object  -----
 

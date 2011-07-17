@@ -36,10 +36,10 @@
 //      Method:  Camera
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Camera::Camera ()
+Camera::Camera () : update_(false)
 {
     // Define a standard set of positions, but adjust for a topdown view.
-    cameraVectors_.pos = glm::vec3(0.0f, 100.0f, -100.0f);
+    cameraVectors_.pos = glm::vec3(0.0f, 200.0f, -200.0f);
     cameraVectors_.target = glm::vec3(0.0f, 0.0f, 0.0f);
     cameraVectors_.up = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -53,7 +53,8 @@ Camera::Camera ()
 //      Method:  Camera
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Camera::Camera ( GLfloat pos[3], GLfloat target[3], GLfloat up[3] )
+Camera::Camera ( GLfloat pos[3], GLfloat target[3], GLfloat up[3] ) :
+    update_(false)
 {
     // If the provided vectors aren't specified, use a default one.
     cameraVectors_.pos = glm::vec3(pos[0], pos[1], pos[2]);
@@ -85,6 +86,7 @@ Camera::rotate ( GLfloat angle )
     // Reset the camera.
     cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target, 
                                 cameraVectors_.up);
+    update_ = true;
 }		// -----  end of method Camera::rotate  -----
 
 //-----------------------------------------------------------------------------
@@ -110,6 +112,7 @@ Camera::move ( GLfloat x, GLfloat y, GLfloat z )
     // Make the matrix
     cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target, 
                                 cameraVectors_.up);
+    update_ = true;
 }		// -----  end of method Camera::move  -----
 
 //-----------------------------------------------------------------------------
@@ -130,5 +133,6 @@ Camera::zoom ( GLfloat amount )
     // Reset the matrix.
     cameraMatrix_ = glm::lookAt(cameraVectors_.pos, cameraVectors_.target, 
                                 cameraVectors_.up);
+    update_ = true;
 }		// -----  end of method Camera::zoom  -----
 

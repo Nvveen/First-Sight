@@ -32,7 +32,7 @@
 #include    <iostream>
 #include    "Context.h"
 
-std::map<std::string, Shader> Context::shaders;
+std::map<std::string, Shader *> Context::shaders;
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
@@ -102,20 +102,18 @@ Context::setup ()
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glDepthMask(GL_TRUE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_3D);
 
     // Add shaders to shaderlist
-    Shader def = Shader("shaders/default.vs", "shaders/default.fs");
-    def.setUniformLocation("vProjection");
-    def.setUniformLocation("vCamera");
-    def.setUniformLocation("vTranslate");
-    def.setUniformLocation("vRotate");
-    def.setUniformLocation("vScale");
+    Shader *def = new Shader;
+    def->add("shaders/default.vs", GL_VERTEX_SHADER);
+    def->add("shaders/default.fs", GL_FRAGMENT_SHADER);
+    def->link();
+    def->setUniformLocation("vMVP");
+    def->setUniformLocation("texTransform");
     shaders["default"] = def;
-//    shaders["text"] = Shader("shaders/text.vs", "shaders/text.fs");
 }		// -----  end of method Context::setup  -----
 
 //-----------------------------------------------------------------------------
@@ -126,8 +124,7 @@ Context::setup ()
     void
 Context::clear ()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | 
-            GL_STENCIL_BUFFER_BIT );
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }		// -----  end of method Context::clear  -----
 
 //-----------------------------------------------------------------------------
@@ -138,19 +135,6 @@ Context::clear ()
     void
 Context::render ()
 {
-    // Get the amount of time that has passed since SDL_Init()
-    float currTime = SDL_GetTicks();
-    // Calculate the time that has elapsed.
-    fpsLimit_.timeElapsed = currTime - fpsLimit_.prevTime;
-    // If a limit is set and the current frame rendered faster than it is
-    // allowed to, do an SDL_Delay and reset the counters.
-    if ( fpsLimit_.timeElapsed < fpsLimit_.limit && fpsLimit_.limitSet ) {
-        SDL_Delay(fpsLimit_.limit - fpsLimit_.timeElapsed);
-        currTime = SDL_GetTicks();
-        fpsLimit_.timeElapsed = currTime - fpsLimit_.prevTime;
-    }
-    fpsLimit_.prevTime = currTime;
-    SDL_Delay(0);
     SDL_GL_SwapBuffers();
 }		// -----  end of method Context::render  -----
 

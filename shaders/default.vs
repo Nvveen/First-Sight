@@ -17,12 +17,12 @@ First Sight. If not, see <http://www.gnu.org/licenses/>. */
 in vec3 vVertex;
 in vec3 TexCoord;
 
-uniform mat4 vProjection, vCamera, vTranslate, vRotate, vScale;
+uniform mat4 vMVP;
 
 out vec3 TexCoord0;
 
 void main(void) {
-    mat4 vTransform = vProjection * vCamera * vTranslate * vRotate * vScale;
+    vec3 pos = vVertex;
     TexCoord0 = TexCoord;
-    gl_Position = vTransform * vec4(vVertex, 1.0);
+    gl_Position = vMVP * vec4(pos, 1.0);
 }

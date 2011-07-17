@@ -452,7 +452,7 @@ void Octree<T>::setNeighbors ( Node *node )
             if ( y+1 < cubeSize_ ) {
                 node->neighbors[CubeSides::Top] = nodeMap_[x][y+1][z];
                 if ( nodeMap_[x][y+1][z] != NULL )
-                    nodeMap_[x][y-1][z]->neighbors[CubeSides::Bottom] = node;
+                    nodeMap_[x][y+1][z]->neighbors[CubeSides::Bottom] = node;
             }
         }
         if ( z >= 0 && z < cubeSize_ ) {

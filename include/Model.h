@@ -19,13 +19,14 @@
 #define  MODEL_H
 
 #include    <vector>
+#include    <algorithm>
 #include    <list>
-#include    <sstream>
+#include    <chrono>
 #include    <fstream>
-#include    <GL/gl.h>
+#include    <GL/glew.h>
 #include    <glm/glm.hpp>
-#include    <glm/gtc/matrix_transform.hpp>
-#include    "Octree.h"
+
+#include    "Shader.h"
 
 // ============================================================================
 //        Class:  Model
@@ -34,95 +35,82 @@
 class Model
 {
     public:
-        // ====================  LIFECYCLE     ================================
+        typedef unsigned char Byte;
+        typedef unsigned int Uint;
         Model ( const std::string& fileName );
-        std::vector<GLfloat> createSliceField ();
-
-        // ====================  ACCESSORS     ================================
-        int size ();
-        GLuint getTextureID ( int i=0 );
-
-        // ====================  MUTATORS      ================================
-
-        // ====================  OPERATORS     ================================
-
-    protected:
-        // ====================  DATA MEMBERS  ================================
-
+        void draw ( Shader& shader );
+        template<class Func>
+        void setAnimation ( Func f, Uint duration, Uint limb, bool loop );
+        void startAnimation ( Uint limb );
     private:
-        class Voxel;
-        // ====================  LIFECYCLE     ================================
+        struct Voxel;
+        class Limb;
         void init ();
-        GLuint createVoxelImage ( std::list<Voxel *>& voxelList );
-        GLuint createVoxelAnimation ( std::list<Voxel *>& animList );
-        // ====================  DATA MEMBERS  ================================
-        int size_;
         std::string fileName_;
-        Octree<Voxel> *volData_;
-        std::list<Voxel *> voxelList_;
-        std::vector<std::list<Voxel *> > animationVoxels_;
-
-        GLuint texID_;
-        std::vector<glm::vec4> texMap_;
-        std::vector<GLuint> animationTexIDs_;
-
+        std::vector<Limb> limbList_;
 }; // -----  end of class Model  -----
 
 // ============================================================================
-//        Class:  Voxel
+//        Class:  Model::Limb
 //  Description:  
 // ============================================================================
-class Model::Voxel
+class Model::Limb
 {
     public:
-        // ====================  LIFECYCLE     ================================
-        Voxel ( glm::vec4 rgba=glm::vec4(1.0f), unsigned int x=0, 
-                unsigned int y=0, unsigned int z=0 ) : x_(x), y_(y), z_(z),
-                                                       rgba_(rgba) {}
-
-        // ====================  ACCESSORS     ================================
-
-        // ====================  MUTATORS      ================================
-
-        // ====================  OPERATORS     ================================
+        Limb ();                             // constructor
+        Limb ( std::list<Voxel>& voxels, std::vector<float>& offset,
+                      std::vector<Uint>& boxSize, bool moveable=false );
 
         friend class Model;
-    protected:
-        // ====================  DATA MEMBERS  ================================
-
     private:
-        // ====================  LIFECYCLE     ================================
-        // ====================  DATA MEMBERS  ================================
-        unsigned int x_;
-        unsigned int y_;
-        unsigned int z_;
-        glm::vec4 rgba_;
+        void createVoxelImage ( std::list<Voxel>& voxels, bool moveable );
+        void createVBO ();
 
-}; // -----  end of class Voxel  -----
+        GLuint vbo_, vao_, texID_;
+        Uint vertexCount_;
+        std::vector<float> offset_;
+        std::vector<Uint> boxSize_;
+        std::vector<glm::mat4> frames_;
+        std::vector<glm::mat4>::iterator frameIt_;
+
+        std::chrono::system_clock::duration animDuration_;
+        std::chrono::system_clock::time_point animBegin_;
+        bool loop_;
+        bool animating_;
+}; // -----  end of class Model::Limb  -----
+
+struct Model::Voxel {
+    Byte x, y, z;
+    glm::vec4 rgba;
+};
 
 //-----------------------------------------------------------------------------
 //       Class:  Model
-//      Method:  size
-// Description:  Return the size of the model.
+//      Method:  setAnimation
+// Description:  
 //-----------------------------------------------------------------------------
-    inline int
-Model::size ()
+template<class Func>
+    void
+Model::setAnimation ( Func f, Uint duration, Uint limb, bool loop )
 {
-    return size_;
-}		// -----  end of method Model::size  -----
+    Limb& l = limbList_.at(limb);
+    // Need error checking for f returning the correct type.
+    for ( Uint t = 0; t <= duration; t += 50 ) {
+        glm::mat4 prev = glm::mat4(1.0f);
+        if ( !l.frames_.empty() ) prev = l.frames_.back();
+        l.frames_.push_back(f(prev));
+    }
+    l.animDuration_ += std::chrono::milliseconds(duration);
+    l.loop_ = loop;
+    l.frameIt_ = l.frames_.begin();
+}		// -----  end of method Model::setAnimation  -----
 
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  getTextureID
-// Description:  Returns the ID of the voxel data map.
-//-----------------------------------------------------------------------------
-    inline GLuint
-Model::getTextureID ( int i )
+    inline void
+Model::startAnimation ( Uint limb )
 {
-    if ( i == 0 )
-        return texID_;
-    else
-        return animationTexIDs_[i-1];
-}		// -----  end of method Model::getTextureID  -----
+    Limb& l = limbList_.at(limb);
+    l.animBegin_ = std::chrono::system_clock::now();
+    l.animating_ = true;
+}		// -----  end of method Model::startAnimation  -----
 
 #endif   // ----- #ifndef MODEL_H  -----

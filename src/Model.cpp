@@ -16,6 +16,7 @@
 
 #include    <iostream>
 #include    <fstream>
+#include    <glm/gtc/matrix_transform.hpp>
 #include    "Model.h"
 
 //-----------------------------------------------------------------------------
@@ -24,7 +25,7 @@
 // Description:  constructor
 //-----------------------------------------------------------------------------
 Model::Model ( const std::string& fileName ) :
-    volData_(NULL), fileName_(fileName), size_(0)
+    fileName_(fileName)
 {
     init();
 }  // -----  end of method Model::Model  (constructor)  -----
@@ -42,213 +43,222 @@ Model::init ()
         std::cerr << "Error reading file " << fileName_ << "\n";
         exit(1);
     }
-    // Get the size first.
-    unsigned char blockSize;
-    unsigned int numAnim;
-    file.read(reinterpret_cast<char *>(&blockSize), sizeof(unsigned char));
-    size_ = (unsigned int)blockSize;
-    file.read(reinterpret_cast<char *>(&numAnim), sizeof(unsigned int));
-    // Initialize the octree.
-    volData_ = new Octree<Voxel>(log(size_)/log(2));
-
-    std::list<Voxel *>* currentList = &voxelList_;
-    int q = 0; // Variable to keep track of which list we're modifying.
-    while ( file.good() && q <= numAnim ) {
-        unsigned int size;
-        file.read(reinterpret_cast<char *>(&size), sizeof(unsigned int));
-        for ( unsigned int i = 0; i < size; i += 1 ) {
-            if ( !file.good() ) {
-                std::cerr << "Error reading model " << fileName_ << "\n";
-                exit(1);
-            }
-            unsigned char x, y, z, r, g, b, a;
-            file.read(reinterpret_cast<char *>(&x), sizeof(unsigned char));
-            file.read(reinterpret_cast<char *>(&y), sizeof(unsigned char));
-            file.read(reinterpret_cast<char *>(&z), sizeof(unsigned char));
-            file.read(reinterpret_cast<char *>(&r), sizeof(unsigned char));
-            file.read(reinterpret_cast<char *>(&g), sizeof(unsigned char));
-            file.read(reinterpret_cast<char *>(&b), sizeof(unsigned char));
-            file.read(reinterpret_cast<char *>(&a), sizeof(unsigned char));
-            glm::vec4 rgba = glm::vec4((float)r/255.0f, (float)g/255.0f,
-                                       (float)b/255.0f, (float)a/255.0f);
-            Voxel *vox = new Voxel(rgba, (unsigned int)x, (unsigned int)y,
-                                         (unsigned int)z);
-            currentList->push_back(vox);
-            if ( currentList == &voxelList_ ) {
-                volData_->insert((unsigned int)x, (unsigned int)y,
-                                 (unsigned int)z, vox);
-            }
+    Byte numLimbs;
+    file.read(reinterpret_cast<char *>(&numLimbs), sizeof(Byte));
+    for ( Uint i = 0; i < numLimbs; i += 1 ) {
+        Uint numVoxels;
+        Byte temp;
+        file.read(reinterpret_cast<char *>(&numVoxels), sizeof(Uint));
+        std::vector<float> offset(3);
+        file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
+        offset[0] = (float)temp;
+        file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
+        offset[1] = (float)temp;
+        file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
+        offset[2] = (float)temp;
+        std::vector<Uint> boxSize(3);
+        file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
+        boxSize[0] = (Uint)temp;
+        file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
+        boxSize[1] = (Uint)temp;
+        file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
+        boxSize[2] = (Uint)temp;
+        std::list<Voxel> limb;
+        for ( Uint j = 0; j < numVoxels; j += 1 ) {
+            Voxel v;
+            file.read(reinterpret_cast<char *>(&v.x), sizeof(Byte));
+            file.read(reinterpret_cast<char *>(&v.y), sizeof(Byte));
+            file.read(reinterpret_cast<char *>(&v.z), sizeof(Byte));
+            Byte info;
+            file.read(reinterpret_cast<char *>(&info), sizeof(Byte));
+            v.rgba[0] = (GLfloat)info / 255.0f;
+            file.read(reinterpret_cast<char *>(&info), sizeof(Byte));
+            v.rgba[1] = (GLfloat)info / 255.0f;
+            file.read(reinterpret_cast<char *>(&info), sizeof(Byte));
+            v.rgba[2] = (GLfloat)info / 255.0f;
+            file.read(reinterpret_cast<char *>(&info), sizeof(Byte));
+            v.rgba[3] = (GLfloat)info / 255.0f;
+            limb.push_back(v);
         }
-        animationVoxels_.resize(animationVoxels_.size()+1);
-        currentList = &animationVoxels_[q];
-        q += 1;
-    }
-    animationVoxels_.pop_back(); // Code adds one too many lists, so remove.
-    texID_ = createVoxelImage(voxelList_);
-    for ( std::list<Voxel *>& list : animationVoxels_ ) {
-        GLuint animID = createVoxelAnimation(list);
-        animationTexIDs_.push_back(animID);
+        bool moveable = false;
+        if ( i > 0 ) moveable = true;
+        limbList_.push_back(Limb(limb, offset, boxSize, moveable));
     }
     file.close();
 }		// -----  end of method Model::init  -----
 
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  createVoxelImage
-// Description:  With the available voxel data, this method creates the texture.
-//-----------------------------------------------------------------------------
-    GLuint
-Model::createVoxelImage ( std::list<Voxel *>& voxelList )
+    void
+Model::draw ( Shader& shader )
 {
-    GLuint texID;
-    // First we create the data-array representing the voxel model from the
-    // initial data we already have.
-    texMap_ = std::vector<glm::vec4>(size_*size_*size_, glm::vec4(0.0f));
-    // For every voxel that exists, we adjust that value in the empty array.
-    for ( std::list<Voxel *>::iterator it = voxelList.begin(); 
-          it != voxelList.end(); it++  ) {
-        unsigned short i, j, k;
-        i = (*it)->x_;
-        j = (*it)->y_;
-        k = (*it)->z_;
-        int index = i*size_*size_ + j*size_ + k;
-        texMap_[index] = (*it)->rgba_;
+    for ( Limb& l : limbList_ ) {
+        if ( l.animating_ ) {
+            glEnable(GL_POLYGON_OFFSET_FILL);
+            glPolygonOffset(0, 500);
+            auto elapsed = std::chrono::system_clock::now() - l.animBegin_;
+            if ( elapsed >= l.animDuration_ )
+                if ( l.loop_ ) l.animBegin_ = std::chrono::system_clock::now();
+                else l.animating_ = false;
+            l.frameIt_ = l.frames_.begin() + 
+                         elapsed/std::chrono::milliseconds(50);
+        }
+        else {
+            glPolygonOffset(0, 0);
+            glDisable(GL_POLYGON_OFFSET_FILL);
+        }
+        glBindVertexArray(l.vao_);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        shader.setUniform("texTransform", (*l.frameIt_));
+        glBindTexture(GL_TEXTURE_3D, l.texID_);
+        glDrawArrays(GL_TRIANGLES, 0, l.vertexCount_);
     }
-    // Now we have the 3D array, we can make an OpenGL 3D texture.
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_3D, texID);
-    // We don't want to interpolate between pixels.
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(0);
+    glBindVertexArray(0);
+}		// -----  end of method Model::draw  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model::Limb
+//      Method:  Model::Limb
+// Description:  constructor
+//-----------------------------------------------------------------------------
+Model::Limb::Limb ()
+{
+}  // -----  end of method Model::Limb::Model::Limb  (constructor)  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model::Limb
+//      Method:  Model::Limb
+// Description:  constructor
+//-----------------------------------------------------------------------------
+Model::Limb::Limb ( std::list<Voxel>& voxels, std::vector<float>& offset,
+                           std::vector<Uint>& boxSize, bool moveable ) :
+    offset_(offset), boxSize_(boxSize)
+{
+    createVoxelImage(voxels, moveable);
+    createVBO();
+    frames_.push_back(glm::mat4(1.0f));
+    frameIt_ = frames_.begin();
+    animating_ = false;
+    animDuration_ = std::chrono::system_clock::duration(0);
+}  // -----  end of method Model::Limb::Model::Limb  (constructor)  -----
+
+    void
+Model::Limb::createVoxelImage ( std::list<Voxel>& voxels, bool moveable )
+{
+    if ( moveable ) {
+        auto it = std::max_element(boxSize_.begin(), boxSize_.end());
+        Uint maxSize = *it;
+        for ( Uint& d : boxSize_ ) {
+            if ( d != maxSize ) d += maxSize;
+            d += maxSize;
+        }
+        for ( Voxel& v : voxels ) {
+            v.x += maxSize; v.y += maxSize; v.z += maxSize;
+            if ( it == boxSize_.begin() ) v.x += maxSize;
+            else if ( it == boxSize_.begin()+1 ) v.y += maxSize;
+            else if ( it == boxSize_.begin()+2 ) v.z += maxSize;
+        }
+        if ( it != boxSize_.begin() ) offset_[0] -= maxSize;
+        if ( it != boxSize_.begin()+1 ) offset_[1] -= maxSize;
+        if ( it != boxSize_.begin()+2 ) offset_[2] -= maxSize;
+    }
+    std::vector<glm::vec4> texMap(boxSize_[0]*boxSize_[1]*boxSize_[2],
+                                  glm::vec4(0));
+    for ( Voxel& v : voxels ) {
+        Uint index = v.z*boxSize_[0]*boxSize_[1] + v.y*boxSize_[0] + v.x;
+        texMap[index] = v.rgba;
+    }
+    glGenTextures(1, &texID_);
+    glBindTexture(GL_TEXTURE_3D, texID_);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // Fill the texture with data.
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, size_, size_, size_, 0, GL_RGBA,
-                 GL_FLOAT, &texMap_[0]);
-    return texID;
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, boxSize_[0], boxSize_[1],
+                 boxSize_[2], 0, GL_RGBA, GL_FLOAT, &texMap[0]);
+    glBindTexture(GL_TEXTURE_3D, 0);
 }		// -----  end of method Model::createVoxelImage  -----
 
-    GLuint
-Model::createVoxelAnimation ( std::list<Voxel *>& animList )
+    void
+Model::Limb::createVBO ()
 {
-    GLuint texID;
-    std::vector<glm::vec4> animMap = texMap_;
-    for ( Voxel* v : animList ) {
-        unsigned int index = v->x_*size_*size_ + v->y_*size_ + v->z_;
-        animMap[index] = v->rgba_;
-    }
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_3D, texID);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, size_, size_, size_, 0, GL_RGBA,
-                 GL_FLOAT, &animMap[0]);
-    return texID;
-}		// -----  end of method Model::createVoxelAnimation  -----
+    std::vector<GLfloat> data;
+    std::vector<GLfloat> b = { (GLfloat)boxSize_[0], (GLfloat)boxSize_[1],
+                               (GLfloat)boxSize_[2] };
+    std::vector<GLfloat> o = offset_;
+    for ( GLfloat z = o[2]; z < b[2]+o[2]; z += 1 ) {
+        GLfloat t = (z-o[2]+0.5)/b[2];
+        std::vector<GLfloat> slice = {
+            o[0],      o[1],        z, 0.0f, 0.0f, t,
+            o[0],      o[1]+b[1],   z, 0.0f, 1.0f, t,
+            o[0]+b[0], o[1]+b[1],   z, 1.0f, 1.0f, t,
+            o[0],      o[1],        z, 0.0f, 0.0f, t,
+            o[0]+b[0], o[1]+b[1],   z, 1.0f, 1.0f, t,
+            o[0]+b[0], o[1],        z, 1.0f, 0.0f, t,
 
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  createSliceField
-// Description:  Create for each axis the front and back slices.
-//-----------------------------------------------------------------------------
-    std::vector<GLfloat>
-Model::createSliceField ()
-{
-    // If we have the 3D texture that represents the model, we visualize it by
-    // rendering slices of every pixel plane in an axis.
-    std::vector<GLfloat> data(36*size_*6, 0.0f);
-    unsigned int p = 0;
-    for ( int i = size_-1; i >= 0; i -= 1 ) {
-        GLfloat q = ((GLfloat)i-0.5f)/(GLfloat)size_; // steps in the texture.
-        GLfloat r = (GLfloat)size_; // End points for the quads.
-        // XY slice.
-        data[p   ] = 0.0f; data[p+1 ] = 0.0f; data[p+2 ] = i;
-        data[p+3 ] = 0.0f; data[p+4 ] = 0.0f; data[p+5 ] = q;
-        data[p+6 ] = 0.0f; data[p+7 ] =    r; data[p+8 ] = i;
-        data[p+9 ] = 0.0f; data[p+10] = 1.0f; data[p+11] = q;
-        data[p+12] =    r; data[p+13] =    r; data[p+14] = i;
-        data[p+15] = 1.0f; data[p+16] = 1.0f; data[p+17] = q;
-        data[p+18] = 0.0f; data[p+19] = 0.0f; data[p+20] = i;
-        data[p+21] = 0.0f; data[p+22] = 0.0f; data[p+23] = q;
-        data[p+24] =    r; data[p+25] =    r; data[p+26] = i;
-        data[p+27] = 1.0f; data[p+28] = 1.0f; data[p+29] = q;
-        data[p+30] =    r; data[p+31] = 0.0f; data[p+32] = i;
-        data[p+33] = 1.0f; data[p+34] = 0.0f; data[p+35] = q;
-        p += 36;
-        // XZ slice.
-        data[p   ] =    r; data[p+1 ] =    i; data[p+2 ] = 0.0f;
-        data[p+3 ] = 1.0f; data[p+4 ] =    q; data[p+5 ] = 0.0f;
-        data[p+6 ] =    r; data[p+7 ] =    i; data[p+8 ] =    r;
-        data[p+9 ] = 1.0f; data[p+10] =    q; data[p+11] = 1.0f;
-        data[p+12] = 0.0f; data[p+13] =    i; data[p+14] =    r;
-        data[p+15] = 0.0f; data[p+16] =    q; data[p+17] = 1.0f;
-        data[p+18] =    r; data[p+19] =    i; data[p+20] = 0.0f;
-        data[p+21] = 1.0f; data[p+22] =    q; data[p+23] = 0.0f;
-        data[p+24] = 0.0f; data[p+25] =    i; data[p+26] =    r;
-        data[p+27] = 0.0f; data[p+28] =    q; data[p+29] = 1.0f;
-        data[p+30] = 0.0f; data[p+31] =    i; data[p+32] = 0.0f;
-        data[p+33] = 0.0f; data[p+34] =    q; data[p+35] = 0.0f;
-        p += 36;
-        // YZ slice.
-        data[p   ] =    i; data[p+1 ] = 0.0f; data[p+2 ] =    r;
-        data[p+3 ] =    q; data[p+4 ] = 0.0f; data[p+5 ] = 1.0f;
-        data[p+6 ] =    i; data[p+7 ] =    r; data[p+8 ] =    r;
-        data[p+9 ] =    q; data[p+10] = 1.0f; data[p+11] = 1.0f;
-        data[p+12] =    i; data[p+13] =    r; data[p+14] = 0.0f;
-        data[p+15] =    q; data[p+16] = 1.0f; data[p+17] = 0.0f;
-        data[p+18] =    i; data[p+19] = 0.0f; data[p+20] =    r;
-        data[p+21] =    q; data[p+22] = 0.0f; data[p+23] = 1.0f;
-        data[p+24] =    i; data[p+25] =    r; data[p+26] = 0.0f;
-        data[p+27] =    q; data[p+28] = 1.0f; data[p+29] = 0.0f;
-        data[p+30] =    i; data[p+31] = 0.0f; data[p+32] = 0.0f;
-        data[p+33] =    q; data[p+34] = 0.0f; data[p+35] = 0.0f;
-        p += 36;
+            o[0]+b[0], o[1],      z+1, 1.0f, 0.0f, t,
+            o[0]+b[0], o[1]+b[1], z+1, 1.0f, 1.0f, t,
+            o[0],      o[1]+b[1], z+1, 0.0f, 1.0f, t,
+            o[0]+b[0], o[1],      z+1, 1.0f, 0.0f, t,
+            o[0],      o[1]+b[1], z+1, 0.0f, 1.0f, t,
+            o[0],      o[1],      z+1, 0.0f, 0.0f, t,
+        };
+        data.insert(data.end(), slice.begin(), slice.end());
     }
-    // Backwards facing slices.
-    for ( int i = 0; i < size_; i += 1 ) {
-        GLfloat q = ((GLfloat)i+0.5f)/(GLfloat)size_;
-        GLfloat r = (GLfloat)size_; // End points for the quads.
-        // XY slice.
-        data[p   ] =    r; data[p+1 ] = 0.0f; data[p+2 ] = i;
-        data[p+3 ] = 1.0f; data[p+4 ] = 0.0f; data[p+5 ] = q;
-        data[p+6 ] =    r; data[p+7 ] =    r; data[p+8 ] = i;
-        data[p+9 ] = 1.0f; data[p+10] = 1.0f; data[p+11] = q;
-        data[p+12] = 0.0f; data[p+13] =    r; data[p+14] = i;
-        data[p+15] = 0.0f; data[p+16] = 1.0f; data[p+17] = q;
-        data[p+18] =    r; data[p+19] = 0.0f; data[p+20] = i;
-        data[p+21] = 1.0f; data[p+22] = 0.0f; data[p+23] = q;
-        data[p+24] = 0.0f; data[p+25] =    r; data[p+26] = i;
-        data[p+27] = 0.0f; data[p+28] = 1.0f; data[p+29] = q;
-        data[p+30] = 0.0f; data[p+31] = 0.0f; data[p+32] = i;
-        data[p+33] = 0.0f; data[p+34] = 0.0f; data[p+35] = q;
-        p += 36;
-        // XZ slice.
-        data[p   ] = 0.0f; data[p+1 ] =    i; data[p+2 ] = 0.0f;
-        data[p+3 ] = 0.0f; data[p+4 ] =    q; data[p+5 ] = 0.0f;
-        data[p+6 ] = 0.0f; data[p+7 ] =    i; data[p+8 ] =    r;
-        data[p+9 ] = 0.0f; data[p+10] =    q; data[p+11] = 1.0f;
-        data[p+12] =    r; data[p+13] =    i; data[p+14] =    r;
-        data[p+15] = 1.0f; data[p+16] =    q; data[p+17] = 1.0f;
-        data[p+18] = 0.0f; data[p+19] =    i; data[p+20] = 0.0f;
-        data[p+21] = 0.0f; data[p+22] =    q; data[p+23] = 0.0f;
-        data[p+24] =    r; data[p+25] =    i; data[p+26] =    r;
-        data[p+27] = 1.0f; data[p+28] =    q; data[p+29] = 1.0f;
-        data[p+30] =    r; data[p+31] =    i; data[p+32] = 0.0f;
-        data[p+33] = 1.0f; data[p+34] =    q; data[p+35] = 0.0f;
-        p += 36;
-        // YZ slice.
-        data[p   ] =    i; data[p+1 ] = 0.0f; data[p+2 ] = 0.0f;
-        data[p+3 ] =    q; data[p+4 ] = 0.0f; data[p+5 ] = 0.0f;
-        data[p+6 ] =    i; data[p+7 ] =    r; data[p+8 ] = 0.0f;
-        data[p+9 ] =    q; data[p+10] = 1.0f; data[p+11] = 0.0f;
-        data[p+12] =    i; data[p+13] =    r; data[p+14] =    r;
-        data[p+15] =    q; data[p+16] = 1.0f; data[p+17] = 1.0f;
-        data[p+18] =    i; data[p+19] = 0.0f; data[p+20] = 0.0f;
-        data[p+21] =    q; data[p+22] = 0.0f; data[p+23] = 0.0f;
-        data[p+24] =    i; data[p+25] =    r; data[p+26] =    r;
-        data[p+27] =    q; data[p+28] = 1.0f; data[p+29] = 1.0f;
-        data[p+30] =    i; data[p+31] = 0.0f; data[p+32] =    r;
-        data[p+33] =    q; data[p+34] = 0.0f; data[p+35] = 1.0f;
-        p += 36;
-    }
-    return data;
-}		// -----  end of method Model::createSliceField  -----
+    for ( GLfloat x = o[0]; x < b[0]+o[0]; x += 1 ) {
+        GLfloat r = (x-o[0]+0.5f)/b[0];
+        std::vector<GLfloat> slice = {
+            x, o[1],      o[2]+b[2], r, 0.0f, 1.0f,
+            x, o[1]+b[1], o[2]+b[2], r, 1.0f, 1.0f,
+            x, o[1]+b[1], o[2],      r, 1.0f, 0.0f,
+            x, o[1],      o[2]+b[2], r, 0.0f, 1.0f,
+            x, o[1]+b[1], o[2],      r, 1.0f, 0.0f,
+            x, o[1],      o[2],      r, 0.0f, 0.0f,
 
+            x+1, o[1],      o[2],      r, 0.0f, 0.0f,
+            x+1, o[1]+b[1], o[2],      r, 1.0f, 0.0f,
+            x+1, o[1]+b[1], o[2]+b[2], r, 1.0f, 1.0f,
+            x+1, o[1],      o[2],      r, 0.0f, 0.0f,
+            x+1, o[1]+b[1], o[2]+b[2], r, 1.0f, 1.0f,
+            x+1, o[1],      o[2]+b[2], r, 0.0f, 1.0f,
+        };
+        data.insert(data.end(), slice.begin(), slice.end());
+    }
+    for ( GLfloat y = o[1]; y < b[1]+o[1]; y += 1 ) {
+        GLfloat s = (y-o[1]+0.5f)/b[1];
+        std::vector<GLfloat> slice = {
+            o[0],      y, o[2]+b[2], 0.0f, s, 1.0f,
+            o[0],      y, o[2],      0.0f, s, 0.0f,
+            o[0]+b[0], y, o[2],      1.0f, s, 0.0f,
+            o[0],      y, o[2]+b[2], 0.0f, s, 1.0f,
+            o[0]+b[0], y, o[2],      1.0f, s, 0.0f,
+            o[0]+b[0], y, o[2]+b[2], 1.0f, s, 1.0f,
+
+            o[0],      y+1, o[2],      0.0f, s, 0.0f,
+            o[0],      y+1, o[2]+b[2], 0.0f, s, 1.0f,
+            o[0]+b[0], y+1, o[2]+b[2], 1.0f, s, 1.0f,
+            o[0],      y+1, o[2],      0.0f, s, 0.0f,
+            o[0]+b[0], y+1, o[2]+b[2], 1.0f, s, 1.0f,
+            o[0]+b[0], y+1, o[2],      1.0f, s, 0.0f,
+        };
+        data.insert(data.end(), slice.begin(), slice.end());
+    }
+    vertexCount_ = data.size()/6;
+    glGenVertexArrays(1, &vao_);
+    glBindVertexArray(vao_);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    glGenBuffers(1, &vbo_);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*data.size(), &data[0],
+                 GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*6,
+                          (const GLvoid *)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*6,
+                          (const GLvoid *)12);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(0);
+    glBindVertexArray(0);
+}		// -----  end of method Model::createVBO  -----

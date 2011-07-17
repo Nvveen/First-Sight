@@ -50,8 +50,12 @@ class Camera
         void rotate ( GLfloat angle );
         void move ( GLfloat x, GLfloat y, GLfloat z );
         void zoom ( GLfloat amount );
+        bool changed ();
+        void clearUpdate ();
 
         glm::mat4& getCamera ();
+        glm::vec3 getPosition ();
+        glm::vec3 getDirection ();
 
     private:
         struct {
@@ -61,7 +65,30 @@ class Camera
         } cameraVectors_;
 
         glm::mat4 cameraMatrix_;
+        bool update_;
 }; // -----  end of class Camera  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Camera
+//      Method:  changed
+// Description:  Returns whether the camera vectors have changed.
+//-----------------------------------------------------------------------------
+    inline bool
+Camera::changed ()
+{
+    return update_;
+}		// -----  end of method Camera::changed  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Camera
+//      Method:  clearUpdate
+// Description:  Clears the update-state.
+//-----------------------------------------------------------------------------
+    inline void
+Camera::clearUpdate ()
+{
+    update_ = false;
+}		// -----  end of method Camera::clearUpdate  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Camera
@@ -73,5 +100,24 @@ Camera::getCamera ()
 {
     return cameraMatrix_;
 }		// -----  end of method Camera::getCamera  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Camera
+//      Method:  getPosition
+// Description:  Returns the position of the camera.
+//-----------------------------------------------------------------------------
+    inline glm::vec3
+Camera::getPosition ()
+{
+    return cameraVectors_.pos;
+}		// -----  end of method Camera::getPosition  -----
+
+    inline glm::vec3
+Camera::getDirection ()
+{
+    return glm::vec3(cameraVectors_.pos[0]*-1,
+                     cameraVectors_.pos[1]*-1,
+                     cameraVectors_.pos[2]*-1);
+}		// -----  end of method Camera::getDirection  -----
 
 #endif   // ----- #ifndef CAMERA_H  -----

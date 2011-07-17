@@ -32,6 +32,7 @@
 #define  SHADER_H
 
 #include    <string>
+#include    <vector>
 #include    <map>
 #include    <GL/glew.h>
 #include    <glm/glm.hpp>
@@ -46,20 +47,22 @@ class Shader
 
         // ====================  LIFECYCLE     ================================
         Shader ();
-        Shader ( std::string vertexShaderFile, std::string fragmentShaderFile,
-                 std::string geoShaderFile="" );
         virtual ~Shader ();
 
+        void add ( std::string fileName, GLenum type );
+        void link ();
         void bind ();
         void unbind ();
+        void setTransform ( std::vector<std::string> names );
 
         // ====================  ACCESSORS     ================================
         GLuint getShaderProgram();
 
         // ====================  MUTATORS      ================================
-        bool setUniform ( std::string name, glm::mat4& matrix );
         bool setUniform ( std::string name, GLfloat val );
-        bool setUniform ( std::string name, glm::vec4& vec );
+        bool setUniform ( std::string name, glm::vec3 vec );
+        bool setUniform ( std::string name, glm::vec4 vec );
+        bool setUniform ( std::string name, glm::mat4 matrix );
         void setUniformLocation ( std::string name );
 
         // ====================  OPERATORS     ================================
@@ -69,22 +72,16 @@ class Shader
 
     private:
         // ====================  DATA MEMBERS  ================================
-        std::string vertexShaderCode_;
-        std::string fragmentShaderCode_;
-        std::string geoShaderCode_;
-
-        static std::map<std::string, GLuint> codeNames_;
-
-        GLuint vertexShaderObject_;
-        GLuint fragmentShaderObject_;
-        GLuint geoShaderObject_;
+        std::map<GLenum, std::string> shaderCodes_;
+        std::map<GLenum, GLuint> shaderObjects_;
         GLuint shaderProgram_;
 
-        std::map<std::string, int> uniformLocs;
+        std::map<std::string, GLint> uniformLocs;
 
         std::string addCode ( std::string fileName );
         GLuint      compileShader ( std::string code, GLenum type );
-        void        createProgram ();
+
+        bool bound_;
 }; // -----  end of class Shader  -----
 
 //-----------------------------------------------------------------------------
@@ -106,7 +103,9 @@ Shader::getShaderProgram ()
     inline void
 Shader::bind ()
 {
-    if ( shaderProgram_ ) glUseProgram(shaderProgram_);
+    if ( !bound_ )
+        glUseProgram(shaderProgram_);
+    bound_ = true;
 }		// -----  end of method Shader::bind  -----
 
 //-----------------------------------------------------------------------------
@@ -117,7 +116,9 @@ Shader::bind ()
     inline void
 Shader::unbind ()
 {
-    if ( shaderProgram_ ) glUseProgram(0);
+    if ( bound_ )
+        glUseProgram(0);
+    bound_ = false;
 }		// -----  end of method Shader::unbind  -----
 
 //-----------------------------------------------------------------------------

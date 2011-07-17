@@ -71,7 +71,7 @@ class Context
 
         friend class EventHandler;
         // ====================  DATA MEMBERS  ================================
-        static std::map<std::string, Shader> shaders;
+        static std::map<std::string, Shader *> shaders;
 
     private:
         // ====================  DATA MEMBERS  ================================

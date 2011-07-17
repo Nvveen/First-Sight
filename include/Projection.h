@@ -50,6 +50,7 @@ class Projection
 
         // ====================  ACCESSORS     ================================
         virtual glm::mat4& getMatrix ();
+        virtual std::pair<GLfloat, GLfloat> getWindowSize ();
 
         // ====================  MUTATORS      ================================
         virtual void setAspectRatio ( GLfloat w, GLfloat h );
@@ -70,7 +71,7 @@ class Perspective : public Projection
 
         // ====================  LIFECYCLE     ================================
         Perspective ( GLfloat w, GLfloat h, GLfloat FOV=45.0f, 
-                      GLfloat zNear=1.0f, GLfloat zFar=1000.0f ) :
+                      GLfloat zNear=20.0f, GLfloat zFar=500.0f ) :
                     Projection(w,h), FOV_(FOV), zNear_(zNear), zFar_(zFar)
         {
             init ();
@@ -109,6 +110,17 @@ Projection::getMatrix ()
 {
     return matrix_;
 }		// -----  end of method Projection::getMatrix  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Projection
+//      Method:  getWindowSize
+// Description:  Return the window size as a std::pair.
+//-----------------------------------------------------------------------------
+    inline std::pair<GLfloat, GLfloat>
+Projection::getWindowSize ()
+{
+    return std::pair<GLfloat, GLfloat>(w_, h_);
+}		// -----  end of method Projection::getWindowSize  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Projection

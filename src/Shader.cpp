@@ -30,80 +30,20 @@
 
 #include    <fstream>
 #include    <iostream>
+#include    <sstream>
 #include    <cstdlib>
 #include    <glm/gtc/type_ptr.hpp>
 #include    "Shader.h"
 
-std::map<std::string, GLuint> Shader::codeNames_;
-
 //-----------------------------------------------------------------------------
 //       Class:  Shader
 //      Method:  Shader
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Shader::Shader ()
+Shader::Shader () : bound_(false)
 {
-}  // -----  end of method Shader::Shader  (constructor)  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Shader
-//      Method:  Shader
-// Description:  constructor
-//-----------------------------------------------------------------------------
-Shader::Shader ( std::string vertexShaderFile, std::string fragmentShaderFile,
-                 std::string geoShaderFile )
-{
-    // Check if the object has already been compiled for the shaders.
-    std::map<std::string, GLuint>::iterator it;
-    it = codeNames_.find(vertexShaderFile);
-    // Vertex shader
-    if ( it != codeNames_.end() ) {
-        vertexShaderObject_ = (*it).second;
-    }
-    else {
-        vertexShaderCode_ = addCode(vertexShaderFile);
-        vertexShaderObject_ = compileShader(vertexShaderCode_, 
-                                            GL_VERTEX_SHADER);
-        codeNames_[vertexShaderFile] = vertexShaderObject_;
-    }
-    it = codeNames_.find(fragmentShaderFile);
-    // Fragment shader
-    if ( it != codeNames_.end() ) {
-        fragmentShaderObject_ = (*it).second;
-    }
-    else {
-        fragmentShaderCode_ = addCode(fragmentShaderFile);
-        fragmentShaderObject_ = compileShader(fragmentShaderCode_, 
-                                             GL_FRAGMENT_SHADER);
-        codeNames_[fragmentShaderFile] = fragmentShaderObject_;
-    }
-    // Optional geometry shader
-    if ( geoShaderFile.size() > 0 ) {
-        it = codeNames_.find(geoShaderFile);
-        if ( it != codeNames_.end() ) {
-            geoShaderObject_ = (*it).second;
-        }
-        else {
-            geoShaderCode_ = addCode(geoShaderFile);
-            geoShaderObject_ = compileShader(geoShaderCode_, 
-                                             GL_GEOMETRY_SHADER);
-            codeNames_[geoShaderFile] = geoShaderObject_;
-        }
-    }
-    // Create shader program
-    createProgram();
-    if ( geoShaderFile.size() > 0 ) {
-        // We also need to define the types of input and output the geometry
-        // shader has to handle.
-        glProgramParameteriARB(shaderProgram_, GL_GEOMETRY_INPUT_TYPE_ARB, 
-                               GL_POINTS);
-        glProgramParameteriARB(shaderProgram_, GL_GEOMETRY_OUTPUT_TYPE_ARB, 
-                               GL_TRIANGLE_STRIP);
-        GLint temp;
-        glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB, &temp);
-        glProgramParameteriARB(shaderProgram_, GL_GEOMETRY_VERTICES_OUT_ARB, 
-                               temp);
-    }
+    // Create the shader program
+    shaderProgram_ = glCreateProgram();
 }  // -----  end of method Shader::Shader  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -117,46 +57,22 @@ Shader::~Shader ()
 
 //-----------------------------------------------------------------------------
 //       Class:  Shader
-//      Method:  setUniform
-// Description:  Sets a uniform variable for the shader.
+//      Method:  add
+// Description:  Add the shader object by compiling the source.
 //-----------------------------------------------------------------------------
-    bool
-Shader::setUniform ( std::string name, glm::mat4& matrix )
+    void
+Shader::add ( std::string fileName, GLenum type )
 {
-    if ( shaderProgram_ ) {
-        glUniformMatrix4fv(uniformLocs[name], 1, GL_FALSE, 
-                           glm::value_ptr(matrix));
+    if ( shaderCodes_.find(type) != shaderCodes_.end() ) {
+        std::cerr << "The shader program already has an object of this type.\n";
+        exit(1);
     }
-    return true;
-}		// -----  end of method Shader::setUniform  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Shader
-//      Method:  setUniform
-// Description:  Sets a uniform variable for the shader.
-//-----------------------------------------------------------------------------
-    bool
-Shader::setUniform ( std::string name, GLfloat val )
-{
-    if ( shaderProgram_ ) {
-        glUniform1i(uniformLocs[name], val);
-    }
-    return true;
-}		// -----  end of method Shader::setUniform  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Shader
-//      Method:  setUniform
-// Description:  Sets a uniform variable for the shader.
-//-----------------------------------------------------------------------------
-    bool
-Shader::setUniform ( std::string name, glm::vec4& vec )
-{
-    if ( shaderProgram_ ) {
-        glUniform4f(uniformLocs[name], vec.x, vec.y, vec.z, vec.w);
-    }
-    return true;
-}		// -----  end of method Shader::setUniform  -----
+    std::string code = addCode(fileName);
+    shaderCodes_.insert(std::pair<GLenum, std::string>(type, code));
+    GLuint object = compileShader(code, type);
+    shaderObjects_.insert(std::pair<GLenum, GLuint>(type, object));
+    glAttachShader(shaderProgram_, object);
+}		// -----  end of method Shader::add  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Shader
@@ -166,23 +82,48 @@ Shader::setUniform ( std::string name, glm::vec4& vec )
     std::string
 Shader::addCode ( std::string fileName )
 {
-    std::string shaderCode;
+    std::stringstream shaderCode(std::ios::out);
     std::ifstream file;
-    // Open the file
     file.open(fileName.c_str(), std::ios::in);
     if ( !file.good() ) {
         std::cerr << "Error opening " << fileName << "\n";
         exit(1);
     }
-    // Get each character and append to string.
-    while ( !file.eof() ) {
-        shaderCode.push_back(file.get());
-    }
-    // The last character of the code needs to be set to a terminating
-    // character.
-    shaderCode[shaderCode.length()-1] = '\0';
-    return shaderCode;
+    shaderCode << file.rdbuf();
+    return shaderCode.str();
 }		// -----  end of method Shader::addCode  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  link
+// Description:  Link the shader program to all specified objects.
+//-----------------------------------------------------------------------------
+    void
+Shader::link ()
+{
+    GLint success;
+    // Link program.
+    glLinkProgram(shaderProgram_);
+    glGetProgramiv(shaderProgram_, GL_LINK_STATUS, &success);
+    // Error check for linking
+    if ( success == GL_FALSE ) {
+        GLchar errorLog[1024];
+        glGetProgramInfoLog(shaderProgram_, sizeof(errorLog), NULL, errorLog);
+        std::cerr << "Error linking shader program: " << errorLog << "\n";
+        exit(1);
+    }
+
+    glValidateProgram(shaderProgram_);
+    glGetProgramiv(shaderProgram_, GL_VALIDATE_STATUS, &success);
+    // Error check for validation
+    if ( success == GL_FALSE ) {
+        GLchar errorLog[1024];
+        glGetProgramInfoLog(shaderProgram_, sizeof(errorLog), NULL, errorLog);
+        std::cerr << "Invalid shader program: " << errorLog << "\n";
+        exit(1);
+    }
+    unbind();
+}		// -----  end of method Shader::link  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Shader
@@ -220,44 +161,74 @@ Shader::compileShader ( std::string code, GLenum type )
     return shader;
 }		// -----  end of method Shader::compileShader  -----
 
+    void
+Shader::setTransform ( std::vector<std::string> names )
+{
+    const char *cNames[names.size()];
+    unsigned int i = 0;
+    for ( std::string& name : names ) {
+        cNames[i] = name.c_str();
+        i += 1;
+    }
+    // I fucking hate C strings.
+    glTransformFeedbackVaryings(shaderProgram_, names.size(),
+            cNames, GL_INTERLEAVED_ATTRIBS);
+}		// -----  end of method Shader::setTransform  -----
+
 //-----------------------------------------------------------------------------
 //       Class:  Shader
-//      Method:  createProgram
-// Description:  Creates a shader program from the specified shaders, by 
-//               linking them and then verifying them.
+//      Method:  setUniform
+// Description:  Sets a uniform variable for the shader.
 //-----------------------------------------------------------------------------
-    void
-Shader::createProgram ()
+    bool
+Shader::setUniform ( std::string name, GLfloat val )
 {
-    // Create the shader program
-    shaderProgram_ = glCreateProgram();
-    // Attach them
-    glAttachShader(shaderProgram_, vertexShaderObject_);
-    glAttachShader(shaderProgram_, fragmentShaderObject_);
-    if ( geoShaderCode_.size() > 0 ) {
-        glAttachShader(shaderProgram_, geoShaderObject_);
+    if ( shaderProgram_ ) {
+        glUniform1i(uniformLocs[name], val);
     }
-    GLint success;
-    // Link them
-    glLinkProgram(shaderProgram_);
-    glGetProgramiv(shaderProgram_, GL_LINK_STATUS, &success);
-    // Error check for linking
-    if ( success == GL_FALSE ) {
-        GLchar errorLog[1024];
-        glGetProgramInfoLog(shaderProgram_, sizeof(errorLog), NULL, errorLog);
-        std::cerr << "Error linking shader program: " << errorLog << "\n";
-        exit(1);
-    }
+    return true;
+}		// -----  end of method Shader::setUniform  -----
 
-    glValidateProgram(shaderProgram_);
-    glGetProgramiv(shaderProgram_, GL_VALIDATE_STATUS, &success);
-    // Error check for validation
-    if ( success == GL_FALSE ) {
-        GLchar errorLog[1024];
-        glGetProgramInfoLog(shaderProgram_, sizeof(errorLog), NULL, errorLog);
-        std::cerr << "Invalid shader program: " << errorLog << "\n";
-        exit(1);
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  setUniform
+// Description:  Sets a uniform variable for the shader.
+//-----------------------------------------------------------------------------
+    bool
+Shader::setUniform ( std::string name, glm::vec3 vec )
+{
+    if ( shaderProgram_ ) {
+        glUniform3f(uniformLocs[name], vec.x, vec.y, vec.z);
     }
-    unbind();
-}		// -----  end of method Shader::createProgram  -----
+    return true;
+}		// -----  end of method Shader::setUniform  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  setUniform
+// Description:  Sets a uniform variable for the shader.
+//-----------------------------------------------------------------------------
+    bool
+Shader::setUniform ( std::string name, glm::vec4 vec )
+{
+    if ( shaderProgram_ ) {
+        glUniform4f(uniformLocs[name], vec.x, vec.y, vec.z, vec.w);
+    }
+    return true;
+}		// -----  end of method Shader::setUniform  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  setUniform
+// Description:  Sets a uniform variable for the shader.
+//-----------------------------------------------------------------------------
+    bool
+Shader::setUniform ( std::string name, glm::mat4 matrix )
+{
+    if ( shaderProgram_ ) {
+        glUniformMatrix4fv(uniformLocs[name], 1, GL_FALSE, 
+                           glm::value_ptr(matrix));
+    }
+    return true;
+}		// -----  end of method Shader::setUniform  -----
 
