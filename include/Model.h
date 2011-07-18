@@ -19,7 +19,6 @@
 #define  MODEL_H
 
 #include    <vector>
-#include    <algorithm>
 #include    <list>
 #include    <chrono>
 #include    <fstream>
@@ -40,14 +39,19 @@ class Model
         Model ( const std::string& fileName );
         void draw ( Shader& shader );
         template<class Func>
-        void setAnimation ( Func f, Uint duration, Uint limb, bool loop );
-        void startAnimation ( Uint limb );
+        void setAnimation ( Func f, Uint duration, Uint limb, Uint animID );
+        void startAnimation ( short animID, bool loop=false );
     private:
         struct Voxel;
         class Limb;
         void init ();
         std::string fileName_;
         std::vector<Limb> limbList_;
+
+        short animID_;
+        bool animLoop_;
+        std::vector<std::chrono::system_clock::duration> animDurations_;
+        std::chrono::system_clock::time_point animBegin_;
 }; // -----  end of class Model  -----
 
 // ============================================================================
@@ -70,13 +74,7 @@ class Model::Limb
         Uint vertexCount_;
         std::vector<float> offset_;
         std::vector<Uint> boxSize_;
-        std::vector<glm::mat4> frames_;
-        std::vector<glm::mat4>::iterator frameIt_;
-
-        std::chrono::system_clock::duration animDuration_;
-        std::chrono::system_clock::time_point animBegin_;
-        bool loop_;
-        bool animating_;
+        std::vector<std::vector<glm::mat4>> anims_;
 }; // -----  end of class Model::Limb  -----
 
 struct Model::Voxel {
@@ -91,26 +89,32 @@ struct Model::Voxel {
 //-----------------------------------------------------------------------------
 template<class Func>
     void
-Model::setAnimation ( Func f, Uint duration, Uint limb, bool loop )
+Model::setAnimation ( Func f, Uint duration, Uint limb, Uint animID )
 {
-    Limb& l = limbList_.at(limb);
-    // Need error checking for f returning the correct type.
-    for ( Uint t = 0; t <= duration; t += 50 ) {
-        glm::mat4 prev = glm::mat4(1.0f);
-        if ( !l.frames_.empty() ) prev = l.frames_.back();
-        l.frames_.push_back(f(prev));
+    for ( Limb& l : limbList_ ) {
+        assert(animID <= l.anims_.size());
+        if ( animID == l.anims_.size() ) {
+            // Push new animation
+            l.anims_.push_back(std::vector<glm::mat4>(1, glm::mat4(1.0f)));
+        }
     }
-    l.animDuration_ += std::chrono::milliseconds(duration);
-    l.loop_ = loop;
-    l.frameIt_ = l.frames_.begin();
+    assert(animID <= animDurations_.size());
+    if ( animID == animDurations_.size() )
+        animDurations_.push_back(std::chrono::system_clock::duration(0));
+    *(animDurations_.begin()+animID) +=
+        std::chrono::milliseconds(duration);
+    Limb& l = limbList_.at(limb);
+    auto animIt = l.anims_.begin()+animID;
+    for ( Uint t = 0; t <= duration; t += 50 )
+        (*animIt).push_back(f((*animIt).back()));
 }		// -----  end of method Model::setAnimation  -----
 
     inline void
-Model::startAnimation ( Uint limb )
+Model::startAnimation ( short animID, bool loop )
 {
-    Limb& l = limbList_.at(limb);
-    l.animBegin_ = std::chrono::system_clock::now();
-    l.animating_ = true;
+    animLoop_ = loop;
+    animID_ = animID;
+    animBegin_ = std::chrono::system_clock::now();
 }		// -----  end of method Model::startAnimation  -----
 
 #endif   // ----- #ifndef MODEL_H  -----

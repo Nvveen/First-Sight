@@ -16,6 +16,7 @@
 
 #include    <iostream>
 #include    <fstream>
+#include    <algorithm>
 #include    <glm/gtc/matrix_transform.hpp>
 #include    "Model.h"
 
@@ -28,6 +29,8 @@ Model::Model ( const std::string& fileName ) :
     fileName_(fileName)
 {
     init();
+    animID_ = -1;
+    animLoop_ = false;
 }  // -----  end of method Model::Model  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -90,27 +93,40 @@ Model::init ()
     void
 Model::draw ( Shader& shader )
 {
+    Uint i = 0;
     for ( Limb& l : limbList_ ) {
-        if ( l.animating_ ) {
-            glEnable(GL_POLYGON_OFFSET_FILL);
-            glPolygonOffset(0, 500);
-            auto elapsed = std::chrono::system_clock::now() - l.animBegin_;
-            if ( elapsed >= l.animDuration_ )
-                if ( l.loop_ ) l.animBegin_ = std::chrono::system_clock::now();
-                else l.animating_ = false;
-            l.frameIt_ = l.frames_.begin() + 
-                         elapsed/std::chrono::milliseconds(50);
-        }
-        else {
-            glPolygonOffset(0, 0);
-            glDisable(GL_POLYGON_OFFSET_FILL);
+        glm::mat4 transMat = glm::mat4(1.0f);
+        if ( animID_ >= 0 ) {
+            auto animIt = l.anims_.begin()+animID_;
+            auto elapsed = std::chrono::system_clock::now() - animBegin_;
+            if ( elapsed >= animDurations_[animID_] ) {
+                if ( animLoop_ ) {
+                    elapsed %= (*animIt).size();
+                    animBegin_ = std::chrono::system_clock::now();
+                }
+                else { 
+                    elapsed = std::chrono::system_clock::duration(0);
+                }
+            }
+            auto offset = elapsed / std::chrono::milliseconds(50);
+            if ( offset >= (*animIt).size() ) offset = 0;
+            transMat = *((*animIt).begin() + offset);
+            if ( (*animIt).size() > 1 ) {
+                glEnable(GL_POLYGON_OFFSET_FILL);
+                glPolygonOffset(0, 500);
+            }
+            else {
+                glDisable(GL_POLYGON_OFFSET_FILL);
+                glPolygonOffset(0, 0);
+            }
         }
         glBindVertexArray(l.vao_);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-        shader.setUniform("texTransform", (*l.frameIt_));
+        shader.setUniform("texTransform", transMat);
         glBindTexture(GL_TEXTURE_3D, l.texID_);
         glDrawArrays(GL_TRIANGLES, 0, l.vertexCount_);
+        i += 1;
     }
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
@@ -137,10 +153,6 @@ Model::Limb::Limb ( std::list<Voxel>& voxels, std::vector<float>& offset,
 {
     createVoxelImage(voxels, moveable);
     createVBO();
-    frames_.push_back(glm::mat4(1.0f));
-    frameIt_ = frames_.begin();
-    animating_ = false;
-    animDuration_ = std::chrono::system_clock::duration(0);
 }  // -----  end of method Model::Limb::Model::Limb  (constructor)  -----
 
     void
