@@ -64,7 +64,7 @@ class Perspective : public Projection
     public:
         Perspective () {};
         Perspective ( GLfloat w, GLfloat h, GLfloat FOV=45.0f, 
-                      GLfloat zNear=20.0f, GLfloat zFar=500.0f ) :
+                      GLfloat zNear=20.0f, GLfloat zFar=1000.0f ) :
                     Projection(w,h), FOV_(FOV), zNear_(zNear), zFar_(zFar)
         {
             init ();

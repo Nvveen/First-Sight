@@ -55,6 +55,8 @@ Context::Context ( GLfloat w, GLfloat h, std::string windowName, Camera cam ) :
 //-----------------------------------------------------------------------------
 Context::~Context ()
 {
+    SDL_FreeSurface(mainWindow_);
+    SDL_Quit();
 }  // -----  end of method Context::~Context  (destructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -101,13 +103,12 @@ Context::setup ()
     glEnable(GL_TEXTURE_3D);
 
     // Add shaders to shaderlist
-    Shader def;
-    def.add("shaders/default.vs", GL_VERTEX_SHADER);
-    def.add("shaders/default.fs", GL_FRAGMENT_SHADER);
-    def.link();
-    def.setUniformLocation("vMVP");
-    def.setUniformLocation("texTransform");
-    shaders["default"] = def;
+    shaders["default"] = Shader();
+    shaders["default"].add("shaders/default.vs", GL_VERTEX_SHADER);
+    shaders["default"].add("shaders/default.fs", GL_FRAGMENT_SHADER);
+    shaders["default"].link();
+    shaders["default"].setUniformLocation("vMVP");
+    shaders["default"].setUniformLocation("texTransform");
 }		// -----  end of method Context::setup  -----
 
 //-----------------------------------------------------------------------------

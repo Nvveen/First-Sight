@@ -25,16 +25,17 @@
 //      Method:  Model
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Model::Model ( const std::string& fileName, Uint x, Uint y, Uint z,
+Model::Model ( const std::string& fileName, GLfloat x, GLfloat y, GLfloat z,
                Context& context, Shader& shader ) :
     fileName_(fileName), x_(x), y_(y), z_(z), animID_(-1), animLoop_(false),
-    shader_(shader), perspective_(context.getPerspective()),
-    camera_(context.getCamera())
+    shader_(&shader), perspective_(&context.getPerspective()),
+    camera_(&context.getCamera())
 {
     translation_ = glm::mat4(1.0f);
     rotation_ = glm::mat4(1.0f);
     scaling_ = glm::mat4(1.0f);
     init();
+    move(Vec3{x_*32.0f, y_*32.0f, z_*32.0f});
 }  // -----  end of method Model::Model  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -54,6 +55,7 @@ Model::init ()
     // Number of limbs.
     Byte numLimbs;
     file.read(reinterpret_cast<char *>(&numLimbs), sizeof(Byte));
+    limbList_.reserve((Uint)numLimbs);
     for ( Uint i = 0; i < numLimbs; i += 1 ) {
         // Voxels in a limb.
         Uint numVoxels;
@@ -97,7 +99,8 @@ Model::init ()
         // increase the size of the bounding box for possible animations.
         bool moveable = false;
         if ( i > 0 ) moveable = true;
-        limbList_.push_back(Limb(limb, offset, boxSize, moveable));
+        limbList_.emplace(limbList_.end(), limb, offset, boxSize, 
+                                                moveable);
     }
     file.close();
     // Force the MVP matrix to update.
@@ -114,11 +117,11 @@ Model::init ()
 Model::draw ()
 {
     // Bind the shader.
-    shader_.bind();
+    shader_->bind();
     // If need be, update the MVP (meaning, no force).
     setMVP();
     // Set the MVP in the shader.
-    shader_.setUniform("vMVP", mvp_);
+    shader_->setUniform("vMVP", mvp_);
     Uint i = 0;
     for ( Limb& l : limbList_ ) {
         glm::mat4 transMat = glm::mat4(1.0f);
@@ -166,7 +169,7 @@ Model::draw ()
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         // Set the animation transformation in the shader.
-        shader_.setUniform("texTransform", transMat);
+        shader_->setUniform("texTransform", transMat);
         // Bind its model.
         glBindTexture(GL_TEXTURE_3D, l.texID_);
         // Draw.
@@ -177,7 +180,7 @@ Model::draw ()
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
     glBindVertexArray(0);
-    shader_.unbind();
+    shader_->unbind();
 }		// -----  end of method Model::draw  -----
 
 //-----------------------------------------------------------------------------
@@ -188,10 +191,9 @@ Model::draw ()
     void
 Model::setMVP ( bool force )
 {
-    if ( camera_.changed() || force ) {
-        mvp_ = perspective_.getMatrix() * camera_.getCamera() * translation_ *
+    if ( camera_->changed() || force ) {
+        mvp_ = perspective_->getMatrix() * camera_->getCamera() * translation_ *
                rotation_ * scaling_;
-        camera_.clearUpdate();
     }
 }		// -----  end of method Model::setMVP  -----
 
@@ -216,6 +218,18 @@ Model::Limb::Limb ( std::list<Voxel>& voxels, std::vector<float>& offset,
     createVoxelImage(voxels, moveable);
     createVBO();
 }  // -----  end of method Model::Limb::Model::Limb  (constructor)  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model::Limb
+//      Method:  ~Model::Limb
+// Description:  destructor
+//-----------------------------------------------------------------------------
+Model::Limb::~Limb ()
+{
+    glDeleteBuffers(1, &vbo_);
+    glDeleteVertexArrays(1, &vao_);
+    glDeleteTextures(1, &texID_);
+}  // -----  end of method Model::Limb::~Model::Limb  (destructor)  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Model::Limb
@@ -360,3 +374,30 @@ Model::Limb::createVBO ()
     glDisableVertexAttribArray(0);
     glBindVertexArray(0);
 }		// -----  end of method Model::createVBO  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  move
+// Description:  Move the model around.
+//-----------------------------------------------------------------------------
+    void
+Model::move ( Vec3 vec )
+{
+    translation_ *= glm::translate(glm::mat4(1.0f), 
+                                   glm::vec3(vec[0], vec[1], vec[2]));
+    setMVP(true);
+}		// -----  end of method Model::move  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  rotate
+// Description:  Rotate the model around an axis.
+//-----------------------------------------------------------------------------
+    void
+Model::rotate ( GLfloat angle, Vec3 vec )
+{
+    rotation_ *= glm::rotate(glm::mat4(1.0f), angle, 
+                             glm::vec3(vec[0], vec[1], vec[2]));
+    setMVP(true);
+}		// -----  end of method Model::rotate  -----
+

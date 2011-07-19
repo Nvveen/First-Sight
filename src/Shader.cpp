@@ -53,6 +53,11 @@ Shader::Shader () : bound_(false)
 //-----------------------------------------------------------------------------
 Shader::~Shader ()
 {
+    if ( !shaderCodes_.empty() ) {
+        for ( auto it : shaderObjects_ )
+            glDeleteShader(it.second);
+        glDeleteProgram(shaderProgram_);
+    }
 }  // -----  end of method Shader::~Shader  (destructor)  -----
 
 //-----------------------------------------------------------------------------

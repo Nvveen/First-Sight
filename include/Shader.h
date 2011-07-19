@@ -45,7 +45,7 @@ class Shader
 {
     public:
         Shader ();
-        virtual ~Shader ();
+        ~Shader ();
 
         void add ( std::string fileName, GLenum type );
         void link ();

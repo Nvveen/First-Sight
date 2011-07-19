@@ -19,6 +19,7 @@
 #define  MODEL_H
 
 #include    <vector>
+#include    <array>
 #include    <list>
 #include    <chrono>
 #include    <fstream>
@@ -38,12 +39,16 @@ class Model
     public:
         typedef unsigned char Byte;
         typedef unsigned int Uint;
+        typedef std::array<GLfloat, 3> Vec3;
 
         Model ();
-        Model ( const std::string& fileName, Uint x, Uint y, Uint z,
+        Model ( const std::string& fileName, GLfloat x, GLfloat y, GLfloat z,
                 Context& context,
                 Shader& shader=Context::shaders["default"] );
         void draw ();
+        void move ( Vec3 vec );
+        void rotate ( GLfloat angle, Vec3 vec );
+
         template<class Func>
             void setAnimation ( Func f, Uint duration, Uint limb, Uint animID );
         void startAnimation ( short animID, bool loop=false );
@@ -59,14 +64,14 @@ class Model
         // Standard model data.
         std::string fileName_;
         std::vector<Limb> limbList_;
-        float x_, y_, z_;
+        GLfloat x_, y_, z_;
         glm::mat4 translation_, rotation_, scaling_;
         glm::mat4 mvp_;
 
         // Bound variables needed for rendering.
-        Shader& shader_;
-        Projection& perspective_;
-        Camera& camera_;
+        Shader *shader_;
+        Projection *perspective_;
+        Camera *camera_;
 
         // Variables needed for animation.
         short animID_;
@@ -87,6 +92,7 @@ class Model::Limb
         Limb ();                             // constructor
         Limb ( std::list<Voxel>& voxels, std::vector<float>& offset,
                       std::vector<Uint>& boxSize, bool moveable=false );
+        ~Limb ();
 
         friend class Model;
     private:

@@ -77,7 +77,6 @@ class Context
 
         SDL_Surface *mainWindow_;
         bool windowOpened_;
-        GLuint projectionUBO_;
 }; // -----  end of class Context  -----
 
 //-----------------------------------------------------------------------------

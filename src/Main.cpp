@@ -31,10 +31,8 @@
 #include    <iostream>
 #include    <GL/glew.h>
 #include    "Context.h"
-#include    <sys/time.h>
 #include    "EventHandler.h"
-
-#include    "Object.h"
+#include    "Model.h"
 
     int
 main ( int argc, char *argv[] )
@@ -45,7 +43,12 @@ main ( int argc, char *argv[] )
     Context windowContext(w, h, windowName);
     windowContext.setup();
 
-    Model test("data/dwarf.dat", 0, 0, 0, windowContext);
+    std::vector<Model> test;
+    for ( int i = 0;  i < 10; i += 1 ) {
+        for ( int j = 0; j < 10; j += 1 ) {
+            test.emplace_back("data/dwarf.dat", i, 0, j, windowContext);
+        }
+    }
     EventHandler event(windowContext);
     Camera *cam = &windowContext.getCamera();
     event.bind(cam, &Camera::move, 10.0f, 0.0f, 0.0f, Key::Left);
@@ -65,7 +68,8 @@ main ( int argc, char *argv[] )
     while ( windowContext.isOpened() ) {
         event.pollEvents();
         windowContext.clear();
-        test.draw();
+        for ( Model& model : test )
+            model.draw();
         windowContext.render();
     }
     return 0;
