@@ -32,26 +32,20 @@
 #include    <iostream>
 #include    "Context.h"
 
-std::map<std::string, Shader *> Context::shaders;
+std::map<std::string, Shader> Context::shaders;
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
 //      Method:  Context
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Context::Context ( GLfloat w, GLfloat h, std::string windowName,
-                   Projection* pers, Camera* cam ) :
-    w_(w), h_(h), windowName_(windowName)
+Context::Context ( GLfloat w, GLfloat h, std::string windowName, Camera cam ) :
+    w_(w), h_(h), windowName_(windowName), cam_(cam)
 {
-    if ( pers == NULL ) {
-        pers_ = new Perspective(w_, h_);
-        ortho_ = new Ortho(w_, h_);
-    }
-    if ( cam == NULL ) cam_ = new Camera;
-
+    pers_ = Perspective(w_, h_);
+    ortho_ = Ortho(w_, h_);
     mainWindow_ = NULL;
     windowOpened_ = true;
-    fpsLimit_ = {0.0f, 0.0f, 0.0f, false};
 }  // -----  end of method Context::Context  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -107,12 +101,12 @@ Context::setup ()
     glEnable(GL_TEXTURE_3D);
 
     // Add shaders to shaderlist
-    Shader *def = new Shader;
-    def->add("shaders/default.vs", GL_VERTEX_SHADER);
-    def->add("shaders/default.fs", GL_FRAGMENT_SHADER);
-    def->link();
-    def->setUniformLocation("vMVP");
-    def->setUniformLocation("texTransform");
+    Shader def;
+    def.add("shaders/default.vs", GL_VERTEX_SHADER);
+    def.add("shaders/default.fs", GL_FRAGMENT_SHADER);
+    def.link();
+    def.setUniformLocation("vMVP");
+    def.setUniformLocation("texTransform");
     shaders["default"] = def;
 }		// -----  end of method Context::setup  -----
 
@@ -150,7 +144,7 @@ Context::resize ( int w, int h )
     w_ = (GLfloat)w;
     h_ = (GLfloat)h;
     // Set this function to resize with values it already has.
-    pers_->setAspectRatio(w_, h_);
-    ortho_->setAspectRatio(w_, h_);
+    pers_.setAspectRatio(w_, h_);
+    ortho_.setAspectRatio(w_, h_);
 }		// -----  end of method Context::resize  -----
 

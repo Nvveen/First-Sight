@@ -44,8 +44,6 @@
 class Shader
 {
     public:
-
-        // ====================  LIFECYCLE     ================================
         Shader ();
         virtual ~Shader ();
 
@@ -54,24 +52,13 @@ class Shader
         void bind ();
         void unbind ();
         void setTransform ( std::vector<std::string> names );
-
-        // ====================  ACCESSORS     ================================
         GLuint getShaderProgram();
-
-        // ====================  MUTATORS      ================================
         bool setUniform ( std::string name, GLfloat val );
         bool setUniform ( std::string name, glm::vec3 vec );
         bool setUniform ( std::string name, glm::vec4 vec );
         bool setUniform ( std::string name, glm::mat4 matrix );
         void setUniformLocation ( std::string name );
-
-        // ====================  OPERATORS     ================================
-
-    protected:
-        // ====================  DATA MEMBERS  ================================
-
     private:
-        // ====================  DATA MEMBERS  ================================
         std::map<GLenum, std::string> shaderCodes_;
         std::map<GLenum, GLuint> shaderObjects_;
         GLuint shaderProgram_;

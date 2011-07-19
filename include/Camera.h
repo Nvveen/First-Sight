@@ -32,6 +32,7 @@
 #define  CAMERA_H
 
 #include    <iostream>
+#include    <array>
 #include    <glm/glm.hpp>
 #include    <GL/gl.h>
 
@@ -43,9 +44,10 @@
 class Camera
 {
     public:
-
-        Camera ();
-        Camera ( GLfloat pos[3], GLfloat target[3], GLfloat up[3] ); 
+        typedef std::array<GLfloat, 3> CamVector;
+        Camera ( CamVector pos=CamVector{0.0f, 200.0f, -200.0f},
+                 CamVector target=CamVector{0.0f, 0.0f, 0.0f},
+                 CamVector up=CamVector{0.0f, 1.0f, 0.0f} ); 
 
         void rotate ( GLfloat angle );
         void move ( GLfloat x, GLfloat y, GLfloat z );

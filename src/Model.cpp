@@ -25,12 +25,16 @@
 //      Method:  Model
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Model::Model ( const std::string& fileName ) :
-    fileName_(fileName)
+Model::Model ( const std::string& fileName, Uint x, Uint y, Uint z,
+               Context& context, Shader& shader ) :
+    fileName_(fileName), x_(x), y_(y), z_(z), animID_(-1), animLoop_(false),
+    shader_(shader), perspective_(context.getPerspective()),
+    camera_(context.getCamera())
 {
+    translation_ = glm::mat4(1.0f);
+    rotation_ = glm::mat4(1.0f);
+    scaling_ = glm::mat4(1.0f);
     init();
-    animID_ = -1;
-    animLoop_ = false;
 }  // -----  end of method Model::Model  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -41,16 +45,20 @@ Model::Model ( const std::string& fileName ) :
     void
 Model::init ()
 {
+    // Read file.
     std::ifstream file(fileName_.c_str(), std::ios::binary);
     if ( !file.is_open() ) {
         std::cerr << "Error reading file " << fileName_ << "\n";
         exit(1);
     }
+    // Number of limbs.
     Byte numLimbs;
     file.read(reinterpret_cast<char *>(&numLimbs), sizeof(Byte));
     for ( Uint i = 0; i < numLimbs; i += 1 ) {
+        // Voxels in a limb.
         Uint numVoxels;
         Byte temp;
+        // Offset the limb has.
         file.read(reinterpret_cast<char *>(&numVoxels), sizeof(Uint));
         std::vector<float> offset(3);
         file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
@@ -59,6 +67,7 @@ Model::init ()
         offset[1] = (float)temp;
         file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
         offset[2] = (float)temp;
+        // Bounding box of the limb.
         std::vector<Uint> boxSize(3);
         file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
         boxSize[0] = (Uint)temp;
@@ -67,6 +76,7 @@ Model::init ()
         file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
         boxSize[2] = (Uint)temp;
         std::list<Voxel> limb;
+        // Read every voxels in the limb.
         for ( Uint j = 0; j < numVoxels; j += 1 ) {
             Voxel v;
             file.read(reinterpret_cast<char *>(&v.x), sizeof(Byte));
@@ -83,55 +93,107 @@ Model::init ()
             v.rgba[3] = (GLfloat)info / 255.0f;
             limb.push_back(v);
         }
+        // If the limb is the first limb read, then we don't have to
+        // increase the size of the bounding box for possible animations.
         bool moveable = false;
         if ( i > 0 ) moveable = true;
         limbList_.push_back(Limb(limb, offset, boxSize, moveable));
     }
     file.close();
+    // Force the MVP matrix to update.
+    setMVP(true);
 }		// -----  end of method Model::init  -----
 
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  draw
+// Description:  Draw the model by looking up its transformation animation
+//               matrix, binding the buffers and calling OpenGL.
+//-----------------------------------------------------------------------------
     void
-Model::draw ( Shader& shader )
+Model::draw ()
 {
+    // Bind the shader.
+    shader_.bind();
+    // If need be, update the MVP (meaning, no force).
+    setMVP();
+    // Set the MVP in the shader.
+    shader_.setUniform("vMVP", mvp_);
     Uint i = 0;
     for ( Limb& l : limbList_ ) {
         glm::mat4 transMat = glm::mat4(1.0f);
         if ( animID_ >= 0 ) {
+            // If animID_ = -1, there is no animating going on.
+            // Now we need the position of the array of matrices.
             auto animIt = l.anims_.begin()+animID_;
+            // We calculate how much time has elapsed.
             auto elapsed = std::chrono::system_clock::now() - animBegin_;
             if ( elapsed >= animDurations_[animID_] ) {
+                // We have exceeded the amount of time the animation gets.
                 if ( animLoop_ ) {
+                    // But we're in a loop, so pretend we start all over again.
                     elapsed %= (*animIt).size();
                     animBegin_ = std::chrono::system_clock::now();
                 }
                 else { 
+                    // Otherwise, we pretend no time has elapsed and the
+                    // transformation animation matrix is set to the 
+                    // identity matrix.
                     elapsed = std::chrono::system_clock::duration(0);
                 }
             }
+            // Calculate the position in the array of matrices according
+            // to how much time has passed given a frametime of 50 ms.
             auto offset = elapsed / std::chrono::milliseconds(50);
             if ( offset >= (*animIt).size() ) offset = 0;
+            // Found the correct matrix, now set it.
             transMat = *((*animIt).begin() + offset);
             if ( (*animIt).size() > 1 ) {
+                // Because of z-fighting occuring with animating, I've
+                // found an arbitrary polgon offset, that seems to cure most
+                // visible artifacts.
                 glEnable(GL_POLYGON_OFFSET_FILL);
                 glPolygonOffset(0, 500);
             }
             else {
+                // We don't want to offset the polygons for stationary limbs.
                 glDisable(GL_POLYGON_OFFSET_FILL);
                 glPolygonOffset(0, 0);
             }
         }
+        // Bind buffers.
         glBindVertexArray(l.vao_);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-        shader.setUniform("texTransform", transMat);
+        // Set the animation transformation in the shader.
+        shader_.setUniform("texTransform", transMat);
+        // Bind its model.
         glBindTexture(GL_TEXTURE_3D, l.texID_);
+        // Draw.
         glDrawArrays(GL_TRIANGLES, 0, l.vertexCount_);
         i += 1;
     }
+    // Clean up.
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
     glBindVertexArray(0);
+    shader_.unbind();
 }		// -----  end of method Model::draw  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  setMVP
+// Description:  Calculate the MVP matrix if force or when the camera changes.
+//-----------------------------------------------------------------------------
+    void
+Model::setMVP ( bool force )
+{
+    if ( camera_.changed() || force ) {
+        mvp_ = perspective_.getMatrix() * camera_.getCamera() * translation_ *
+               rotation_ * scaling_;
+        camera_.clearUpdate();
+    }
+}		// -----  end of method Model::setMVP  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Model::Limb
@@ -155,16 +217,26 @@ Model::Limb::Limb ( std::list<Voxel>& voxels, std::vector<float>& offset,
     createVBO();
 }  // -----  end of method Model::Limb::Model::Limb  (constructor)  -----
 
+//-----------------------------------------------------------------------------
+//       Class:  Model::Limb
+//      Method:  createVoxelImage
+// Description:  Generate a texture from the voxel data we have read.
+//-----------------------------------------------------------------------------
     void
 Model::Limb::createVoxelImage ( std::list<Voxel>& voxels, bool moveable )
 {
+    // We need to take into account that animating might exceed the normal
+    // bounding box of a limb.
     if ( moveable ) {
+        // So get the size of the largest axis.
         auto it = std::max_element(boxSize_.begin(), boxSize_.end());
         Uint maxSize = *it;
+        // And update all other box axis.
         for ( Uint& d : boxSize_ ) {
             if ( d != maxSize ) d += maxSize;
             d += maxSize;
         }
+        // Then offset the voxels and the box itself by the right amount
         for ( Voxel& v : voxels ) {
             v.x += maxSize; v.y += maxSize; v.z += maxSize;
             if ( it == boxSize_.begin() ) v.x += maxSize;
@@ -175,8 +247,11 @@ Model::Limb::createVoxelImage ( std::list<Voxel>& voxels, bool moveable )
         if ( it != boxSize_.begin()+1 ) offset_[1] -= maxSize;
         if ( it != boxSize_.begin()+2 ) offset_[2] -= maxSize;
     }
+    // And voila, we have a limb with the freedom to move if its not
+    // stationary.
     std::vector<glm::vec4> texMap(boxSize_[0]*boxSize_[1]*boxSize_[2],
                                   glm::vec4(0));
+    // Next, we create an OpenGL texture.
     for ( Voxel& v : voxels ) {
         Uint index = v.z*boxSize_[0]*boxSize_[1] + v.y*boxSize_[0] + v.x;
         texMap[index] = v.rgba;
@@ -190,32 +265,21 @@ Model::Limb::createVoxelImage ( std::list<Voxel>& voxels, bool moveable )
     glBindTexture(GL_TEXTURE_3D, 0);
 }		// -----  end of method Model::createVoxelImage  -----
 
+//-----------------------------------------------------------------------------
+//       Class:  Model::Limb
+//      Method:  createVBO
+// Description:  Generate 6 stacks of quads, 2 for each axis in an amount equal
+//               to the size of the texture/model on that axis.
+//-----------------------------------------------------------------------------
     void
 Model::Limb::createVBO ()
 {
     std::vector<GLfloat> data;
+    // Helper variables so the typed size isn't so big.
     std::vector<GLfloat> b = { (GLfloat)boxSize_[0], (GLfloat)boxSize_[1],
                                (GLfloat)boxSize_[2] };
     std::vector<GLfloat> o = offset_;
-    for ( GLfloat z = o[2]; z < b[2]+o[2]; z += 1 ) {
-        GLfloat t = (z-o[2]+0.5)/b[2];
-        std::vector<GLfloat> slice = {
-            o[0],      o[1],        z, 0.0f, 0.0f, t,
-            o[0],      o[1]+b[1],   z, 0.0f, 1.0f, t,
-            o[0]+b[0], o[1]+b[1],   z, 1.0f, 1.0f, t,
-            o[0],      o[1],        z, 0.0f, 0.0f, t,
-            o[0]+b[0], o[1]+b[1],   z, 1.0f, 1.0f, t,
-            o[0]+b[0], o[1],        z, 1.0f, 0.0f, t,
-
-            o[0]+b[0], o[1],      z+1, 1.0f, 0.0f, t,
-            o[0]+b[0], o[1]+b[1], z+1, 1.0f, 1.0f, t,
-            o[0],      o[1]+b[1], z+1, 0.0f, 1.0f, t,
-            o[0]+b[0], o[1],      z+1, 1.0f, 0.0f, t,
-            o[0],      o[1]+b[1], z+1, 0.0f, 1.0f, t,
-            o[0],      o[1],      z+1, 0.0f, 0.0f, t,
-        };
-        data.insert(data.end(), slice.begin(), slice.end());
-    }
+    // Add all slices in the x-axis, ...
     for ( GLfloat x = o[0]; x < b[0]+o[0]; x += 1 ) {
         GLfloat r = (x-o[0]+0.5f)/b[0];
         std::vector<GLfloat> slice = {
@@ -235,6 +299,7 @@ Model::Limb::createVBO ()
         };
         data.insert(data.end(), slice.begin(), slice.end());
     }
+    // ...y-axis, ...
     for ( GLfloat y = o[1]; y < b[1]+o[1]; y += 1 ) {
         GLfloat s = (y-o[1]+0.5f)/b[1];
         std::vector<GLfloat> slice = {
@@ -254,6 +319,27 @@ Model::Limb::createVBO ()
         };
         data.insert(data.end(), slice.begin(), slice.end());
     }
+    // ...and z-axis.
+    for ( GLfloat z = o[2]; z < b[2]+o[2]; z += 1 ) {
+        GLfloat t = (z-o[2]+0.5)/b[2];
+        std::vector<GLfloat> slice = {
+            o[0],      o[1],        z, 0.0f, 0.0f, t,
+            o[0],      o[1]+b[1],   z, 0.0f, 1.0f, t,
+            o[0]+b[0], o[1]+b[1],   z, 1.0f, 1.0f, t,
+            o[0],      o[1],        z, 0.0f, 0.0f, t,
+            o[0]+b[0], o[1]+b[1],   z, 1.0f, 1.0f, t,
+            o[0]+b[0], o[1],        z, 1.0f, 0.0f, t,
+
+            o[0]+b[0], o[1],      z+1, 1.0f, 0.0f, t,
+            o[0]+b[0], o[1]+b[1], z+1, 1.0f, 1.0f, t,
+            o[0],      o[1]+b[1], z+1, 0.0f, 1.0f, t,
+            o[0]+b[0], o[1],      z+1, 1.0f, 0.0f, t,
+            o[0],      o[1]+b[1], z+1, 0.0f, 1.0f, t,
+            o[0],      o[1],      z+1, 0.0f, 0.0f, t,
+        };
+        data.insert(data.end(), slice.begin(), slice.end());
+    }
+    // Create the buffer for the entire stack.
     vertexCount_ = data.size()/6;
     glGenVertexArrays(1, &vao_);
     glBindVertexArray(vao_);

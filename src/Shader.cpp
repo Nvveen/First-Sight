@@ -71,6 +71,7 @@ Shader::add ( std::string fileName, GLenum type )
     shaderCodes_.insert(std::pair<GLenum, std::string>(type, code));
     GLuint object = compileShader(code, type);
     shaderObjects_.insert(std::pair<GLenum, GLuint>(type, object));
+    // Bind the shader to the program.
     glAttachShader(shaderProgram_, object);
 }		// -----  end of method Shader::add  -----
 
@@ -161,6 +162,12 @@ Shader::compileShader ( std::string code, GLenum type )
     return shader;
 }		// -----  end of method Shader::compileShader  -----
 
+//-----------------------------------------------------------------------------
+//       Class:  Shader
+//      Method:  setTransform
+// Description:  Set the varying variables that are used in the transform
+//               feedback.
+//-----------------------------------------------------------------------------
     void
 Shader::setTransform ( std::vector<std::string> names )
 {

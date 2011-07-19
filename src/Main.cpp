@@ -45,10 +45,9 @@ main ( int argc, char *argv[] )
     Context windowContext(w, h, windowName);
     windowContext.setup();
 
-    Object test("data/dwarf.dat", 0, 0, 0, &windowContext);
-
+    Model test("data/dwarf.dat", 0, 0, 0, windowContext);
     EventHandler event(windowContext);
-    Camera *cam = windowContext.getCamera();
+    Camera *cam = &windowContext.getCamera();
     event.bind(cam, &Camera::move, 10.0f, 0.0f, 0.0f, Key::Left);
     event.bind(cam, &Camera::move, -10.0f, 0.0f, 0.0f, Key::Right);
     event.bind(cam, &Camera::move, 0.0f, 0.0f, 10.0f, Key::Up);

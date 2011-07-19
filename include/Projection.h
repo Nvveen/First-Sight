@@ -43,19 +43,13 @@
 class Projection
 {
     public:
-
-        // ====================  LIFECYCLE     ================================
+        Projection () {};
         Projection ( GLfloat w, GLfloat h ) : w_(w), h_(h) {}      // constructor
         virtual void init() = 0;
-
-        // ====================  ACCESSORS     ================================
         virtual glm::mat4& getMatrix ();
         virtual std::pair<GLfloat, GLfloat> getWindowSize ();
-
-        // ====================  MUTATORS      ================================
         virtual void setAspectRatio ( GLfloat w, GLfloat h );
     protected:
-        // ====================  DATA MEMBERS  ================================
         glm::mat4 matrix_;
         GLfloat w_;
         GLfloat h_;
@@ -68,8 +62,7 @@ class Projection
 class Perspective : public Projection
 {
     public:
-
-        // ====================  LIFECYCLE     ================================
+        Perspective () {};
         Perspective ( GLfloat w, GLfloat h, GLfloat FOV=45.0f, 
                       GLfloat zNear=20.0f, GLfloat zFar=500.0f ) :
                     Projection(w,h), FOV_(FOV), zNear_(zNear), zFar_(zFar)
@@ -78,7 +71,6 @@ class Perspective : public Projection
         }
         virtual void init ();
     private:
-        // ====================  DATA MEMBERS  ================================
         GLfloat FOV_;
         GLfloat zNear_;
         GLfloat zFar_;
@@ -91,8 +83,7 @@ class Perspective : public Projection
 class Ortho : public Projection
 {
     public:
-
-        // ====================  LIFECYCLE     ================================
+        Ortho () {};
         Ortho ( GLfloat w, GLfloat h ) : Projection(w, h)
         {
             init ();

@@ -5,7 +5,6 @@ set(firstsight_SRCS
     Font.cpp
     Main.cpp
     Model.cpp
-    Object.cpp
     Shader.cpp
     Texture.cpp)
 

@@ -47,52 +47,37 @@
 class Context
 {
     public:
-
-        // ====================  LIFECYCLE     ================================
         Context ( GLfloat w, GLfloat h, std::string windowName,
-                  Projection* pers=NULL, Camera* cam=NULL ); 
+                  Camera camera=Camera() ); 
         ~Context ();
         void setup ();
         void clear ();
         void render ();
         void resize ( int w, int h );
 
-        // ====================  ACCESSORS     ================================
         bool isOpened ();
-        Perspective* getPerspective ();
-        Ortho* getOrtho ();
-        Camera* getCamera ();
+        Perspective& getPerspective ();
+        Ortho& getOrtho ();
+        Camera& getCamera ();
 
-        // ====================  MUTATORS      ================================
         void close ();
-        void setFramerateLimit ( int limit );
-
-        // ====================  OPERATORS     ================================
 
         friend class EventHandler;
-        // ====================  DATA MEMBERS  ================================
-        static std::map<std::string, Shader *> shaders;
+
+        static std::map<std::string, Shader> shaders;
 
     private:
-        // ====================  DATA MEMBERS  ================================
         GLfloat w_;
         GLfloat h_;
         std::string windowName_;
 
-        Perspective *pers_;
-        Ortho *ortho_;
-        Camera *cam_;
+        Perspective pers_;
+        Ortho ortho_;
+        Camera cam_;
 
         SDL_Surface *mainWindow_;
         bool windowOpened_;
         GLuint projectionUBO_;
-
-        struct {
-            float prevTime;
-            float timeElapsed;
-            float limit;
-            bool limitSet;
-        } fpsLimit_;
 }; // -----  end of class Context  -----
 
 //-----------------------------------------------------------------------------
@@ -119,25 +104,10 @@ Context::close ()
 
 //-----------------------------------------------------------------------------
 //       Class:  Context
-//      Method:  setFramerateLimit
-// Description:  Sets the framerate to a certain limit, disallowing SDL to
-//               render more frames in a second.
-//-----------------------------------------------------------------------------
-    inline void
-Context::setFramerateLimit ( int limit )
-{
-    fpsLimit_.limitSet = true;
-    // The user inputs a maximum fps, we need to convert that to the limit each
-    // frame gets in time allowed to render.
-    fpsLimit_.limit = 1000/limit;
-}		// -----  end of method Context::setFramerateLimit  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Context
 //      Method:  getCamera
 // Description:  Returns the camera object.
 //-----------------------------------------------------------------------------
-    inline Camera*
+    inline Camera&
 Context::getCamera ()
 {
     return cam_;
@@ -148,7 +118,7 @@ Context::getCamera ()
 //      Method:  getPerspective
 // Description:  Returns the perspective object.
 //-----------------------------------------------------------------------------
-    inline Perspective*
+    inline Perspective&
 Context::getPerspective ()
 {
     return pers_;
@@ -159,7 +129,7 @@ Context::getPerspective ()
 //      Method:  getOrtho
 // Description:  Returns the orthographic object.
 //-----------------------------------------------------------------------------
-    inline Ortho*
+    inline Ortho&
 Context::getOrtho ()
 {
     return ortho_;
