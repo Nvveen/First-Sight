@@ -27,15 +27,15 @@
 //-----------------------------------------------------------------------------
 Model::Model ( const std::string& fileName, GLfloat x, GLfloat y, GLfloat z,
                Context& context, Shader& shader ) :
-    fileName_(fileName), x_(x), y_(y), z_(z), animID_(-1), animLoop_(false),
-    shader_(&shader), perspective_(&context.getPerspective()),
+    fileName_(fileName), location_(glm::vec3(x, y, z)), animID_(-1),
+    animLoop_(false), shader_(&shader), perspective_(&context.getPerspective()),
     camera_(&context.getCamera())
 {
     translation_ = glm::mat4(1.0f);
     rotation_ = glm::mat4(1.0f);
     scaling_ = glm::mat4(1.0f);
     init();
-    move(Vec3{x_*32.0f, y_*32.0f, z_*32.0f});
+    move(x*32.0f, y*32.0f, z*32.0f);
 }  // -----  end of method Model::Model  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -56,13 +56,14 @@ Model::init ()
     Byte numLimbs;
     file.read(reinterpret_cast<char *>(&numLimbs), sizeof(Byte));
     limbList_.reserve((Uint)numLimbs);
+    glm::vec3 minSide(0, 0, 0), maxSide(0, 0, 0);
     for ( Uint i = 0; i < numLimbs; i += 1 ) {
         // Voxels in a limb.
         Uint numVoxels;
         Byte temp;
         // Offset the limb has.
         file.read(reinterpret_cast<char *>(&numVoxels), sizeof(Uint));
-        std::vector<float> offset(3);
+        std::array<float, 3> offset;
         file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
         offset[0] = (float)temp;
         file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
@@ -70,7 +71,7 @@ Model::init ()
         file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
         offset[2] = (float)temp;
         // Bounding box of the limb.
-        std::vector<Uint> boxSize(3);
+        std::array<Uint, 3> boxSize;
         file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
         boxSize[0] = (Uint)temp;
         file.read(reinterpret_cast<char *>(&temp), sizeof(Byte));
@@ -99,6 +100,17 @@ Model::init ()
         // increase the size of the bounding box for possible animations.
         bool moveable = false;
         if ( i > 0 ) moveable = true;
+        // We also need to offset the offset to put the center of the model
+        // at location_.
+        minSide[0] = std::min(offset[0], minSide[0]);
+        minSide[1] = std::min(offset[1], minSide[1]);
+        minSide[2] = std::min(offset[2], minSide[2]);
+        maxSide[0] = std::max(offset[0]+boxSize[0], maxSide[0]);
+        maxSide[1] = std::max(offset[1]+boxSize[1], maxSide[1]);
+        maxSide[2] = std::max(offset[2]+boxSize[2], maxSide[2]);
+        offset[0] -= (maxSide[0]-minSide[0])/2;
+        offset[1] -= (maxSide[1]-minSide[1])/2;
+        offset[2] -= (maxSide[2]-minSide[2])/2;
         limbList_.emplace(limbList_.end(), limb, offset, boxSize, 
                                                 moveable);
     }
@@ -126,29 +138,24 @@ Model::draw ()
     for ( Limb& l : limbList_ ) {
         glm::mat4 transMat = glm::mat4(1.0f);
         if ( animID_ >= 0 ) {
-            // If animID_ = -1, there is no animating going on.
-            // Now we need the position of the array of matrices.
+            // Get the correct animation
             auto animIt = l.anims_.begin()+animID_;
-            // We calculate how much time has elapsed.
+            // Calculate elapsed time and the corresponding offset to a frame
             auto elapsed = std::chrono::system_clock::now() - animBegin_;
-            if ( elapsed >= animDurations_[animID_] ) {
-                // We have exceeded the amount of time the animation gets.
+            auto offset = elapsed / std::chrono::milliseconds(50);
+            if ( elapsed >= duration_ ) {
                 if ( animLoop_ ) {
-                    // But we're in a loop, so pretend we start all over again.
-                    elapsed %= (*animIt).size();
+                    // Reset if looping
                     animBegin_ = std::chrono::system_clock::now();
                 }
-                else { 
-                    // Otherwise, we pretend no time has elapsed and the
-                    // transformation animation matrix is set to the 
-                    // identity matrix.
-                    elapsed = std::chrono::system_clock::duration(0);
-                }
+                // But always reduce offset to 0
+                offset = 0;
             }
-            // Calculate the position in the array of matrices according
-            // to how much time has passed given a frametime of 50 ms.
-            auto offset = elapsed / std::chrono::milliseconds(50);
-            if ( offset >= (*animIt).size() ) offset = 0;
+            // Finally, if the offset exceeds the number of frames, we need
+            // to wrap around.
+            if ( offset >= (*animIt).size()-1 )
+                offset %= (*animIt).size();
+
             // Found the correct matrix, now set it.
             transMat = *((*animIt).begin() + offset);
             if ( (*animIt).size() > 1 ) {
@@ -211,8 +218,8 @@ Model::Limb::Limb ()
 //      Method:  Model::Limb
 // Description:  constructor
 //-----------------------------------------------------------------------------
-Model::Limb::Limb ( std::list<Voxel>& voxels, std::vector<float>& offset,
-                           std::vector<Uint>& boxSize, bool moveable ) :
+Model::Limb::Limb ( std::list<Voxel>& voxels, std::array<float, 3>& offset,
+                           std::array<Uint, 3>& boxSize, bool moveable ) :
     offset_(offset), boxSize_(boxSize)
 {
     createVoxelImage(voxels, moveable);
@@ -290,9 +297,9 @@ Model::Limb::createVBO ()
 {
     std::vector<GLfloat> data;
     // Helper variables so the typed size isn't so big.
-    std::vector<GLfloat> b = { (GLfloat)boxSize_[0], (GLfloat)boxSize_[1],
+    std::array<GLfloat, 3> b = { (GLfloat)boxSize_[0], (GLfloat)boxSize_[1],
                                (GLfloat)boxSize_[2] };
-    std::vector<GLfloat> o = offset_;
+    std::array<GLfloat, 3> o = offset_;
     // Add all slices in the x-axis, ...
     for ( GLfloat x = o[0]; x < b[0]+o[0]; x += 1 ) {
         GLfloat r = (x-o[0]+0.5f)/b[0];
@@ -381,10 +388,9 @@ Model::Limb::createVBO ()
 // Description:  Move the model around.
 //-----------------------------------------------------------------------------
     void
-Model::move ( Vec3 vec )
+Model::move ( GLfloat x, GLfloat y, GLfloat z )
 {
-    translation_ *= glm::translate(glm::mat4(1.0f), 
-                                   glm::vec3(vec[0], vec[1], vec[2]));
+    translation_ *= glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
     setMVP(true);
 }		// -----  end of method Model::move  -----
 
@@ -394,10 +400,15 @@ Model::move ( Vec3 vec )
 // Description:  Rotate the model around an axis.
 //-----------------------------------------------------------------------------
     void
-Model::rotate ( GLfloat angle, Vec3 vec )
+Model::rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z )
 {
-    rotation_ *= glm::rotate(glm::mat4(1.0f), angle, 
-                             glm::vec3(vec[0], vec[1], vec[2]));
+    rotation_ *= glm::translate(glm::mat4(1.0f), glm::vec3(-location_[0],
+                                                           -location_[1],
+                                                           -location_[2]));
+    rotation_ *= glm::rotate(glm::mat4(1.0f), angle, glm::vec3(x, y, z));
+    rotation_ *= glm::translate(glm::mat4(1.0f), glm::vec3(location_[0],
+                                                           location_[1],
+                                                           location_[2]));
     setMVP(true);
 }		// -----  end of method Model::rotate  -----
 

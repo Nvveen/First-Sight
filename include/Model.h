@@ -39,18 +39,17 @@ class Model
     public:
         typedef unsigned char Byte;
         typedef unsigned int Uint;
-        typedef std::array<GLfloat, 3> Vec3;
 
         Model ();
         Model ( const std::string& fileName, GLfloat x, GLfloat y, GLfloat z,
                 Context& context,
                 Shader& shader=Context::shaders["default"] );
         void draw ();
-        void move ( Vec3 vec );
-        void rotate ( GLfloat angle, Vec3 vec );
+        void move ( GLfloat x, GLfloat y, GLfloat z );
+        void rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
 
         template<class Func>
-            void setAnimation ( Func f, Uint duration, Uint limb, Uint animID );
+            void setAnimation ( Func f, Uint nrFrames, Uint limb, Uint animID );
         void startAnimation ( short animID, bool loop=false );
     private:
         void init ();
@@ -64,7 +63,7 @@ class Model
         // Standard model data.
         std::string fileName_;
         std::vector<Limb> limbList_;
-        GLfloat x_, y_, z_;
+        glm::vec3 location_;
         glm::mat4 translation_, rotation_, scaling_;
         glm::mat4 mvp_;
 
@@ -76,8 +75,8 @@ class Model
         // Variables needed for animation.
         short animID_;
         bool animLoop_;
-        std::vector<std::chrono::system_clock::duration> animDurations_;
         std::chrono::system_clock::time_point animBegin_;
+        std::chrono::system_clock::duration duration_;
 }; // -----  end of class Model  -----
 
 // ============================================================================
@@ -90,8 +89,8 @@ class Model::Limb
 {
     public:
         Limb ();                             // constructor
-        Limb ( std::list<Voxel>& voxels, std::vector<float>& offset,
-                      std::vector<Uint>& boxSize, bool moveable=false );
+        Limb ( std::list<Voxel>& voxels, std::array<float, 3>& offset,
+                      std::array<Uint, 3>& boxSize, bool moveable=false );
         ~Limb ();
 
         friend class Model;
@@ -101,8 +100,8 @@ class Model::Limb
 
         GLuint vbo_, vao_, texID_;
         Uint vertexCount_;
-        std::vector<float> offset_;
-        std::vector<Uint> boxSize_;
+        std::array<float, 3> offset_;
+        std::array<Uint, 3> boxSize_;
         std::vector<std::vector<glm::mat4>> anims_;
 }; // -----  end of class Model::Limb  -----
 
@@ -117,12 +116,11 @@ struct Model::Voxel {
 //      Method:  setAnimation
 // Description:  Animating works by progressively generating the transformation
 //               matrices in a specific timeframe an animation needs. To do
-//               this, the limb + its animation ID are looked up, while the
-//               duration of the animation is set in the object.
+//               this, the limb + its animation ID are looked up.
 //-----------------------------------------------------------------------------
 template<class Func>
     void
-Model::setAnimation ( Func f, Uint duration, Uint limb, Uint animID )
+Model::setAnimation ( Func f, Uint nrFrames, Uint limb, Uint animID )
 {
     // We first check for every limb if it already has an animation with that
     // ID yet.
@@ -133,20 +131,9 @@ Model::setAnimation ( Func f, Uint duration, Uint limb, Uint animID )
             // Push new animation
             l.anims_.push_back(std::vector<glm::mat4>(1, glm::mat4(1.0f)));
     }
-    // Same thing goes for the durations.
-    assert(animID <= animDurations_.size());
-    if ( animID == animDurations_.size() )
-        // We need to push the new animation duration to the array.
-        animDurations_.push_back(std::chrono::system_clock::duration(0));
-    // Next we set the actual duration in stone.
-    *(animDurations_.begin()+animID) +=
-        std::chrono::milliseconds(duration);
-    // Finally, for the amount of frames in the animation specified by its
-    // duration and a frametime of 50 ms per frame, we compute the
-    // transformation matrices on those steps.
     Limb& l = limbList_.at(limb);
     auto animIt = l.anims_.begin()+animID;
-    for ( Uint t = 0; t <= duration; t += 50 )
+    for ( Uint t = 0; t < nrFrames; t += 1 )
         (*animIt).push_back(f((*animIt).back()));
 }		// -----  end of method Model::setAnimation  -----
 
@@ -163,6 +150,13 @@ Model::startAnimation ( short animID, bool loop )
     animID_ = animID;
     // Keep track of when the animation started.
     animBegin_ = std::chrono::system_clock::now();
+    // Calculate duration
+    Uint maxFrames = 0;
+    for ( Limb& l : limbList_ ) {
+        auto animIt = l.anims_.begin()+animID;
+        maxFrames = std::max(maxFrames, (Uint)(*animIt).size()-1);
+    }
+    duration_ = maxFrames * std::chrono::milliseconds(50);
 }		// -----  end of method Model::startAnimation  -----
 
 #endif   // ----- #ifndef MODEL_H  -----
