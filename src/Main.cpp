@@ -74,24 +74,33 @@ main ( int argc, char *argv[] )
     test.setAnimation(rotate, 5, 2, 0);
 
     EventHandler event(windowContext);
-    Camera *cam = &windowContext.getCamera();
-    event.bind(cam, &Camera::move, 10.0f, 0.0f, 0.0f, Key::Left);
-    event.bind(cam, &Camera::move, -10.0f, 0.0f, 0.0f, Key::Right);
-    event.bind(cam, &Camera::move, 0.0f, 0.0f, 10.0f, Key::Up);
-    event.bind(cam, &Camera::move, 0.0f, 0.0f, -10.0f, Key::Down);
-    event.bind(cam, &Camera::rotate, 30.0f, 
-               EventHandler::Keyset(Key::Lctrl, Key::Left));
-    event.bind(cam, &Camera::rotate, -30.0f, 
-               EventHandler::Keyset(Key::Lctrl, Key::Right));
-    event.bind(cam, &Camera::zoom,  10.0f, 
-               EventHandler::Keyset(Key::Lctrl, Key::Up));
-    event.bind(cam, &Camera::zoom, -10.0f, 
-               EventHandler::Keyset(Key::Lctrl, Key::Down));
-    event.bind(&windowContext, &Context::close, Key::Escape);
+    Camera& camera = windowContext.getCamera();
+    event.bind([&]{ camera.move(10.0f, 0.0f, 0.0f);},
+                    EventHandler::Key::Left);
+    event.bind([&]{ camera.move(-10.0f, 0.0f, 0.0f);},
+                    EventHandler::Key::Right);
+    event.bind([&]{ camera.move(0.0f, 0.0f, 10.0f);}, 
+                    EventHandler::Key::Up);
+    event.bind([&]{ camera.move(0.0f, 0.0f, -10.0f);},
+                    EventHandler::Key::Down);
+    event.bind([&]{ camera.rotate(30.0f);},
+                    EventHandler::Keyset{ EventHandler::Key::Lctrl,
+                                          EventHandler::Key::Left});
+    event.bind([&]{ camera.rotate(-30.0f);},
+                    EventHandler::Keyset{ EventHandler::Key::Lctrl,
+                                          EventHandler::Key::Right});
+    event.bind([&]{ camera.zoom(10.0f);}, 
+                    EventHandler::Keyset{ EventHandler::Key::Lctrl,
+                                          EventHandler::Key::Up });
+    event.bind([&]{ camera.zoom(-10.0f);}, 
+                    EventHandler::Keyset{ EventHandler::Key::Lctrl,
+                                          EventHandler::Key::Down });
+    event.bind([&]{ windowContext.close();}, EventHandler::Key::Escape);
 
     unsigned int i = 0;
     while ( windowContext.isOpened() ) {
         if ( i == 100 ) test.startAnimation(0, true);
+        if ( i == 500 ) test.stopAnimation();
         event.pollEvents();
         windowContext.clear();
         test.rotate(1.0f, 0.0f, 1.0f, 0.0f);

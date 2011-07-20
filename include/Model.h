@@ -51,6 +51,7 @@ class Model
         template<class Func>
             void setAnimation ( Func f, Uint nrFrames, Uint limb, Uint animID );
         void startAnimation ( short animID, bool loop=false );
+        void stopAnimation ();
     private:
         void init ();
         void setMVP ( bool force=false );
@@ -158,5 +159,16 @@ Model::startAnimation ( short animID, bool loop )
     }
     duration_ = maxFrames * std::chrono::milliseconds(50);
 }		// -----  end of method Model::startAnimation  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  stopAnimation
+// Description:  Stop the animation.
+//-----------------------------------------------------------------------------
+    inline void
+Model::stopAnimation ()
+{
+    animLoop_ = false;
+}		// -----  end of method Model::stopAnimation  -----
 
 #endif   // ----- #ifndef MODEL_H  -----

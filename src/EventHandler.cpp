@@ -57,12 +57,17 @@ EventHandler::pollEvents ()
             context_->windowOpened_ = false;
         }
         if ( event_.type == SDL_KEYDOWN ) {
-            SDL_keysym sym = event_.key.keysym;
-            Keyset keyset((Key::Mod)(sym.mod % 4096), (Key::Code)sym.sym);
-            std::map<Keyset, Functionoid>::iterator it;
-            for ( it = keyMap_.begin(); it != keyMap_.end(); it ++ ) {
-                if ( it->first == keyset ) (it->second)();
-            }
+            // Get the keyboard state.
+            int size;
+            Uint8 *keyState = SDL_GetKeyState(&size);
+            Keyset keySet;
+            // Walk through the state and add every pressed key to the set.
+            for ( unsigned int i = 0; i < size; i += 1 )
+                if ( keyState[i] ) keySet.insert(keySet.end(), (Key)i);
+            // If the set is equal to one in the map, we can execute its
+            // function.
+            auto it = keyMap_.find(keySet);
+            if ( it != keyMap_.end() ) (it->second)();
         }
         if ( event_.type == SDL_VIDEORESIZE ) {
             context_->resize(event_.resize.w, event_.resize.h);
