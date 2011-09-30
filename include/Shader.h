@@ -32,6 +32,8 @@
 #define  SHADER_H
 
 #include    <string>
+#include    <exception>
+#include    <iostream>
 #include    <vector>
 #include    <map>
 #include    <GL/glew.h>
@@ -51,7 +53,6 @@ class Shader
         void link ();
         void bind ();
         void unbind ();
-        void setTransform ( std::vector<std::string> names );
         GLuint getShaderProgram();
         bool setUniform ( std::string name, GLfloat val );
         bool setUniform ( std::string name, glm::vec3 vec );
@@ -63,7 +64,7 @@ class Shader
         std::map<GLenum, GLuint> shaderObjects_;
         GLuint shaderProgram_;
 
-        std::map<std::string, GLint> uniformLocs;
+        std::map<std::string, GLint> uniformLocs_;
 
         std::string addCode ( std::string fileName );
         GLuint      compileShader ( std::string code, GLenum type );
@@ -116,8 +117,30 @@ Shader::unbind ()
     inline void
 Shader::setUniformLocation ( std::string name )
 {
-    GLint loc = glGetUniformLocation(shaderProgram_, name.c_str());
-    uniformLocs[name] = loc;
+    bind();
+    try {
+        GLint loc = glGetUniformLocation(shaderProgram_, name.c_str());
+        uniformLocs_[name] = loc;
+        if ( loc == -1 ) throw true;
+        GLenum error = glGetError();
+        if ( error != GL_NO_ERROR ) throw error;
+    }
+    catch ( bool e ) {
+        if ( e ) {
+            std::cerr << "Error finding uniform " << name;
+            std::cerr << " in shaderprogram " << shaderProgram_ << "\n";
+        }
+    }
+    catch ( GLenum error ) {
+        if ( error == GL_INVALID_VALUE ) {
+            std::cerr << "Invalid value " << shaderProgram_ << " used.\n";
+        }
+        else if ( error == GL_INVALID_OPERATION ) {
+            std::cerr << "Invalid operation while setting uniform ";
+            std::cerr << name << " in shaderProgram " << shaderProgram_ << "\n";
+        }
+    }
+    unbind();
 }		// -----  end of method Shader::setUniformLocation  -----
 
 #endif   // ----- #ifndef SHADER_H  -----

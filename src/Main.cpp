@@ -33,6 +33,7 @@
 #include    "Context.h"
 #include    "EventHandler.h"
 #include    "Model.h"
+#include    "Terrain.h"
 
     int
 main ( int argc, char *argv[] )
@@ -40,73 +41,63 @@ main ( int argc, char *argv[] )
     int w = 1024, h = 768;
     std::string windowName = "Tech demo";
 
-    Context windowContext(w, h, windowName);
-    windowContext.setup();
+    try {
+        Context windowContext(w, h, windowName);
+        windowContext.setup();
 
-    Model test("data/dwarf.dat", 0, 0, 0, windowContext);
-    float angle;
-    glm::vec3 limbPos;
-    auto rotate = [&](glm::mat4 mat)->glm::mat4 {
-        glm::mat4 m = glm::translate(glm::mat4(1.0f), limbPos);
-        m *= glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1, 0, 0));
-        m *= glm::translate(glm::mat4(1.0f), -limbPos);
-        mat *= m;
-        return mat;
-    };
-    angle = -7.5f;
-    limbPos = glm::vec3(13, 11, 18);
-    test.setAnimation(rotate, 5, 1, 0);
-    angle = 7.5f;
-    test.setAnimation(rotate, 5, 1, 0);
-    limbPos = glm::vec3(13, 11, 10);
-    test.setAnimation(rotate, 5, 1, 0);
-    angle = -7.5f;
-    test.setAnimation(rotate, 5, 1, 0);
+        Model test("data/dwarf.dat", windowContext, 0, 0, 0);
+        unsigned int index = test.addAnimation(true);
+        glm::vec3 limbPos;
+        float angle;
+        auto function = [&]( glm::mat4 mat )->glm::mat4 {
+            glm::mat4 m = glm::translate(glm::mat4(1.0f), limbPos);
+            m *= glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1, 0, 0));
+            m *= glm::translate(glm::mat4(1.0f), -limbPos);
+            mat *= m;
+            return mat;
+        };
+        limbPos = glm::vec3(3, 11, 4);
+        angle = 7.5f;
+        test.animateLimb(1, index, 500, function);
+        angle = -7.5f;
+        test.animateLimb(1, index, 500, function);
 
-    angle = 7.5f;
-    limbPos = glm::vec3(18, 11, 10);
-    test.setAnimation(rotate, 5, 2, 0);
-    angle = -7.5f;
-    test.setAnimation(rotate, 5, 2, 0);
-    limbPos = glm::vec3(18, 11, 18);
-    test.setAnimation(rotate, 5, 2, 0);
-    angle = 7.5f;
-    test.setAnimation(rotate, 5, 2, 0);
+        EventHandler event(windowContext);
+        Camera& camera = windowContext.getCamera();
+        event.bind([&]{ camera.move(10.0f, 0.0f, 0.0f);},
+                        EventHandler::Key::Left);
+        event.bind([&]{ camera.move(-10.0f, 0.0f, 0.0f);},
+                        EventHandler::Key::Right);
+        event.bind([&]{ camera.move(0.0f, 0.0f, 10.0f);}, 
+                        EventHandler::Key::Up);
+        event.bind([&]{ camera.move(0.0f, 0.0f, -10.0f);},
+                        EventHandler::Key::Down);
+        event.bind([&]{ camera.rotate(30.0f);},
+                        EventHandler::Keyset{ EventHandler::Key::Lctrl,
+                                              EventHandler::Key::Left});
+        event.bind([&]{ camera.rotate(-30.0f);},
+                        EventHandler::Keyset{ EventHandler::Key::Lctrl,
+                                              EventHandler::Key::Right});
+        event.bind([&]{ camera.zoom(10.0f);}, 
+                        EventHandler::Keyset{ EventHandler::Key::Lctrl,
+                                              EventHandler::Key::Up });
+        event.bind([&]{ camera.zoom(-10.0f);}, 
+                        EventHandler::Keyset{ EventHandler::Key::Lctrl,
+                                              EventHandler::Key::Down });
+        event.bind([&]{ windowContext.close();}, EventHandler::Key::Escape);
 
-    EventHandler event(windowContext);
-    Camera& camera = windowContext.getCamera();
-    event.bind([&]{ camera.move(10.0f, 0.0f, 0.0f);},
-                    EventHandler::Key::Left);
-    event.bind([&]{ camera.move(-10.0f, 0.0f, 0.0f);},
-                    EventHandler::Key::Right);
-    event.bind([&]{ camera.move(0.0f, 0.0f, 10.0f);}, 
-                    EventHandler::Key::Up);
-    event.bind([&]{ camera.move(0.0f, 0.0f, -10.0f);},
-                    EventHandler::Key::Down);
-    event.bind([&]{ camera.rotate(30.0f);},
-                    EventHandler::Keyset{ EventHandler::Key::Lctrl,
-                                          EventHandler::Key::Left});
-    event.bind([&]{ camera.rotate(-30.0f);},
-                    EventHandler::Keyset{ EventHandler::Key::Lctrl,
-                                          EventHandler::Key::Right});
-    event.bind([&]{ camera.zoom(10.0f);}, 
-                    EventHandler::Keyset{ EventHandler::Key::Lctrl,
-                                          EventHandler::Key::Up });
-    event.bind([&]{ camera.zoom(-10.0f);}, 
-                    EventHandler::Keyset{ EventHandler::Key::Lctrl,
-                                          EventHandler::Key::Down });
-    event.bind([&]{ windowContext.close();}, EventHandler::Key::Escape);
-
-    unsigned int i = 0;
-    while ( windowContext.isOpened() ) {
-        if ( i == 100 ) test.startAnimation(0, true);
-        if ( i == 500 ) test.stopAnimation();
-        event.pollEvents();
-        windowContext.clear();
-        test.rotate(1.0f, 0.0f, 1.0f, 0.0f);
-        test.draw();
-        windowContext.render();
-        i += 1;
+        unsigned int i = 0;
+        while ( windowContext.isOpened() ) {
+            if ( i == 100 ) test.startAnimation(index);
+            event.pollEvents();
+            windowContext.clear();
+            test.draw();
+            windowContext.render();
+            i++;
+        }
+    }
+    catch (...) {
+        throw;
     }
     return 0;
 }				// ----------  end of function main  ----------

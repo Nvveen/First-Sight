@@ -29,7 +29,6 @@
 // ============================================================================
 
 #include    <fstream>
-#include    <iostream>
 #include    <sstream>
 #include    <cstdlib>
 #include    <glm/gtc/type_ptr.hpp>
@@ -43,7 +42,7 @@
 Shader::Shader () : bound_(false)
 {
     // Create the shader program
-    shaderProgram_ = glCreateProgram();
+    shaderProgram_ = 0;
 }  // -----  end of method Shader::Shader  (constructor)  -----
 
 //-----------------------------------------------------------------------------
@@ -68,6 +67,7 @@ Shader::~Shader ()
     void
 Shader::add ( std::string fileName, GLenum type )
 {
+    if ( shaderProgram_ == 0 ) shaderProgram_ = glCreateProgram();
     if ( shaderCodes_.find(type) != shaderCodes_.end() ) {
         std::cerr << "The shader program already has an object of this type.\n";
         exit(1);
@@ -128,6 +128,7 @@ Shader::link ()
         std::cerr << "Invalid shader program: " << errorLog << "\n";
         exit(1);
     }
+    bound_ = true;
     unbind();
 }		// -----  end of method Shader::link  -----
 
@@ -151,6 +152,7 @@ Shader::compileShader ( std::string code, GLenum type )
     sStringPtr[0] = code.c_str();
     // Pass code to shader
     glShaderSource(shader, 1, (const GLchar **)sStringPtr, NULL);
+    GLenum error = glGetError();
 
     glCompileShader(shader);
 
@@ -169,34 +171,14 @@ Shader::compileShader ( std::string code, GLenum type )
 
 //-----------------------------------------------------------------------------
 //       Class:  Shader
-//      Method:  setTransform
-// Description:  Set the varying variables that are used in the transform
-//               feedback.
-//-----------------------------------------------------------------------------
-    void
-Shader::setTransform ( std::vector<std::string> names )
-{
-    const char *cNames[names.size()];
-    unsigned int i = 0;
-    for ( std::string& name : names ) {
-        cNames[i] = name.c_str();
-        i += 1;
-    }
-    // I fucking hate C strings.
-    glTransformFeedbackVaryings(shaderProgram_, names.size(),
-            cNames, GL_INTERLEAVED_ATTRIBS);
-}		// -----  end of method Shader::setTransform  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Shader
 //      Method:  setUniform
 // Description:  Sets a uniform variable for the shader.
 //-----------------------------------------------------------------------------
     bool
 Shader::setUniform ( std::string name, GLfloat val )
 {
-    if ( shaderProgram_ ) {
-        glUniform1i(uniformLocs[name], val);
+    if ( shaderProgram_ && bound_ ) {
+        glUniform1i(uniformLocs_[name], val);
     }
     return true;
 }		// -----  end of method Shader::setUniform  -----
@@ -209,8 +191,8 @@ Shader::setUniform ( std::string name, GLfloat val )
     bool
 Shader::setUniform ( std::string name, glm::vec3 vec )
 {
-    if ( shaderProgram_ ) {
-        glUniform3f(uniformLocs[name], vec.x, vec.y, vec.z);
+    if ( shaderProgram_ && bound_ ) {
+        glUniform3f(uniformLocs_[name], vec.x, vec.y, vec.z);
     }
     return true;
 }		// -----  end of method Shader::setUniform  -----
@@ -223,8 +205,8 @@ Shader::setUniform ( std::string name, glm::vec3 vec )
     bool
 Shader::setUniform ( std::string name, glm::vec4 vec )
 {
-    if ( shaderProgram_ ) {
-        glUniform4f(uniformLocs[name], vec.x, vec.y, vec.z, vec.w);
+    if ( shaderProgram_ && bound_ ) {
+        glUniform4f(uniformLocs_[name], vec.x, vec.y, vec.z, vec.w);
     }
     return true;
 }		// -----  end of method Shader::setUniform  -----
@@ -237,8 +219,8 @@ Shader::setUniform ( std::string name, glm::vec4 vec )
     bool
 Shader::setUniform ( std::string name, glm::mat4 matrix )
 {
-    if ( shaderProgram_ ) {
-        glUniformMatrix4fv(uniformLocs[name], 1, GL_FALSE, 
+    if ( shaderProgram_ && bound_ ) {
+        glUniformMatrix4fv(uniformLocs_[name], 1, GL_FALSE, 
                            glm::value_ptr(matrix));
     }
     return true;

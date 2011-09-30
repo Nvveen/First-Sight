@@ -18,157 +18,164 @@
 #ifndef  MODEL_H
 #define  MODEL_H
 
-#include    <vector>
 #include    <array>
+#include    <vector>
 #include    <list>
 #include    <chrono>
-#include    <fstream>
-#include    <GL/glew.h>
-#include    <glm/glm.hpp>
-
-#include    "Shader.h"
+#include    "Drawable.h"
 #include    "Context.h"
+#include    "Shader.h"
 
 // ============================================================================
 //        Class:  Model
 //  Description:  Base class that provides the necessary function to read
 //                animate and render a voxel model from file.
 // ============================================================================
-class Model
+class Model : public DrawableInterface
 {
-    public:
-        typedef unsigned char Byte;
-        typedef unsigned int Uint;
-
-        Model ();
-        Model ( const std::string& fileName, GLfloat x, GLfloat y, GLfloat z,
-                Context& context,
-                Shader& shader=Context::shaders["default"] );
-        void draw ();
-        void move ( GLfloat x, GLfloat y, GLfloat z );
-        void rotate ( GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
-
-        template<class Func>
-            void setAnimation ( Func f, Uint nrFrames, Uint limb, Uint animID );
-        void startAnimation ( short animID, bool loop=false );
-        void stopAnimation ();
     private:
-        void init ();
-        void setMVP ( bool force=false );
+        // Easy access typedefs.
+        typedef unsigned int Uint;
+        typedef unsigned char Byte;
+        typedef std::array<float, 3> Vec3;
 
-        // Resident classes that don't need to be exposed to anything other
-        // than a Model.
-        struct Voxel;
         class Limb;
+        // A limb is constructed from voxels.
+        struct Voxel {
+            Byte x, y, z;
+            glm::vec4 color;
+        };
 
-        // Standard model data.
+        struct Animation {
+            std::map<Limb *, std::vector<glm::mat4>> matrices;
+            bool loop;
+        };
+    public:
+        Model ();
+        Model ( const std::string& fileName, Context& context,
+                const GLfloat& x, const GLfloat& y, const GLfloat& z,
+                Shader& shader=Context::shaders["default"] );
+        ~Model ();
+        virtual void draw ();
+
+        Uint addAnimation ( const bool& loop=false );
+        template < typename Function >
+            void animateLimb ( const Uint& limbIndex, const Uint& animIndex, 
+                               const Uint& length, Function func );
+        bool loopAnimation ( const Uint& animIndex );
+        void setAnimationLoop ( const Uint& animIndex, const bool& loop );
+        void startAnimation ( const Uint& animIndex );
+    protected:
+    private:
         std::string fileName_;
-        std::vector<Limb> limbList_;
-        glm::vec3 location_;
-        glm::mat4 translation_, rotation_, scaling_;
-        glm::mat4 mvp_;
-
-        // Bound variables needed for rendering.
-        Shader *shader_;
-        Projection *perspective_;
-        Camera *camera_;
-
-        // Variables needed for animation.
-        short animID_;
-        bool animLoop_;
+        std::vector<Limb> limbs_;
+        std::vector<Animation> animations_;
         std::chrono::system_clock::time_point animBegin_;
-        std::chrono::system_clock::duration duration_;
+        int animIndex_;
+
+        void readData ();
 }; // -----  end of class Model  -----
 
 // ============================================================================
 //        Class:  Model::Limb
-//  Description:  Each Model is divided into Limbs, which generate their own
-//                buffers in OpenGL and their transformation matrices used
-//                for animating.
+//  Description:  A limb is an OpenGL rendering object, constructed from a list
+//                of voxels.
 // ============================================================================
-class Model::Limb
+class Model::Limb : public DrawableObject
 {
     public:
-        Limb ();                             // constructor
-        Limb ( std::list<Voxel>& voxels, std::array<float, 3>& offset,
-                      std::array<Uint, 3>& boxSize, bool moveable=false );
-        ~Limb ();
+        Limb () = default;
+        Limb ( const std::vector<Voxel>& voxels, const Vec3& offset,
+               const Vec3& boxSize );
 
-        friend class Model;
+        virtual void draw ();
+        virtual void construct ();
+        virtual void adjustBoxSize ( const std::vector<glm::mat4>& matrices );
+    protected:
     private:
-        void createVoxelImage ( std::list<Voxel>& voxels, bool moveable );
-        void createVBO ();
+        Vec3 offset_, boxSize_;
+        std::vector<Voxel> voxels_;
+        bool constructed_;
 
-        GLuint vbo_, vao_, texID_;
-        Uint vertexCount_;
-        std::array<float, 3> offset_;
-        std::array<Uint, 3> boxSize_;
-        std::vector<std::vector<glm::mat4>> anims_;
+        virtual void createVertexBuffer ();
+        virtual void createTexture ();
 }; // -----  end of class Model::Limb  -----
 
-// Simple voxel struct that holds the data a voxel needs.
-struct Model::Voxel {
-    Byte x, y, z;
-    glm::vec4 rgba;
-};				// ----------  end of struct Model::Voxel  ----------
-
 //-----------------------------------------------------------------------------
 //       Class:  Model
-//      Method:  setAnimation
-// Description:  Animating works by progressively generating the transformation
-//               matrices in a specific timeframe an animation needs. To do
-//               this, the limb + its animation ID are looked up.
+//      Method:  animateLimb
+// Description:  Inputs a function to generate a row of matrices to
+//               transform a limb.
 //-----------------------------------------------------------------------------
-template<class Func>
-    void
-Model::setAnimation ( Func f, Uint nrFrames, Uint limb, Uint animID )
+    template < typename Function >
+void Model::animateLimb ( const Uint& limbIndex, const Uint& animIndex, 
+                          const Uint& length, Function func )
 {
-    // We first check for every limb if it already has an animation with that
-    // ID yet.
-    for ( Limb& l : limbList_ ) {
-        // The ID can never exceed the number of IDs already stored.
-        assert(animID <= l.anims_.size());
-        if ( animID == l.anims_.size() )
-            // Push new animation
-            l.anims_.push_back(std::vector<glm::mat4>(1, glm::mat4(1.0f)));
+    try {
+        if ( limbIndex >= limbs_.size() ) throw 1;
+        if ( animIndex >= animations_.size() ) throw 2;
+
+        // Find the correct vector of matrices.
+        std::vector<glm::mat4> *p = 
+            &(animations_[animIndex].matrices[&limbs_[limbIndex]]);
+        // Number of frames * 50 ms = length
+        Uint numAnimations = length/50;
+        // Execute function so many times
+        for ( Uint i = 0; i < numAnimations; i += 1 ) {
+            glm::mat4 newMat = func(*(p->end()-1));
+            p->push_back(newMat);
+        }
+        // Adjust limbbox to account for animation.
+        limbs_[limbIndex].adjustBoxSize(*p);
     }
-    Limb& l = limbList_.at(limb);
-    auto animIt = l.anims_.begin()+animID;
-    for ( Uint t = 0; t < nrFrames; t += 1 )
-        (*animIt).push_back(f((*animIt).back()));
-}		// -----  end of method Model::setAnimation  -----
+    catch ( int i ) {
+        std::cerr << "Invalid index throw for ";
+        if ( i == 1 ) std::cerr << "limbIndex.";
+        else if ( i == 2 ) std::cerr << "animIndex.";
+        std::cerr << std::endl;
+        std::cerr << "Doing nothing." << std::endl;
+    }
+}		// -----  end of method Model<T>::animateLimb  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Model
-//      Method:  startAnimation
-// Description:  Start the animation.
+//      Method:  loopAnimation
+// Description:  Return whether or not the animation is looping.
+//-----------------------------------------------------------------------------
+    inline bool
+Model::loopAnimation ( const Uint& animIndex )
+{
+    // We need a special try-catch block so users don't input the wrong
+    // indices.
+    try {
+        if ( animIndex >= animations_.size() ) throw animIndex;
+        return animations_[animIndex].loop;
+    }
+    catch ( const Uint& i ) {
+        std::cerr << "Invalid index " << i << " for animations in ";
+        std::cerr << "loopAnimation." << std::endl << "Returning false.";
+        std::cerr << std::endl;
+        return false;
+    }
+}		// -----  end of method Model::loopAnimation  -----
+
+//-----------------------------------------------------------------------------
+//       Class:  Model
+//      Method:  setAnimationLoop
+// Description:  Set the animation to loop.
 //-----------------------------------------------------------------------------
     inline void
-Model::startAnimation ( short animID, bool loop )
+Model::setAnimationLoop ( const Uint& animIndex, const bool& loop )
 {
-    animLoop_ = loop;
-    // Set the current animation the model is in to the new ID.
-    animID_ = animID;
-    // Keep track of when the animation started.
-    animBegin_ = std::chrono::system_clock::now();
-    // Calculate duration
-    Uint maxFrames = 0;
-    for ( Limb& l : limbList_ ) {
-        auto animIt = l.anims_.begin()+animID;
-        maxFrames = std::max(maxFrames, (Uint)(*animIt).size()-1);
+    try {
+        if ( animIndex >= animations_.size() ) throw animIndex;
+        animations_[animIndex].loop = loop;
     }
-    duration_ = maxFrames * std::chrono::milliseconds(50);
-}		// -----  end of method Model::startAnimation  -----
-
-//-----------------------------------------------------------------------------
-//       Class:  Model
-//      Method:  stopAnimation
-// Description:  Stop the animation.
-//-----------------------------------------------------------------------------
-    inline void
-Model::stopAnimation ()
-{
-    animLoop_ = false;
-}		// -----  end of method Model::stopAnimation  -----
+    catch ( Uint i ) {
+        std::cerr << "Invalid index " << i << " for animations in ";
+        std::cerr << "setAnimationLoop." << std::endl << "Doing nothing.";
+        std::cerr << std::endl;
+    }
+}		// -----  end of method Model::setAnimationLoop  -----
 
 #endif   // ----- #ifndef MODEL_H  -----

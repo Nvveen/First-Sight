@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License along with
 First Sight. If not, see <http://www.gnu.org/licenses/>. */
 #version 150
 
-in vec3 TexCoord0;
+in vec3 texPos;
 
 uniform sampler3D gSampler;
 uniform mat4 texTransform = mat4(1.0);
@@ -22,12 +22,8 @@ uniform mat4 texTransform = mat4(1.0);
 out vec4 fragColor;
 
 void main(void) {
-    vec3 sizes = textureSize(gSampler, 0);
-    vec3 modTex = TexCoord0*sizes;
-    modTex = floor(modTex);
-    modTex = (texTransform * vec4(modTex, 1.0)).xyz;
-    ivec3 texPos = ivec3(round(modTex));
-    vec4 color = texelFetch(gSampler, texPos, 0);
+    vec3 t = (texTransform * vec4(floor(texPos), 1)).xyz;
+    vec4 color = texelFetch(gSampler, ivec3(round(t)), 0);
     if ( color.a == 0.0 ) discard;
     fragColor = color;
 }

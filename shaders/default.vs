@@ -18,11 +18,12 @@ in vec3 vVertex;
 in vec3 TexCoord;
 
 uniform mat4 vMVP;
+uniform mat4 texTransform = mat4(1.0);
+uniform sampler3D gSampler;
 
-out vec3 TexCoord0;
+out vec3 texPos;
 
 void main(void) {
-    vec3 pos = vVertex;
-    TexCoord0 = TexCoord;
-    gl_Position = vMVP * vec4(pos, 1.0);
+    texPos = TexCoord;
+    gl_Position = vMVP * vec4(vVertex, 1.0);
 }

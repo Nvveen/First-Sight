@@ -55,7 +55,7 @@ class Camera
         bool changed ();
         void clearUpdate ();
 
-        glm::mat4& getCamera ();
+        glm::mat4& getMatrix ();
         glm::vec3 getPosition ();
         glm::vec3 getDirection ();
 
@@ -94,14 +94,14 @@ Camera::clearUpdate ()
 
 //-----------------------------------------------------------------------------
 //       Class:  Camera
-//      Method:  getCamera
+//      Method:  getMatrix
 // Description:  Returns the camera matrix
 //-----------------------------------------------------------------------------
     inline glm::mat4&
-Camera::getCamera ()
+Camera::getMatrix ()
 {
     return cameraMatrix_;
-}		// -----  end of method Camera::getCamera  -----
+}		// -----  end of method Camera::getMatrix  -----
 
 //-----------------------------------------------------------------------------
 //       Class:  Camera

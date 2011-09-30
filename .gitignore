@@ -4,3 +4,8 @@ tempdata/*
 build/
 firstsight
 convert
+tags
+src/tags
+include/tags
+.gitignore
+build.sh

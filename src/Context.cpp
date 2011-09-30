@@ -109,6 +109,13 @@ Context::setup ()
     shaders["default"].link();
     shaders["default"].setUniformLocation("vMVP");
     shaders["default"].setUniformLocation("texTransform");
+    shaders["default"].setUniformLocation("gSampler");
+
+    shaders["terrain"] = Shader();
+    shaders["terrain"].add("shaders/terrain.vs", GL_VERTEX_SHADER);
+    shaders["terrain"].add("shaders/terrain.fs", GL_FRAGMENT_SHADER);
+    shaders["terrain"].link();
+    shaders["terrain"].setUniformLocation("vMVP");
 }		// -----  end of method Context::setup  -----
 
 //-----------------------------------------------------------------------------
